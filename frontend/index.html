@@ -653,10 +653,12 @@ function toggleMic(type) {
   recognition.onstart=()=>{isListening=true;btn.classList.add('on','pulsing');btn.textContent='🔴 듣는 중...';showV('🎤 말씀하세요...');};
   recognition.onresult=e=>{
     let fin='',inter='';
-    for(const r of e.results)r.isFinal?fin+=r[0].transcript:inter+=r[0].transcript;
-    const txt=fin||inter;
-    ta.value=(ta.value+(ta.value?'\n':'')+txt).trim();
-    showV('🎤 '+txt);
+    for(let i=0;i<e.results.length;i++){
+      if(e.results[i].isFinal)fin+=e.results[i][0].transcript;
+      else inter+=e.results[i][0].transcript;
+    }
+    if(inter)btn.textContent='🔴 '+inter;
+    if(fin){ta.value=(ta.value+(ta.value?'\n':'')+fin.trim()).trim();showV('🎤 '+fin.trim());}
   };
   recognition.onerror=e=>{showV('⚠️ '+e.error);stopMic(type);};
   recognition.onend=()=>stopMic(type);
