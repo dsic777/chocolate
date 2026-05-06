@@ -327,8 +327,7 @@ const won = n  => Number(n||0).toLocaleString('ko-KR')+'원';
 function fmtNum(el){const r=el.value.replace(/[^0-9]/g,'');el.value=r?Number(r).toLocaleString('ko-KR'):'';}
 function parseNum(v){return parseInt((v||'').replace(/,/g,''))||0;}
 function today() {
-  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Seoul'}));
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'});
 }
 let selectedDate=today();
 const uid  = () => Date.now().toString(36)+Math.random().toString(36).slice(2,5);
