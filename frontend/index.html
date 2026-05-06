@@ -614,7 +614,10 @@ function showParsed(type,items) {
         ${x.cash?`<div class="pi-row"><span class="pi-lbl">현금</span><span class="pi-val">${won(x.cash)}</span></div>`:''}
         ${x.credit?`<div class="pi-row"><span class="pi-lbl">외상</span><span class="pi-val neg">${won(x.credit)}</span></div>`:''}
         ${x.memo?`<div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val">${x.memo}</span></div>`:''}
-        <button class="btn btn-green" style="margin-top:8px" onclick="saveParsed('sales',${i})">✓ 저장</button>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-green" style="width:60%;margin:0" onclick="saveParsed('sales',${i})">✓ 저장</button>
+          <button class="btn btn-navy" style="width:40%;margin:0" onclick="editParsed('sales',${i})">✏️ 수정</button>
+        </div>
       </div>`
     :`<div class="pi" id="pi-${type}-${i}">
         <div class="pi-row"><span class="pi-lbl">날짜</span><span class="pi-val">${dl(x.date)}</span></div>
@@ -623,10 +626,36 @@ function showParsed(type,items) {
         <div class="pi-row"><span class="pi-lbl">금액</span><span class="pi-val neg">${won(x.amount||0)}</span></div>
         <div class="pi-row"><span class="pi-lbl">구분</span><span class="pi-val">${x.payment==='cash'?'현금':'카드'}</span></div>
         ${x.memo?`<div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val">${x.memo}</span></div>`:''}
-        <button class="btn btn-green" style="margin-top:8px" onclick="saveParsed('purchase',${i})">✓ 저장</button>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-green" style="width:60%;margin:0" onclick="saveParsed('purchase',${i})">✓ 저장</button>
+          <button class="btn btn-navy" style="width:40%;margin:0" onclick="editParsed('purchase',${i})">✏️ 수정</button>
+        </div>
       </div>`
   ).join('');
   $('#'+elId).innerHTML=`<div style="font-size:15px;font-weight:700;color:#1565c0;margin-bottom:8px">✨ ${items.length}건 파싱 완료</div>`+html;
+}
+
+function editParsed(type,idx) {
+  const item=_parsed[type]?.[idx];
+  if(!item)return;
+  if(type==='sales'){
+    if(item.date)$('#s-date').value=item.date;
+    $('#s-cust').value=item.customer||'';
+    $('#s-card').value=item.card||0;
+    $('#s-cash').value=item.cash||0;
+    $('#s-cred').value=item.credit||0;
+    $('#s-memo').value=item.memo||'';
+    calcTotal();
+    document.querySelector('#page-sales .card:last-of-type').scrollIntoView({behavior:'smooth',block:'start'});
+  } else {
+    if(item.date)$('#p-date').value=item.date;
+    $('#p-vendor').value=item.vendor||'';
+    $('#p-cat').value=item.category||'';
+    $('#p-amt').value=item.amount||0;
+    if(item.payment)$('#p-pay').value=item.payment;
+    $('#p-memo').value=item.memo||'';
+    document.querySelector('#page-purchase .card:last-of-type').scrollIntoView({behavior:'smooth',block:'start'});
+  }
 }
 
 function saveParsed(type,idx) {
