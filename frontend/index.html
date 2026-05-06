@@ -464,7 +464,7 @@ function calcPayTotal(){
 function selectCreditor(name,bal){
   $('#pay-name').value=name;
   $('#pay-cred-bal').value=bal.toLocaleString('ko-KR');
-  $('#pay-total').value=bal.toLocaleString('ko-KR');
+  $('#pay-total').value='';
   $('#pay-card').value='';$('#pay-cash').value='';
   $('#pay-form').scrollIntoView({behavior:'smooth',block:'start'});
 }
