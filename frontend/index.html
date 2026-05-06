@@ -245,7 +245,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           <div class="fg"><label>외상잔액</label><input type="text" id="pay-cred-bal" placeholder="0" readonly style="background:#1f2937;color:#9ca3af"></div>
           <div class="fg"><label>합계</label><input type="text" id="pay-total" placeholder="자동" readonly style="background:#111827;color:#4ade80;font-size:22px;font-weight:900"></div>
         </div>
-        <div id="pay-warn" style="display:none;color:#f87171;font-size:19px;font-weight:900;text-align:center;padding:10px 0 6px"></div>
+        <div id="pay-warn" style="display:none;color:#f87171;font-size:22px;font-weight:900;text-align:center;padding:10px 0 6px"></div>
         <button class="btn btn-green" id="pay-btn" onclick="addPayment()">변제 처리</button>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 6px">
@@ -464,7 +464,7 @@ function calcPayTotal(){
   const warn=$('#pay-warn'), btn=$('#pay-btn');
   if(bal>0&&v>bal){
     const over=v-bal;
-    warn.textContent=`⚠️ 변제금액이 ${over.toLocaleString('ko-KR')}원 초과`;
+    warn.textContent=`⚠️ 변제금액 ${over.toLocaleString('ko-KR')}원 초과`;
     warn.style.display='block';
     btn.disabled=true;btn.style.opacity='.4';
   } else {
