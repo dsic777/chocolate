@@ -288,13 +288,10 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 
 <script>
 // ── DATA ──────────────────────────────────
-const KSALES='choco2_sales', KPURCH='choco2_purch', KCRED='choco2_cred';
-const getSales  = () => JSON.parse(localStorage.getItem(KSALES)||'[]');
-const saveSales = d  => localStorage.setItem(KSALES, JSON.stringify(d));
-const getPurchs = () => JSON.parse(localStorage.getItem(KPURCH)||'[]');
-const savePurchs= d  => localStorage.setItem(KPURCH, JSON.stringify(d));
-const getCreds  = () => JSON.parse(localStorage.getItem(KCRED) ||'[]');
-const saveCreds = d  => localStorage.setItem(KCRED,  JSON.stringify(d));
+const API = '/chocolate/api';
+async function getSales()  { const r=await fetch(`${API}/sales`);  return r.ok?await r.json():[]; }
+async function getPurchs() { const r=await fetch(`${API}/purchases`); return r.ok?await r.json():[]; }
+async function getCreds()  { const r=await fetch(`${API}/credits`); return r.ok?await r.json():[]; }
 
 // ── UTILS ─────────────────────────────────
 const won = n  => Number(n||0).toLocaleString('ko-KR')+'원';
@@ -321,9 +318,20 @@ function navigate(p) {
   if(p==='analysis') renderAnalysis('daily');
 }
 
+async function apiPost(path, body) {
+  const r = await fetch(`${API}${path}`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  if(!r.ok) throw new Error('API 오류');
+  return r.json();
+}
+async function apiDel(path) {
+  const r = await fetch(`${API}${path}`, {method:'DELETE'});
+  if(!r.ok) throw new Error('API 오류');
+  return r.json();
+}
+
 // ── HOME ──────────────────────────────────
-function renderHome() {
-  const sales=getSales(), purch=getPurchs(), creds=getCreds(), t=today();
+async function renderHome() {
+  const [sales,purch,creds]=[await getSales(),await getPurchs(),await getCreds()], t=today();
   const sTotal=sales.filter(s=>s.date===t).reduce((a,s)=>a+(s.total||0),0);
   const pTotal=purch.filter(p=>p.date===t).reduce((a,p)=>a+(p.amount||0),0);
   const cBal=creds.filter(c=>c.type==='debit').reduce((a,c)=>a+c.amount,0)
@@ -375,7 +383,7 @@ function calcTotal() {
   $('#s-total').value=v?v.toLocaleString('ko-KR'):'';
 }
 
-function addSale(data) {
+async function addSale(data) {
   const d=data||{
     date:$('#s-date').value, customer:$('#s-cust').value.trim()||'손님',
     card:parseNum($('#s-card').value), cash:parseNum($('#s-cash').value),
@@ -385,22 +393,22 @@ function addSale(data) {
   d.total=(d.card||0)+(d.cash||0)+(d.credit||0);
   if(!d.total){alert('금액을 입력하세요');return;}
   d.id=uid();
-  const sales=getSales(); sales.push(d); saveSales(sales);
-  if((d.credit||0)>0){
-    const cr=getCreds();
-    cr.push({id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'매출 외상'+(d.memo?' - '+d.memo:'')});
-    saveCreds(cr);
-  }
-  if(!data)['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
-  if(!data)$('#s-total').value='';
-  renderSales(); showV('✅ 매출 저장: '+won(d.total)); return true;
+  try {
+    await apiPost('/sales', d);
+    if((d.credit||0)>0){
+      await apiPost('/credits',{id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'매출 외상'+(d.memo?' - '+d.memo:'')});
+    }
+    if(!data)['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+    if(!data)$('#s-total').value='';
+    await renderSales(); showV('✅ 매출 저장: '+won(d.total)); return true;
+  } catch(e) { alert('저장 실패: '+e.message); }
 }
 
-function delSale(id){if(!confirm('삭제할까요?'))return;saveSales(getSales().filter(s=>s.id!==id));renderSales();}
+async function delSale(id){if(!confirm('삭제할까요?'))return;await apiDel('/sales/'+id);renderSales();}
 
-function renderSales() {
+async function renderSales() {
   if(!$('#s-date').value)$('#s-date').value=today();
-  const list=[...getSales()].sort((a,b)=>b.date.localeCompare(a.date));
+  const list=[...await getSales()].sort((a,b)=>b.date.localeCompare(a.date));
   $('#sales-list').innerHTML=list.length===0?`<div class="empty">매출 내역이 없습니다</div>`
     :list.map(s=>`<div class="li">
       <div class="li-body">
@@ -420,7 +428,7 @@ function renderSales() {
 }
 
 // ── PURCHASE ──────────────────────────────
-function addPurchase(data) {
+async function addPurchase(data) {
   const d=data||{
     date:$('#p-date').value, vendor:$('#p-vendor').value.trim(),
     category:$('#p-cat').value.trim(), amount:parseNum($('#p-amt').value),
@@ -429,16 +437,18 @@ function addPurchase(data) {
   if(!d.date){alert('날짜를 입력하세요');return;}
   if(!d.amount){alert('금액을 입력하세요');return;}
   d.id=uid();
-  const p=getPurchs(); p.push(d); savePurchs(p);
-  if(!data)['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
-  renderPurchase(); showV('✅ 매입 저장: '+(d.vendor||'')+ ' '+won(d.amount)); return true;
+  try {
+    await apiPost('/purchases', d);
+    if(!data)['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+    await renderPurchase(); showV('✅ 매입 저장: '+(d.vendor||'')+' '+won(d.amount)); return true;
+  } catch(e) { alert('저장 실패: '+e.message); }
 }
 
-function delPurchase(id){if(!confirm('삭제할까요?'))return;savePurchs(getPurchs().filter(p=>p.id!==id));renderPurchase();}
+async function delPurchase(id){if(!confirm('삭제할까요?'))return;await apiDel('/purchases/'+id);renderPurchase();}
 
-function renderPurchase() {
+async function renderPurchase() {
   if(!$('#p-date').value)$('#p-date').value=today();
-  const list=[...getPurchs()].sort((a,b)=>b.date.localeCompare(a.date));
+  const list=[...await getPurchs()].sort((a,b)=>b.date.localeCompare(a.date));
   $('#purch-list').innerHTML=list.length===0?`<div class="empty">매입 내역이 없습니다</div>`
     :list.map(p=>`<div class="li">
       <div class="li-body">
@@ -479,7 +489,7 @@ function selectCreditor(name,bal){
   $('#pay-card').value='';$('#pay-cash').value='';
   $('#pay-form').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function addPayment() {
+async function addPayment() {
   const name=$('#pay-name').value.trim(), date=$('#pay-date').value,
         card=parseNum($('#pay-card').value), cash=parseNum($('#pay-cash').value),
         amount=card+cash;
@@ -488,14 +498,16 @@ function addPayment() {
   if(!amount){alert('금액을 입력하세요');return;}
   const bal=parseNum($('#pay-cred-bal').value);
   if(bal>0&&amount>bal)return;
-  const cr=getCreds(); cr.push({id:uid(),name,date,amount,type:'credit',memo:''}); saveCreds(cr);
-  ['pay-card','pay-cash','pay-total','pay-cred-bal'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
-  renderCredit(); showV('✅ '+name+' 변제 '+won(amount));
+  try {
+    await apiPost('/credits',{id:uid(),name,date,amount,type:'credit',memo:''});
+    ['pay-card','pay-cash','pay-total','pay-cred-bal'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+    await renderCredit(); showV('✅ '+name+' 변제 '+won(amount));
+  } catch(e) { alert('저장 실패: '+e.message); }
 }
 
-function renderCredit() {
+async function renderCredit() {
   if(!$('#pay-date').value)$('#pay-date').value=today();
-  const cr=getCreds(), allNames=[...new Set(cr.map(c=>c.name))];
+  const cr=await getCreds(), allNames=[...new Set(cr.map(c=>c.name))];
   const balMap={};
   allNames.forEach(n=>{
     const deb=cr.filter(c=>c.name===n&&c.type==='debit').reduce((a,c)=>a+c.amount,0);
@@ -555,9 +567,9 @@ function switchPeriod(p,btn){
   document.querySelectorAll('.pt').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on'); renderAnalysis(p);
 }
-function renderAnalysis(p) {
+async function renderAnalysis(p) {
   if(chartInst){chartInst.destroy();chartInst=null;}
-  const s=getSales(),pu=getPurchs();
+  const [s,pu]=[await getSales(),await getPurchs()];
   if(p==='daily')   renderDaily(s,pu);
   else if(p==='weekly') renderWeekly(s,pu);
   else              renderMonthly(s,pu);
@@ -723,10 +735,10 @@ function editParsed(type,idx) {
   }
 }
 
-function saveParsed(type,idx) {
+async function saveParsed(type,idx) {
   const item=_parsed[type]?.[idx];
   if(!item)return;
-  const ok=type==='sales'?addSale(item):addPurchase(item);
+  const ok=type==='sales'?await addSale(item):await addPurchase(item);
   if(ok){
     const el=$(`#pi-${type}-${idx}`);
     if(el){el.style.opacity='.4';const btn=el.querySelector('button');if(btn){btn.textContent='✓ 저장됨';btn.disabled=true;}}
