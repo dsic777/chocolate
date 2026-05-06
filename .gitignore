@@ -18,7 +18,6 @@ staticfiles/
 
 # 참고용 파일 및 내부 문서 (GitHub 비공개)
 *참고.html
-mockup*.html
 *.docx
 *.pdf
 *.md
