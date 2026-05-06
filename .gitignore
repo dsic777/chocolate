@@ -1,0 +1,36 @@
+# 환경변수 (절대 Git에 올리면 안됨!)
+.env
+
+# 가상환경
+venv/
+myEnv/
+
+# Python 캐시
+__pycache__/
+*.pyc
+*.pyo
+
+# DB 파일
+db.sqlite3
+*.db
+media/
+staticfiles/
+
+# 참고용 파일 및 내부 문서 (GitHub 비공개)
+*참고.html
+mockup*.html
+*.docx
+*.pdf
+*.md
+*.txt
+
+# IDE
+.vscode/
+*.DS_Store
+
+# 개발 문서 (README.md 제외)
+!README.md
+!.gitignore
+
+# Claude 설정
+.claude/
