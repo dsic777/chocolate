@@ -176,12 +176,12 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           <div class="fg"><label>손님명</label><input type="text" id="s-cust" placeholder="손님1"></div>
         </div>
         <div class="fg2">
-          <div class="fg"><label>카드</label><input type="number" id="s-card" placeholder="0" oninput="calcTotal()"></div>
-          <div class="fg"><label>현금</label><input type="number" id="s-cash" placeholder="0" oninput="calcTotal()"></div>
+          <div class="fg"><label>카드</label><input type="text" inputmode="numeric" id="s-card" placeholder="0" oninput="calcTotal()"></div>
+          <div class="fg"><label>현금</label><input type="text" inputmode="numeric" id="s-cash" placeholder="0" oninput="calcTotal()"></div>
         </div>
         <div class="fg2">
-          <div class="fg"><label>외상</label><input type="number" id="s-cred" placeholder="0" oninput="calcTotal()"></div>
-          <div class="fg"><label>합계</label><input type="number" id="s-total" placeholder="자동" readonly style="background:#f5f5f5;color:#888"></div>
+          <div class="fg"><label>외상</label><input type="text" inputmode="numeric" id="s-cred" placeholder="0" oninput="calcTotal()"></div>
+          <div class="fg"><label>합계</label><input type="text" id="s-total" placeholder="자동" readonly style="background:#111827;color:#4ade80;font-size:22px;font-weight:900"></div>
         </div>
         <div class="fg"><label>메모</label><input type="text" id="s-memo" placeholder="메모"></div>
         <button class="btn btn-navy" onclick="addSale()">매출 저장</button>
@@ -217,7 +217,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
             <select id="p-pay"><option value="card">카드</option><option value="cash">현금</option></select>
           </div>
         </div>
-        <div class="fg"><label>금액</label><input type="number" id="p-amt" placeholder="0"></div>
+        <div class="fg"><label>금액</label><input type="text" inputmode="numeric" id="p-amt" placeholder="0" oninput="fmtNum(this)"></div>
         <div class="fg"><label>메모</label><input type="text" id="p-memo" placeholder="메모"></div>
         <button class="btn btn-navy" onclick="addPurchase()">매입 저장</button>
       </div>
@@ -238,12 +238,12 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           <div class="fg"><label>손님명</label><input type="text" id="pay-name" placeholder="손님명"></div>
         </div>
         <div class="fg2">
-          <div class="fg"><label>카드</label><input type="number" id="pay-card" placeholder="0" oninput="calcPayTotal()"></div>
-          <div class="fg"><label>현금</label><input type="number" id="pay-cash" placeholder="0" oninput="calcPayTotal()"></div>
+          <div class="fg"><label>카드</label><input type="text" inputmode="numeric" id="pay-card" placeholder="0" oninput="calcPayTotal()"></div>
+          <div class="fg"><label>현금</label><input type="text" inputmode="numeric" id="pay-cash" placeholder="0" oninput="calcPayTotal()"></div>
         </div>
         <div class="fg2">
-          <div class="fg"><label>외상잔액</label><input type="number" id="pay-cred-bal" placeholder="0" readonly style="background:#1f2937;color:#9ca3af"></div>
-          <div class="fg"><label>합계</label><input type="number" id="pay-total" placeholder="자동" readonly style="background:#f5f5f5;color:#888"></div>
+          <div class="fg"><label>외상잔액</label><input type="text" id="pay-cred-bal" placeholder="0" readonly style="background:#1f2937;color:#9ca3af"></div>
+          <div class="fg"><label>합계</label><input type="text" id="pay-total" placeholder="자동" readonly style="background:#111827;color:#4ade80;font-size:22px;font-weight:900"></div>
         </div>
         <div class="fg"><label>메모</label><input type="text" id="pay-memo" placeholder="메모"></div>
         <button class="btn btn-green" onclick="addPayment()">변제 처리</button>
@@ -298,6 +298,8 @@ const saveCreds = d  => localStorage.setItem(KCRED,  JSON.stringify(d));
 
 // ── UTILS ─────────────────────────────────
 const won = n  => Number(n||0).toLocaleString('ko-KR')+'원';
+function fmtNum(el){const r=el.value.replace(/[^0-9]/g,'');el.value=r?Number(r).toLocaleString('ko-KR'):'';}
+function parseNum(v){return parseInt((v||'').replace(/,/g,''))||0;}
 const today= () => new Date().toISOString().slice(0,10);
 const uid  = () => Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const $    = s  => document.querySelector(s);
@@ -368,15 +370,16 @@ function renderHome() {
 
 // ── SALES ─────────────────────────────────
 function calcTotal() {
-  const v=(parseInt($('#s-card').value)||0)+(parseInt($('#s-cash').value)||0)+(parseInt($('#s-cred').value)||0);
-  $('#s-total').value=v||'';
+  ['s-card','s-cash','s-cred'].forEach(id=>fmtNum($('#'+id)));
+  const v=parseNum($('#s-card').value)+parseNum($('#s-cash').value)+parseNum($('#s-cred').value);
+  $('#s-total').value=v?v.toLocaleString('ko-KR'):'';
 }
 
 function addSale(data) {
   const d=data||{
     date:$('#s-date').value, customer:$('#s-cust').value.trim()||'손님',
-    card:parseInt($('#s-card').value)||0, cash:parseInt($('#s-cash').value)||0,
-    credit:parseInt($('#s-cred').value)||0, memo:$('#s-memo').value.trim()
+    card:parseNum($('#s-card').value), cash:parseNum($('#s-cash').value),
+    credit:parseNum($('#s-cred').value), memo:$('#s-memo').value.trim()
   };
   if(!d.date){alert('날짜를 입력하세요');return;}
   d.total=(d.card||0)+(d.cash||0)+(d.credit||0);
@@ -420,7 +423,7 @@ function renderSales() {
 function addPurchase(data) {
   const d=data||{
     date:$('#p-date').value, vendor:$('#p-vendor').value.trim(),
-    category:$('#p-cat').value.trim(), amount:parseInt($('#p-amt').value)||0,
+    category:$('#p-cat').value.trim(), amount:parseNum($('#p-amt').value),
     payment:$('#p-pay').value, memo:$('#p-memo').value.trim()
   };
   if(!d.date){alert('날짜를 입력하세요');return;}
@@ -454,19 +457,20 @@ function renderPurchase() {
 
 // ── CREDIT ────────────────────────────────
 function calcPayTotal(){
-  const v=(parseInt($('#pay-card').value)||0)+(parseInt($('#pay-cash').value)||0);
-  $('#pay-total').value=v||'';
+  ['pay-card','pay-cash'].forEach(id=>fmtNum($('#'+id)));
+  const v=parseNum($('#pay-card').value)+parseNum($('#pay-cash').value);
+  $('#pay-total').value=v?v.toLocaleString('ko-KR'):'';
 }
 function selectCreditor(name,bal){
   $('#pay-name').value=name;
-  $('#pay-cred-bal').value=bal;
-  $('#pay-total').value=bal;
+  $('#pay-cred-bal').value=bal.toLocaleString('ko-KR');
+  $('#pay-total').value=bal.toLocaleString('ko-KR');
   $('#pay-card').value='';$('#pay-cash').value='';
   $('#pay-form').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function addPayment() {
   const name=$('#pay-name').value.trim(), date=$('#pay-date').value,
-        card=parseInt($('#pay-card').value)||0, cash=parseInt($('#pay-cash').value)||0,
+        card=parseNum($('#pay-card').value), cash=parseNum($('#pay-cash').value),
         amount=card+cash, memo=$('#pay-memo').value.trim();
   if(!name){alert('손님명을 입력하세요');return;}
   if(!date){alert('날짜를 입력하세요');return;}
