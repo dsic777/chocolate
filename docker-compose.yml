@@ -5,7 +5,7 @@ services:
     build: ./backend
     container_name: chocolate-api
     restart: unless-stopped
-    env_file: .env
+    env_file: ./backend/.env
     expose:
       - "8000"
     networks:
