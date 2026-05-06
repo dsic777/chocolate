@@ -125,6 +125,17 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 @keyframes sp{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .pulsing{animation:pulse 1s infinite}
+
+/* ── Calendar Modal ── */
+#cal-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center}
+#cal-box{background:#111827;border:1px solid #374151;border-radius:14px;padding:20px;width:320px}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-nav{background:none;border:none;color:#9ca3af;font-size:26px;cursor:pointer;padding:2px 12px;line-height:1}
+.cal-nav:active{color:#fff}
+.cal-month{font-size:20px;font-weight:900;color:#fff}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
+.cal-dow span{text-align:center;font-size:15px;font-weight:700;padding:5px 0;color:#9ca3af}
+#cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 </style>
 </head>
 <body>
@@ -133,7 +144,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
   <div id="hdr">
     <h1>🍫 초콜릿 운영관리</h1>
     <div id="hdr-sub">
-      <span id="today-lbl"></span>
+      <span id="today-lbl" onclick="openCal()" style="cursor:pointer"></span>
+      <span id="today-btn" onclick="goToday()" style="display:none;font-size:16px;font-weight:700;color:#fbbf24;cursor:pointer">오늘로</span>
     </div>
   </div>
   <div id="content">
@@ -286,6 +298,23 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
   </div>
 </div><!-- /app -->
 
+<!-- ═══ CALENDAR MODAL ═══ -->
+<div id="cal-modal" onclick="if(event.target===this)closeCal()">
+  <div id="cal-box">
+    <div class="cal-hdr">
+      <button class="cal-nav" onclick="prevMonth()">‹</button>
+      <div class="cal-month" id="cal-title"></div>
+      <button class="cal-nav" onclick="nextMonth()">›</button>
+    </div>
+    <div class="cal-dow">
+      <span style="color:#f87171">일</span>
+      <span>월</span><span>화</span><span>수</span><span>목</span><span>금</span>
+      <span style="color:#93c5fd">토</span>
+    </div>
+    <div id="cal-grid"></div>
+  </div>
+</div>
+
 <script>
 // ── DATA ──────────────────────────────────
 const API = '/chocolate/api';
@@ -297,7 +326,11 @@ async function getCreds()  { const r=await fetch(`${API}/credits`); return r.ok?
 const won = n  => Number(n||0).toLocaleString('ko-KR')+'원';
 function fmtNum(el){const r=el.value.replace(/[^0-9]/g,'');el.value=r?Number(r).toLocaleString('ko-KR'):'';}
 function parseNum(v){return parseInt((v||'').replace(/,/g,''))||0;}
-const today= () => new Date().toISOString().slice(0,10);
+function today() {
+  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Seoul'}));
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+let selectedDate=today();
 const uid  = () => Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const $    = s  => document.querySelector(s);
 const dl   = d  => (d||'').replace(/-/g,'.');
@@ -331,7 +364,7 @@ async function apiDel(path) {
 
 // ── HOME ──────────────────────────────────
 async function renderHome() {
-  const [sales,purch,creds]=[await getSales(),await getPurchs(),await getCreds()], t=today();
+  const [sales,purch,creds]=[await getSales(),await getPurchs(),await getCreds()], t=selectedDate;
   const sTotal=sales.filter(s=>s.date===t).reduce((a,s)=>a+(s.total||0),0);
   const pTotal=purch.filter(p=>p.date===t).reduce((a,p)=>a+(p.amount||0),0);
   const cBal=creds.filter(c=>c.type==='debit').reduce((a,c)=>a+c.amount,0)
@@ -779,8 +812,57 @@ function stopMic(type){
 // ── VOICE STATUS ──────────────────────────
 function showV(msg){console.log(msg);}
 
+// ── DATE LABEL ────────────────────────────
+const DOW_KO=['일','월','화','수','목','금','토'];
+const DOW_COLOR=['#f87171','#e5e7eb','#e5e7eb','#e5e7eb','#e5e7eb','#e5e7eb','#93c5fd'];
+
+function updateDateLabel() {
+  const [y,m,d]=selectedDate.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  const dow=dt.getDay();
+  const t=today();
+  $('#today-lbl').innerHTML=
+    `<span style="font-size:20px;font-weight:900;color:#e5e7eb">${y}년 ${m}월 ${d}일</span>`+
+    `<span style="font-size:20px;font-weight:900;color:${DOW_COLOR[dow]};margin-left:4px">(${DOW_KO[dow]})</span>`;
+  $('#today-btn').style.display=selectedDate===t?'none':'inline';
+}
+
+function goToday(){selectedDate=today();updateDateLabel();renderHome();}
+
+// ── CALENDAR ──────────────────────────────
+let calY,calM;
+
+function openCal(){
+  const [y,m]=selectedDate.split('-').map(Number);
+  calY=y;calM=m;renderCal();
+  $('#cal-modal').style.display='flex';
+}
+function closeCal(){$('#cal-modal').style.display='none';}
+
+function renderCal(){
+  $('#cal-title').textContent=calY+'년 '+calM+'월';
+  const first=new Date(calY,calM-1,1).getDay();
+  const last=new Date(calY,calM,0).getDate();
+  const t=today();
+  let cells='',day=1,total=Math.ceil((first+last)/7)*7;
+  for(let i=0;i<total;i++){
+    const col=i%7;
+    if(i<first||day>last){cells+='<div></div>';continue;}
+    const ds=`${calY}-${String(calM).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const isSel=ds===selectedDate,isT=ds===t;
+    const tc=col===0?'#f87171':col===6?'#93c5fd':'#fff';
+    cells+=`<div onclick="selectDate('${ds}')" style="text-align:center;padding:10px 2px;cursor:pointer;border-radius:8px;font-size:19px;font-weight:900;color:${isSel?'#000':tc};background:${isSel?'#fbbf24':isT?'#1f2937':'transparent'};border:1px solid ${isT&&!isSel?'#fbbf24':'transparent'}">${day}</div>`;
+    day++;
+  }
+  $('#cal-grid').innerHTML=cells;
+}
+
+function selectDate(ds){selectedDate=ds;closeCal();updateDateLabel();renderHome();}
+function prevMonth(){calM--;if(calM<1){calM=12;calY--;}renderCal();}
+function nextMonth(){calM++;if(calM>12){calM=1;calY++;}renderCal();}
+
 // ── INIT ──────────────────────────────────
-$('#today-lbl').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+updateDateLabel();
 navigate('home');
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/chocolate/sw.js');}
 </script>
