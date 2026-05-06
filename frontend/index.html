@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>노래방 관리</title>
+<title>초콜릿 운영관리</title>
+<link rel="manifest" href="/chocolate/manifest.json">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="초콜릿">
+<link rel="apple-touch-icon" href="/chocolate/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -124,7 +131,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 
 <div id="app">
   <div id="hdr">
-    <h1>🍫 초코렛 경영관리</h1>
+    <h1>🍫 초콜릿 운영관리</h1>
     <div id="hdr-sub">
       <span id="today-lbl"></span>
     </div>
@@ -557,14 +564,14 @@ async function parseAI(type) {
 
   const t=today();
   const prompt=type==='sales'
-    ?`다음 텍스트에서 초코렛 매출 정보를 추출하여 JSON 배열로만 반환하세요.
+    ?`다음 텍스트에서 초콜릿 매출 정보를 추출하여 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
 필드: date(YYYY-MM-DD, 없으면 오늘), customer(손님명, 없으면 "손님"), card(카드금액 숫자), cash(현금금액 숫자), credit(외상금액 숫자), total(합계=card+cash+credit), memo
 한국어 숫자(백만원=1000000, 오십만=500000 등) 변환 필수.
 설명 없이 JSON 배열만 반환:
 ${text}`
-    :`다음 텍스트에서 초코렛 매입 정보를 추출하여 JSON 배열로만 반환하세요.
+    :`다음 텍스트에서 초콜릿 매입 정보를 추출하여 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
 필드: date(YYYY-MM-DD, 없으면 오늘), vendor(업체명), category(품목), amount(금액 숫자), payment("card" 또는 "cash"), memo
@@ -667,6 +674,7 @@ function showV(msg){console.log(msg);}
 // ── INIT ──────────────────────────────────
 $('#today-lbl').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
 navigate('home');
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/chocolate/sw.js');}
 </script>
 </body>
 </html>
