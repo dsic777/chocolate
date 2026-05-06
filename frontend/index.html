@@ -248,7 +248,12 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div class="fg"><label>메모</label><input type="text" id="pay-memo" placeholder="메모"></div>
         <button class="btn btn-green" onclick="addPayment()">변제 처리</button>
       </div>
-      <div class="stl">외상 거래 내역</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 6px">
+        <span class="stl" style="margin:0">외상 거래 내역</span>
+        <label style="display:flex;align-items:center;gap:6px;font-size:15px;color:#9ca3af;cursor:pointer">
+          <input type="checkbox" id="show-all-cred" onchange="renderCredit()">완제포함
+        </label>
+      </div>
       <div class="card" id="cred-list"></div>
     </div>
 
@@ -473,28 +478,37 @@ function addPayment() {
 
 function renderCredit() {
   if(!$('#pay-date').value)$('#pay-date').value=today();
-  const cr=getCreds(), names=[...new Set(cr.map(c=>c.name))];
-  $('#cred-summary').innerHTML=names.length===0?`<div class="empty">외상 데이터가 없습니다</div>`
-    :names.map(n=>{
+  const cr=getCreds(), allNames=[...new Set(cr.map(c=>c.name))];
+  const balMap={};
+  allNames.forEach(n=>{
+    const deb=cr.filter(c=>c.name===n&&c.type==='debit').reduce((a,c)=>a+c.amount,0);
+    const pd=cr.filter(c=>c.name===n&&c.type==='credit').reduce((a,c)=>a+c.amount,0);
+    balMap[n]=deb-pd;
+  });
+  const misuNames=allNames.filter(n=>balMap[n]>0);
+  $('#cred-summary').innerHTML=misuNames.length===0?`<div class="empty">미수 외상이 없습니다</div>`
+    :misuNames.map(n=>{
       const deb=cr.filter(c=>c.name===n&&c.type==='debit').reduce((a,c)=>a+c.amount,0);
       const pd=cr.filter(c=>c.name===n&&c.type==='credit').reduce((a,c)=>a+c.amount,0);
-      const bal=deb-pd;
-      return `<div class="li" style="cursor:pointer" onclick="selectCreditor('${n}',${bal})">
+      return `<div class="li" style="cursor:pointer" onclick="selectCreditor('${n}',${balMap[n]})">
         <div class="li-body">
-          <div class="li-title">👤 ${n} <span style="font-size:15px;color:#9ca3af">▶ 탭하여 변제입력</span></div>
+          <div class="li-title" style="white-space:normal">👤 ${n}</div>
           <div class="li-sub">총 외상 ${won(deb)} · 변제 ${won(pd)}</div>
         </div>
         <div class="li-right">
-          <div class="li-main ${bal>0?'neg':'pos'}">${won(bal)}</div>
-          <div style="font-size:16px;color:#aaa">${bal===0?'완제':'미수'}</div>
+          <div class="li-main neg">${won(balMap[n])}</div>
+          <div style="font-size:16px;color:#f87171">미수</div>
         </div>
       </div>`;
     }).join('');
+  const showAll=$('#show-all-cred')?.checked;
+  const misuSet=new Set(misuNames);
   const sorted=[...cr].sort((a,b)=>b.date.localeCompare(a.date));
-  $('#cred-list').innerHTML=sorted.length===0?`<div class="empty">거래 내역이 없습니다</div>`
-    :sorted.map(c=>`<div class="li">
+  const filtered=showAll?sorted:sorted.filter(c=>misuSet.has(c.name));
+  $('#cred-list').innerHTML=filtered.length===0?`<div class="empty">거래 내역이 없습니다</div>`
+    :filtered.map(c=>`<div class="li">
       <div class="li-body">
-        <div class="li-title">${dl(c.date)} <strong>${c.name}</strong>
+        <div class="li-title" style="white-space:normal">${dl(c.date)} <strong>${c.name}</strong>
           <span class="badge ${c.type==='debit'?'b-debit':'b-cash'}" style="margin-left:6px">${c.type==='debit'?'외상':'변제'}</span>
         </div>
         ${c.memo?`<div class="li-sub">${c.memo}</div>`:''}
