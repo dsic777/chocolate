@@ -22,13 +22,13 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 #app{display:flex;flex-direction:column;width:100%;max-width:390px;height:100svh;background:#000;box-shadow:0 0 40px rgba(0,0,0,.8);overflow:hidden;position:relative}
 #hdr{background:#000;border-bottom:1px solid #1f2937;padding:18px 20px 14px;flex-shrink:0}
 #hdr h1{font-size:22px;font-weight:900;color:#fff}
-#hdr-sub{font-size:15px;font-weight:700;color:#6b7280;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
+#hdr-sub{font-size:15px;font-weight:700;color:#9ca3af;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
 #content{flex:1;overflow-y:auto;padding-bottom:72px;scrollbar-width:none}
 #content::-webkit-scrollbar{display:none}
 #tabbar{position:absolute;bottom:0;left:0;right:0;background:#000;border-top:1px solid #1f2937;display:flex;z-index:100}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;cursor:pointer}
 .tab .ti{font-size:24px}
-.tab .tl{font-size:13px;font-weight:700;color:#4b5563;margin-top:2px}
+.tab .tl{font-size:13px;font-weight:700;color:#9ca3af;margin-top:2px}
 .tab.on .tl{color:#fbbf24}
 
 /* ── Pages ── */
@@ -42,7 +42,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 /* ── Stats ── */
 .stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .sc{background:#111827;border:1px solid #1f2937;border-radius:6px;padding:12px 8px;text-align:center}
-.sc-lbl{font-size:14px;font-weight:700;color:#6b7280;margin-bottom:5px}
+.sc-lbl{font-size:14px;font-weight:700;color:#9ca3af;margin-bottom:5px}
 .sc-val{font-size:20px;font-weight:900;color:#fff}
 .sc-val.amber{color:#fbbf24}
 .sc-val.red{color:#f87171}
@@ -51,18 +51,18 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 /* ── Voice box ── */
 .vbox{background:#0a0a0a;border:1px solid #374151;border-radius:6px;padding:12px;margin-bottom:10px}
 .vbox textarea{width:100%;border:none;background:transparent;font-size:18px;font-family:'Noto Sans KR',sans-serif;font-weight:700;resize:none;outline:none;color:#d1d5db;line-height:1.5}
-.vbox textarea::placeholder{color:#4b5563;font-size:16px}
+.vbox textarea::placeholder{color:#9ca3af;font-size:16px}
 .vbtns{display:flex;gap:8px;margin-top:10px}
 .vb{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 8px;border:none;border-radius:6px;font-size:17px;font-weight:900;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
 .vb-mic{background:#1f2937;color:#fff;border:1px solid #374151}
 .vb-mic.on{background:#991b1b;border-color:#991b1b}
 .vb-ai{background:#fbbf24;color:#000}
-.vb-ai:disabled{background:#374151;color:#6b7280;cursor:not-allowed}
+.vb-ai:disabled{background:#374151;color:#9ca3af;cursor:not-allowed}
 
 /* ── Parsed preview ── */
 .pi{background:#0f1a2a;border:1px solid #1e3a5f;border-radius:6px;padding:12px;margin-bottom:8px}
 .pi-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:17px}
-.pi-lbl{color:#6b7280;font-weight:700}
+.pi-lbl{color:#9ca3af;font-weight:700}
 .pi-val{font-weight:900;color:#93c5fd}
 
 /* ── Forms ── */
@@ -70,7 +70,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .fg label{display:block;font-size:15px;font-weight:700;color:#9ca3af;margin-bottom:5px}
 .fg input,.fg select{width:100%;padding:12px;border:1px solid #374151;border-radius:6px;font-size:18px;font-family:'Noto Sans KR',sans-serif;font-weight:700;background:#111827;color:#fff}
 .fg input:focus,.fg select:focus{outline:none;border-color:#fbbf24}
-.fg input::placeholder{color:#4b5563;font-weight:400}
+.fg input::placeholder{color:#9ca3af;font-weight:400}
 .fg select option{background:#111827}
 .fg2{display:flex;gap:8px}
 .fg2 .fg{flex:1}
@@ -90,7 +90,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .li:last-child{border-bottom:none}
 .li-body{flex:1;min-width:0}
 .li-title{font-size:18px;font-weight:700;color:#f3f4f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.li-sub{font-size:15px;font-weight:700;color:#6b7280;margin-top:3px}
+.li-sub{font-size:15px;font-weight:700;color:#9ca3af;margin-top:3px}
 .li-right{text-align:right;flex-shrink:0}
 .li-main{font-size:19px;font-weight:900}
 .pos{color:#4ade80}
@@ -106,15 +106,15 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .b-debit{background:#3f0000;color:#f87171}
 
 /* ── Section title ── */
-.stl{font-size:14px;font-weight:700;color:#4b5563;letter-spacing:.8px;margin:14px 0 6px;text-transform:uppercase}
+.stl{font-size:14px;font-weight:700;color:#9ca3af;letter-spacing:.8px;margin:14px 0 6px;text-transform:uppercase}
 
 /* ── Empty ── */
-.empty{text-align:center;padding:28px;color:#4b5563;font-size:17px;font-weight:700}
+.empty{text-align:center;padding:28px;color:#9ca3af;font-size:17px;font-weight:700}
 
 /* ── Chart ── */
 .chart-wrap{position:relative;height:220px}
 .ptabs{display:flex;gap:6px;margin-bottom:12px}
-.pt{flex:1;padding:10px 4px;border:1px solid #374151;border-radius:6px;background:transparent;color:#6b7280;font-size:16px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.pt{flex:1;padding:10px 4px;border:1px solid #374151;border-radius:6px;background:transparent;color:#9ca3af;font-size:16px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
 .pt.on{background:#fbbf24;color:#000;border-color:#fbbf24}
 
 /* ── Profit ── */
@@ -543,8 +543,8 @@ function drawChart(labels,sData,pData) {
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'top',labels:{font:{family:'Noto Sans KR',size:15,weight:'700'},color:'#9ca3af'}}},
       scales:{
-        x:{ticks:{font:{family:'Noto Sans KR',size:13},color:'#6b7280'},grid:{color:'#1f2937'}},
-        y:{ticks:{font:{family:'Noto Sans KR',size:13},color:'#6b7280',callback:v=>v>=10000?(v/10000)+'만':v},grid:{color:'#1f2937'}}
+        x:{ticks:{font:{family:'Noto Sans KR',size:13},color:'#9ca3af'},grid:{color:'#1f2937'}},
+        y:{ticks:{font:{family:'Noto Sans KR',size:13},color:'#9ca3af',callback:v=>v>=10000?(v/10000)+'만':v},grid:{color:'#1f2937'}}
       }
     }
   });
