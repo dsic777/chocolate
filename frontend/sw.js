@@ -1,4 +1,4 @@
-const CACHE = 'choco-v1';
+const CACHE = 'choco-v3';
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/chocolate/'])));
