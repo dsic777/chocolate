@@ -22,13 +22,13 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 #app{display:flex;flex-direction:column;width:100%;max-width:390px;height:100svh;background:#000;box-shadow:0 0 40px rgba(0,0,0,.8);overflow:hidden;position:relative}
 #hdr{background:#000;border-bottom:1px solid #1f2937;padding:18px 20px 14px;flex-shrink:0}
 #hdr h1{font-size:22px;font-weight:900;color:#fff}
-#hdr-sub{font-size:15px;font-weight:700;color:#9ca3af;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
+#hdr-sub{font-size:17px;font-weight:700;color:#9ca3af;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
 #content{flex:1;overflow-y:auto;padding-bottom:72px;scrollbar-width:none}
 #content::-webkit-scrollbar{display:none}
 #tabbar{position:absolute;bottom:0;left:0;right:0;background:#000;border-top:1px solid #1f2937;display:flex;z-index:100}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;cursor:pointer}
 .tab .ti{font-size:24px}
-.tab .tl{font-size:13px;font-weight:700;color:#9ca3af;margin-top:2px}
+.tab .tl{font-size:15px;font-weight:700;color:#9ca3af;margin-top:2px}
 .tab.on .tl{color:#fbbf24}
 
 /* ── Pages ── */
@@ -42,7 +42,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 /* ── Stats ── */
 .stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .sc{background:#111827;border:1px solid #1f2937;border-radius:6px;padding:12px 8px;text-align:center}
-.sc-lbl{font-size:14px;font-weight:700;color:#9ca3af;margin-bottom:5px}
+.sc-lbl{font-size:16px;font-weight:700;color:#9ca3af;margin-bottom:5px}
 .sc-val{font-size:20px;font-weight:900;color:#fff}
 .sc-val.amber{color:#fbbf24}
 .sc-val.red{color:#f87171}
@@ -51,7 +51,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 /* ── Voice box ── */
 .vbox{background:#0a0a0a;border:1px solid #374151;border-radius:6px;padding:12px;margin-bottom:10px}
 .vbox textarea{width:100%;border:none;background:transparent;font-size:18px;font-family:'Noto Sans KR',sans-serif;font-weight:700;resize:none;outline:none;color:#d1d5db;line-height:1.5}
-.vbox textarea::placeholder{color:#9ca3af;font-size:16px}
+.vbox textarea::placeholder{color:#9ca3af;font-size:18px}
 .vbtns{display:flex;gap:8px;margin-top:10px}
 .vb{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 8px;border:none;border-radius:6px;font-size:17px;font-weight:900;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
 .vb-mic{background:#1f2937;color:#fff;border:1px solid #374151}
@@ -67,7 +67,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 
 /* ── Forms ── */
 .fg{margin-bottom:10px}
-.fg label{display:block;font-size:15px;font-weight:700;color:#9ca3af;margin-bottom:5px}
+.fg label{display:block;font-size:17px;font-weight:700;color:#9ca3af;margin-bottom:5px}
 .fg input,.fg select{width:100%;padding:12px;border:1px solid #374151;border-radius:6px;font-size:18px;font-family:'Noto Sans KR',sans-serif;font-weight:700;background:#111827;color:#fff}
 .fg input:focus,.fg select:focus{outline:none;border-color:#fbbf24}
 .fg input::placeholder{color:#9ca3af;font-weight:400}
@@ -81,7 +81,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .btn-green{background:#166534;color:#4ade80;border:1px solid #16a34a}
 .btn-red-full{background:#991b1b;color:#fff}
 .btn-outline{background:transparent;border:1px solid #374151;color:#9ca3af}
-.btn-sm{display:inline-block;padding:6px 12px;font-size:15px;width:auto;margin:0;border-radius:6px;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:700}
+.btn-sm{display:inline-block;padding:6px 12px;font-size:17px;width:auto;margin:0;border-radius:6px;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:700}
 .bsm-red{background:#3f0000;color:#f87171;border:1px solid #7f1d1d}
 .bsm-green{background:#052e16;color:#4ade80;border:1px solid #166534}
 
@@ -90,7 +90,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .li:last-child{border-bottom:none}
 .li-body{flex:1;min-width:0}
 .li-title{font-size:18px;font-weight:700;color:#f3f4f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.li-sub{font-size:15px;font-weight:700;color:#9ca3af;margin-top:3px}
+.li-sub{font-size:17px;font-weight:700;color:#9ca3af;margin-top:3px}
 .li-right{text-align:right;flex-shrink:0}
 .li-main{font-size:19px;font-weight:900}
 .pos{color:#4ade80}
@@ -99,14 +99,14 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .amber{color:#fbbf24}
 
 /* ── Badge ── */
-.badge{padding:2px 8px;border-radius:10px;font-size:14px;font-weight:700;display:inline-block;margin-right:2px}
+.badge{padding:2px 8px;border-radius:10px;font-size:16px;font-weight:700;display:inline-block;margin-right:2px}
 .b-card{background:#1e3a5f;color:#93c5fd}
 .b-cash{background:#052e16;color:#4ade80}
 .b-credit{background:#431407;color:#fb923c}
 .b-debit{background:#3f0000;color:#f87171}
 
 /* ── Section title ── */
-.stl{font-size:14px;font-weight:700;color:#9ca3af;letter-spacing:.8px;margin:14px 0 6px;text-transform:uppercase}
+.stl{font-size:16px;font-weight:700;color:#9ca3af;letter-spacing:.8px;margin:14px 0 6px;text-transform:uppercase}
 
 /* ── Empty ── */
 .empty{text-align:center;padding:28px;color:#9ca3af;font-size:17px;font-weight:700}
@@ -114,7 +114,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 /* ── Chart ── */
 .chart-wrap{position:relative;height:220px}
 .ptabs{display:flex;gap:6px;margin-bottom:12px}
-.pt{flex:1;padding:10px 4px;border:1px solid #374151;border-radius:6px;background:transparent;color:#9ca3af;font-size:16px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.pt{flex:1;padding:10px 4px;border:1px solid #374151;border-radius:6px;background:transparent;color:#9ca3af;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
 .pt.on{background:#fbbf24;color:#000;border-color:#fbbf24}
 
 /* ── Profit ── */
@@ -148,7 +148,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
       <div class="card">
         <div class="card-ttl">오늘 손익 (매출 - 매입)</div>
         <div id="h-profit-val">-</div>
-        <div style="text-align:center;font-size:14px;color:#aaa;margin-top:4px" id="h-profit-sub"></div>
+        <div style="text-align:center;font-size:16px;color:#aaa;margin-top:4px" id="h-profit-sub"></div>
       </div>
       <div class="stl">최근 거래</div>
       <div class="card" id="home-list"></div>
@@ -468,7 +468,7 @@ function renderCredit() {
         </div>
         <div class="li-right">
           <div class="li-main ${bal>0?'neg':'pos'}">${won(bal)}</div>
-          <div style="font-size:14px;color:#aaa">${bal===0?'완제':'미수'}</div>
+          <div style="font-size:16px;color:#aaa">${bal===0?'완제':'미수'}</div>
         </div>
       </div>`;
     }).join('');
