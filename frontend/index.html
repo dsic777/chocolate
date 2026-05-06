@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>노래방 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:20px;background:#3f3f3f;color:#fff;display:flex;justify-content:center}
+
+/* ── App shell ── */
+#app{display:flex;flex-direction:column;width:100%;max-width:390px;height:100svh;background:#000;box-shadow:0 0 40px rgba(0,0,0,.8);overflow:hidden;position:relative}
+#hdr{background:#000;border-bottom:1px solid #1f2937;padding:18px 20px 14px;flex-shrink:0}
+#hdr h1{font-size:22px;font-weight:900;color:#fff}
+#hdr-sub{font-size:15px;font-weight:700;color:#6b7280;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
+#content{flex:1;overflow-y:auto;padding-bottom:72px;scrollbar-width:none}
+#content::-webkit-scrollbar{display:none}
+#tabbar{position:absolute;bottom:0;left:0;right:0;background:#000;border-top:1px solid #1f2937;display:flex;z-index:100}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;cursor:pointer}
+.tab .ti{font-size:24px}
+.tab .tl{font-size:13px;font-weight:700;color:#4b5563;margin-top:2px}
+.tab.on .tl{color:#fbbf24}
+
+/* ── Pages ── */
+.page{display:none;padding:14px}
+.page.on{display:block}
+
+/* ── Card ── */
+.card{background:#111827;border:1px solid #1f2937;border-radius:6px;padding:14px;margin-bottom:12px}
+.card-ttl{font-size:18px;font-weight:900;color:#fff;margin-bottom:12px}
+
+/* ── Stats ── */
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.sc{background:#111827;border:1px solid #1f2937;border-radius:6px;padding:12px 8px;text-align:center}
+.sc-lbl{font-size:14px;font-weight:700;color:#6b7280;margin-bottom:5px}
+.sc-val{font-size:20px;font-weight:900;color:#fff}
+.sc-val.amber{color:#fbbf24}
+.sc-val.red{color:#f87171}
+.sc-val.green{color:#4ade80}
+
+/* ── Voice box ── */
+.vbox{background:#0a0a0a;border:1px solid #374151;border-radius:6px;padding:12px;margin-bottom:10px}
+.vbox textarea{width:100%;border:none;background:transparent;font-size:18px;font-family:'Noto Sans KR',sans-serif;font-weight:700;resize:none;outline:none;color:#d1d5db;line-height:1.5}
+.vbox textarea::placeholder{color:#4b5563;font-size:16px}
+.vbtns{display:flex;gap:8px;margin-top:10px}
+.vb{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 8px;border:none;border-radius:6px;font-size:17px;font-weight:900;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
+.vb-mic{background:#1f2937;color:#fff;border:1px solid #374151}
+.vb-mic.on{background:#991b1b;border-color:#991b1b}
+.vb-ai{background:#fbbf24;color:#000}
+.vb-ai:disabled{background:#374151;color:#6b7280;cursor:not-allowed}
+
+/* ── Parsed preview ── */
+.pi{background:#0f1a2a;border:1px solid #1e3a5f;border-radius:6px;padding:12px;margin-bottom:8px}
+.pi-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:17px}
+.pi-lbl{color:#6b7280;font-weight:700}
+.pi-val{font-weight:900;color:#93c5fd}
+
+/* ── Forms ── */
+.fg{margin-bottom:10px}
+.fg label{display:block;font-size:15px;font-weight:700;color:#9ca3af;margin-bottom:5px}
+.fg input,.fg select{width:100%;padding:12px;border:1px solid #374151;border-radius:6px;font-size:18px;font-family:'Noto Sans KR',sans-serif;font-weight:700;background:#111827;color:#fff}
+.fg input:focus,.fg select:focus{outline:none;border-color:#fbbf24}
+.fg input::placeholder{color:#4b5563;font-weight:400}
+.fg select option{background:#111827}
+.fg2{display:flex;gap:8px}
+.fg2 .fg{flex:1}
+
+/* ── Buttons ── */
+.btn{width:100%;padding:14px;border:none;border-radius:6px;font-size:19px;font-weight:900;font-family:'Noto Sans KR',sans-serif;cursor:pointer;margin-bottom:6px;display:block}
+.btn-navy{background:#fbbf24;color:#000}
+.btn-green{background:#166534;color:#4ade80;border:1px solid #16a34a}
+.btn-red-full{background:#991b1b;color:#fff}
+.btn-outline{background:transparent;border:1px solid #374151;color:#9ca3af}
+.btn-sm{display:inline-block;padding:6px 12px;font-size:15px;width:auto;margin:0;border-radius:6px;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:700}
+.bsm-red{background:#3f0000;color:#f87171;border:1px solid #7f1d1d}
+.bsm-green{background:#052e16;color:#4ade80;border:1px solid #166534}
+
+/* ── List items ── */
+.li{display:flex;align-items:flex-start;padding:12px 0;border-bottom:1px solid #1f2937;gap:10px}
+.li:last-child{border-bottom:none}
+.li-body{flex:1;min-width:0}
+.li-title{font-size:18px;font-weight:700;color:#f3f4f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-sub{font-size:15px;font-weight:700;color:#6b7280;margin-top:3px}
+.li-right{text-align:right;flex-shrink:0}
+.li-main{font-size:19px;font-weight:900}
+.pos{color:#4ade80}
+.neg{color:#f87171}
+.navy{color:#93c5fd}
+.amber{color:#fbbf24}
+
+/* ── Badge ── */
+.badge{padding:2px 8px;border-radius:10px;font-size:14px;font-weight:700;display:inline-block;margin-right:2px}
+.b-card{background:#1e3a5f;color:#93c5fd}
+.b-cash{background:#052e16;color:#4ade80}
+.b-credit{background:#431407;color:#fb923c}
+.b-debit{background:#3f0000;color:#f87171}
+
+/* ── Section title ── */
+.stl{font-size:14px;font-weight:700;color:#4b5563;letter-spacing:.8px;margin:14px 0 6px;text-transform:uppercase}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:28px;color:#4b5563;font-size:17px;font-weight:700}
+
+/* ── Chart ── */
+.chart-wrap{position:relative;height:220px}
+.ptabs{display:flex;gap:6px;margin-bottom:12px}
+.pt{flex:1;padding:10px 4px;border:1px solid #374151;border-radius:6px;background:transparent;color:#6b7280;font-size:16px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.pt.on{background:#fbbf24;color:#000;border-color:#fbbf24}
+
+/* ── Profit ── */
+#h-profit-val{font-size:32px;font-weight:900;text-align:center;padding:8px 0}
+
+/* ── Spinner ── */
+.spin{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulsing{animation:pulse 1s infinite}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="hdr">
+    <h1>🍫 초코렛 경영관리</h1>
+    <div id="hdr-sub">
+      <span id="today-lbl"></span>
+    </div>
+  </div>
+  <div id="content">
+
+    <!-- ═══ HOME ═══ -->
+    <div class="page on" id="page-home">
+      <div class="stats3">
+        <div class="sc"><div class="sc-lbl">오늘 매출</div><div class="sc-val amber" id="h-sales">-</div></div>
+        <div class="sc"><div class="sc-lbl">오늘 매입</div><div class="sc-val red" id="h-purch">-</div></div>
+        <div class="sc"><div class="sc-lbl">외상 잔액</div><div class="sc-val navy" id="h-cred">-</div></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">오늘 손익 (매출 - 매입)</div>
+        <div id="h-profit-val">-</div>
+        <div style="text-align:center;font-size:14px;color:#aaa;margin-top:4px" id="h-profit-sub"></div>
+      </div>
+      <div class="stl">최근 거래</div>
+      <div class="card" id="home-list"></div>
+    </div>
+
+    <!-- ═══ 매출 ═══ -->
+    <div class="page" id="page-sales">
+      <div class="card">
+        <div class="card-ttl">🎤 AI 음성 입력</div>
+        <div class="vbox">
+          <textarea id="sales-ta" rows="4" placeholder="말하거나 직접 입력하세요.
+예) 오늘 손님1 카드 80만원 현금 20만원
+    손님2 합계 50만원 외상 30만원"></textarea>
+          <div class="vbtns">
+            <button class="vb vb-mic" id="mic-sales" onclick="toggleMic('sales')">🎤 말하기</button>
+            <button class="vb vb-ai"  id="ai-sales"  onclick="parseAI('sales')">✨ AI 파싱</button>
+          </div>
+        </div>
+        <div id="sales-parsed"></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">직접 입력</div>
+        <div class="fg2">
+          <div class="fg"><label>날짜</label><input type="date" id="s-date"></div>
+          <div class="fg"><label>손님명</label><input type="text" id="s-cust" placeholder="손님1"></div>
+        </div>
+        <div class="fg2">
+          <div class="fg"><label>카드</label><input type="number" id="s-card" placeholder="0" oninput="calcTotal()"></div>
+          <div class="fg"><label>현금</label><input type="number" id="s-cash" placeholder="0" oninput="calcTotal()"></div>
+        </div>
+        <div class="fg2">
+          <div class="fg"><label>외상</label><input type="number" id="s-cred" placeholder="0" oninput="calcTotal()"></div>
+          <div class="fg"><label>합계</label><input type="number" id="s-total" placeholder="자동" readonly style="background:#f5f5f5;color:#888"></div>
+        </div>
+        <div class="fg"><label>메모</label><input type="text" id="s-memo" placeholder="메모"></div>
+        <button class="btn btn-navy" onclick="addSale()">매출 저장</button>
+      </div>
+      <div class="stl">매출 내역</div>
+      <div class="card" id="sales-list"></div>
+    </div>
+
+    <!-- ═══ 매입 ═══ -->
+    <div class="page" id="page-purchase">
+      <div class="card">
+        <div class="card-ttl">🎤 AI 음성 입력</div>
+        <div class="vbox">
+          <textarea id="purch-ta" rows="4" placeholder="말하거나 직접 입력하세요.
+예) 대선주류 주류 음료 백만원 카드
+    시장 안주 오십만원 현금"></textarea>
+          <div class="vbtns">
+            <button class="vb vb-mic" id="mic-purchase" onclick="toggleMic('purchase')">🎤 말하기</button>
+            <button class="vb vb-ai"  id="ai-purchase"  onclick="parseAI('purchase')">✨ AI 파싱</button>
+          </div>
+        </div>
+        <div id="purch-parsed"></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">직접 입력</div>
+        <div class="fg2">
+          <div class="fg"><label>날짜</label><input type="date" id="p-date"></div>
+          <div class="fg"><label>업체명</label><input type="text" id="p-vendor" placeholder="대선주류"></div>
+        </div>
+        <div class="fg2">
+          <div class="fg"><label>품목</label><input type="text" id="p-cat" placeholder="주류,음료"></div>
+          <div class="fg"><label>구분</label>
+            <select id="p-pay"><option value="card">카드</option><option value="cash">현금</option></select>
+          </div>
+        </div>
+        <div class="fg"><label>금액</label><input type="number" id="p-amt" placeholder="0"></div>
+        <div class="fg"><label>메모</label><input type="text" id="p-memo" placeholder="메모"></div>
+        <button class="btn btn-navy" onclick="addPurchase()">매입 저장</button>
+      </div>
+      <div class="stl">매입 내역</div>
+      <div class="card" id="purch-list"></div>
+    </div>
+
+    <!-- ═══ 외상 ═══ -->
+    <div class="page" id="page-credit">
+      <div class="card">
+        <div class="card-ttl">손님별 외상 현황</div>
+        <div id="cred-summary"></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">변제 입력</div>
+        <div class="fg"><label>손님</label><select id="pay-name"><option value="">-- 선택 --</option></select></div>
+        <div class="fg2">
+          <div class="fg"><label>날짜</label><input type="date" id="pay-date"></div>
+          <div class="fg"><label>금액</label><input type="number" id="pay-amt" placeholder="0"></div>
+        </div>
+        <div class="fg"><label>메모</label><input type="text" id="pay-memo" placeholder="메모"></div>
+        <button class="btn btn-green" onclick="addPayment()">변제 처리</button>
+      </div>
+      <div class="stl">외상 거래 내역</div>
+      <div class="card" id="cred-list"></div>
+    </div>
+
+    <!-- ═══ 분석 ═══ -->
+    <div class="page" id="page-analysis">
+      <div class="ptabs">
+        <button class="pt on" onclick="switchPeriod('daily',this)">일별</button>
+        <button class="pt" onclick="switchPeriod('weekly',this)">주간</button>
+        <button class="pt" onclick="switchPeriod('monthly',this)">월별</button>
+      </div>
+      <div class="card">
+        <div class="card-ttl" id="chart-title">최근 14일</div>
+        <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
+      </div>
+      <div class="stats3">
+        <div class="sc"><div class="sc-lbl" id="as1-l">기간 매출</div><div class="sc-val navy"  id="as1-v">-</div></div>
+        <div class="sc"><div class="sc-lbl" id="as2-l">기간 매입</div><div class="sc-val red"   id="as2-v">-</div></div>
+        <div class="sc"><div class="sc-lbl" id="as3-l">순이익</div>  <div class="sc-val green" id="as3-v">-</div></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <div id="tabbar">
+    <div class="tab on" data-p="home">    <div class="ti">📊</div><div class="tl">홈</div></div>
+    <div class="tab" data-p="sales">      <div class="ti">💰</div><div class="tl">매출</div></div>
+    <div class="tab" data-p="purchase">   <div class="ti">🛒</div><div class="tl">매입</div></div>
+    <div class="tab" data-p="credit">     <div class="ti">📋</div><div class="tl">외상</div></div>
+    <div class="tab" data-p="analysis">   <div class="ti">📈</div><div class="tl">분석</div></div>
+  </div>
+</div><!-- /app -->
+
+<script>
+// ── DATA ──────────────────────────────────
+const KSALES='choco2_sales', KPURCH='choco2_purch', KCRED='choco2_cred';
+const getSales  = () => JSON.parse(localStorage.getItem(KSALES)||'[]');
+const saveSales = d  => localStorage.setItem(KSALES, JSON.stringify(d));
+const getPurchs = () => JSON.parse(localStorage.getItem(KPURCH)||'[]');
+const savePurchs= d  => localStorage.setItem(KPURCH, JSON.stringify(d));
+const getCreds  = () => JSON.parse(localStorage.getItem(KCRED) ||'[]');
+const saveCreds = d  => localStorage.setItem(KCRED,  JSON.stringify(d));
+
+// ── UTILS ─────────────────────────────────
+const won = n  => Number(n||0).toLocaleString('ko-KR')+'원';
+const today= () => new Date().toISOString().slice(0,10);
+const uid  = () => Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const $    = s  => document.querySelector(s);
+const dl   = d  => (d||'').replace(/-/g,'.');
+const pad2 = n  => String(n).padStart(2,'0');
+
+// ── NAV ───────────────────────────────────
+let curPage='home', chartInst=null;
+document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.p)));
+
+function navigate(p) {
+  curPage=p;
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('on',el.dataset.p===p));
+  document.querySelectorAll('.page').forEach(el=>el.classList.toggle('on',el.id==='page-'+p));
+  if(p==='home')     renderHome();
+  if(p==='sales')    renderSales();
+  if(p==='purchase') renderPurchase();
+  if(p==='credit')   renderCredit();
+  if(p==='analysis') renderAnalysis('daily');
+}
+
+// ── HOME ──────────────────────────────────
+function renderHome() {
+  const sales=getSales(), purch=getPurchs(), creds=getCreds(), t=today();
+  const sTotal=sales.filter(s=>s.date===t).reduce((a,s)=>a+(s.total||0),0);
+  const pTotal=purch.filter(p=>p.date===t).reduce((a,p)=>a+(p.amount||0),0);
+  const cBal=creds.filter(c=>c.type==='debit').reduce((a,c)=>a+c.amount,0)
+            -creds.filter(c=>c.type==='credit').reduce((a,c)=>a+c.amount,0);
+  const profit=sTotal-pTotal;
+  $('#h-sales').textContent=won(sTotal);
+  $('#h-purch').textContent=won(pTotal);
+  $('#h-cred').textContent=won(cBal);
+  const pEl=$('#h-profit-val');
+  pEl.textContent=(profit>=0?'+':'')+won(profit);
+  pEl.className=profit>=0?'pos':'neg';
+  pEl.style.cssText='font-size:32px;font-weight:700;text-align:center;padding:8px 0';
+  $('#h-profit-sub').textContent=`매출 ${won(sTotal)} · 매입 ${won(pTotal)}`;
+
+  const all=[
+    ...sales.map(s=>({...s,_t:'sale'})),
+    ...purch.map(p=>({...p,_t:'purch'}))
+  ].sort((a,b)=>b.date.localeCompare(a.date)||(b.id||'').localeCompare(a.id||'')).slice(0,8);
+
+  $('#home-list').innerHTML=all.length===0
+    ?`<div class="empty">거래 내역이 없습니다</div>`
+    :all.map(x=>x._t==='sale'
+      ?`<div class="li">
+          <div class="li-body">
+            <div class="li-title">💰 ${x.customer||'손님'}</div>
+            <div class="li-sub">${dl(x.date)}${x.memo?' · '+x.memo:''}</div>
+            <div class="li-sub" style="margin-top:3px">
+              ${x.card?`<span class="badge b-card">카드 ${won(x.card)}</span>`:''}
+              ${x.cash?`<span class="badge b-cash">현금 ${won(x.cash)}</span>`:''}
+              ${x.credit?`<span class="badge b-credit">외상 ${won(x.credit)}</span>`:''}
+            </div>
+          </div>
+          <div class="li-right"><div class="li-main pos">+${won(x.total||0)}</div></div>
+        </div>`
+      :`<div class="li">
+          <div class="li-body">
+            <div class="li-title">🛒 ${x.vendor||''} <span style="font-weight:400;color:#888">${x.category||''}</span></div>
+            <div class="li-sub">${dl(x.date)} · <span class="badge ${x.payment==='card'?'b-card':'b-cash'}">${x.payment==='card'?'카드':'현금'}</span></div>
+          </div>
+          <div class="li-right"><div class="li-main neg">-${won(x.amount||0)}</div></div>
+        </div>`
+    ).join('');
+}
+
+// ── SALES ─────────────────────────────────
+function calcTotal() {
+  const v=(parseInt($('#s-card').value)||0)+(parseInt($('#s-cash').value)||0)+(parseInt($('#s-cred').value)||0);
+  $('#s-total').value=v||'';
+}
+
+function addSale(data) {
+  const d=data||{
+    date:$('#s-date').value, customer:$('#s-cust').value.trim()||'손님',
+    card:parseInt($('#s-card').value)||0, cash:parseInt($('#s-cash').value)||0,
+    credit:parseInt($('#s-cred').value)||0, memo:$('#s-memo').value.trim()
+  };
+  if(!d.date){alert('날짜를 입력하세요');return;}
+  d.total=(d.card||0)+(d.cash||0)+(d.credit||0);
+  if(!d.total){alert('금액을 입력하세요');return;}
+  d.id=uid();
+  const sales=getSales(); sales.push(d); saveSales(sales);
+  if((d.credit||0)>0){
+    const cr=getCreds();
+    cr.push({id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'매출 외상'+(d.memo?' - '+d.memo:'')});
+    saveCreds(cr);
+  }
+  if(!data)['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+  if(!data)$('#s-total').value='';
+  renderSales(); showV('✅ 매출 저장: '+won(d.total)); return true;
+}
+
+function delSale(id){if(!confirm('삭제할까요?'))return;saveSales(getSales().filter(s=>s.id!==id));renderSales();}
+
+function renderSales() {
+  if(!$('#s-date').value)$('#s-date').value=today();
+  const list=[...getSales()].sort((a,b)=>b.date.localeCompare(a.date));
+  $('#sales-list').innerHTML=list.length===0?`<div class="empty">매출 내역이 없습니다</div>`
+    :list.map(s=>`<div class="li">
+      <div class="li-body">
+        <div class="li-title">${dl(s.date)} <strong>${s.customer||'손님'}</strong></div>
+        <div class="li-sub" style="margin-top:4px">
+          ${s.card?`<span class="badge b-card">카드 ${won(s.card)}</span>`:''}
+          ${s.cash?`<span class="badge b-cash">현금 ${won(s.cash)}</span>`:''}
+          ${s.credit?`<span class="badge b-credit">외상 ${won(s.credit)}</span>`:''}
+        </div>
+        ${s.memo?`<div class="li-sub">${s.memo}</div>`:''}
+      </div>
+      <div class="li-right">
+        <div class="li-main pos">${won(s.total||0)}</div>
+        <button class="btn-sm bsm-red" style="margin-top:6px" onclick="delSale('${s.id}')">삭제</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── PURCHASE ──────────────────────────────
+function addPurchase(data) {
+  const d=data||{
+    date:$('#p-date').value, vendor:$('#p-vendor').value.trim(),
+    category:$('#p-cat').value.trim(), amount:parseInt($('#p-amt').value)||0,
+    payment:$('#p-pay').value, memo:$('#p-memo').value.trim()
+  };
+  if(!d.date){alert('날짜를 입력하세요');return;}
+  if(!d.amount){alert('금액을 입력하세요');return;}
+  d.id=uid();
+  const p=getPurchs(); p.push(d); savePurchs(p);
+  if(!data)['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+  renderPurchase(); showV('✅ 매입 저장: '+(d.vendor||'')+ ' '+won(d.amount)); return true;
+}
+
+function delPurchase(id){if(!confirm('삭제할까요?'))return;savePurchs(getPurchs().filter(p=>p.id!==id));renderPurchase();}
+
+function renderPurchase() {
+  if(!$('#p-date').value)$('#p-date').value=today();
+  const list=[...getPurchs()].sort((a,b)=>b.date.localeCompare(a.date));
+  $('#purch-list').innerHTML=list.length===0?`<div class="empty">매입 내역이 없습니다</div>`
+    :list.map(p=>`<div class="li">
+      <div class="li-body">
+        <div class="li-title">${dl(p.date)} <strong>${p.vendor||'미상'}</strong>${p.category?' <span style="color:#888;font-weight:400">'+p.category+'</span>':''}</div>
+        <div class="li-sub" style="margin-top:4px">
+          <span class="badge ${p.payment==='card'?'b-card':'b-cash'}">${p.payment==='card'?'카드':'현금'}</span>
+        </div>
+        ${p.memo?`<div class="li-sub">${p.memo}</div>`:''}
+      </div>
+      <div class="li-right">
+        <div class="li-main neg">-${won(p.amount||0)}</div>
+        <button class="btn-sm bsm-red" style="margin-top:6px" onclick="delPurchase('${p.id}')">삭제</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── CREDIT ────────────────────────────────
+function addPayment() {
+  const name=$('#pay-name').value, date=$('#pay-date').value,
+        amount=parseInt($('#pay-amt').value)||0, memo=$('#pay-memo').value.trim();
+  if(!name){alert('손님을 선택하세요');return;}
+  if(!date){alert('날짜를 입력하세요');return;}
+  if(!amount){alert('금액을 입력하세요');return;}
+  const cr=getCreds(); cr.push({id:uid(),name,date,amount,type:'credit',memo}); saveCreds(cr);
+  $('#pay-amt').value='';$('#pay-memo').value='';
+  renderCredit(); showV('✅ '+name+' 변제 '+won(amount));
+}
+
+function renderCredit() {
+  if(!$('#pay-date').value)$('#pay-date').value=today();
+  const cr=getCreds(), names=[...new Set(cr.map(c=>c.name))];
+  $('#pay-name').innerHTML='<option value="">-- 선택 --</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  $('#cred-summary').innerHTML=names.length===0?`<div class="empty">외상 데이터가 없습니다</div>`
+    :names.map(n=>{
+      const deb=cr.filter(c=>c.name===n&&c.type==='debit').reduce((a,c)=>a+c.amount,0);
+      const pd=cr.filter(c=>c.name===n&&c.type==='credit').reduce((a,c)=>a+c.amount,0);
+      const bal=deb-pd;
+      return `<div class="li">
+        <div class="li-body">
+          <div class="li-title">👤 ${n}</div>
+          <div class="li-sub">총 외상 ${won(deb)} · 변제 ${won(pd)}</div>
+        </div>
+        <div class="li-right">
+          <div class="li-main ${bal>0?'neg':'pos'}">${won(bal)}</div>
+          <div style="font-size:14px;color:#aaa">${bal===0?'완제':'미수'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  const sorted=[...cr].sort((a,b)=>b.date.localeCompare(a.date));
+  $('#cred-list').innerHTML=sorted.length===0?`<div class="empty">거래 내역이 없습니다</div>`
+    :sorted.map(c=>`<div class="li">
+      <div class="li-body">
+        <div class="li-title">${dl(c.date)} <strong>${c.name}</strong>
+          <span class="badge ${c.type==='debit'?'b-debit':'b-cash'}" style="margin-left:6px">${c.type==='debit'?'외상':'변제'}</span>
+        </div>
+        ${c.memo?`<div class="li-sub">${c.memo}</div>`:''}
+      </div>
+      <div class="li-right"><div class="li-main ${c.type==='debit'?'neg':'pos'}">${won(c.amount)}</div></div>
+    </div>`).join('');
+}
+
+// ── ANALYSIS ──────────────────────────────
+function switchPeriod(p,btn){
+  document.querySelectorAll('.pt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); renderAnalysis(p);
+}
+function renderAnalysis(p) {
+  if(chartInst){chartInst.destroy();chartInst=null;}
+  const s=getSales(),pu=getPurchs();
+  if(p==='daily')   renderDaily(s,pu);
+  else if(p==='weekly') renderWeekly(s,pu);
+  else              renderMonthly(s,pu);
+}
+function renderDaily(sales,purch) {
+  $('#chart-title').textContent='최근 14일';
+  const now=new Date();
+  const days=Array.from({length:14},(_,i)=>{const d=new Date(now);d.setDate(d.getDate()-(13-i));return d.toISOString().slice(0,10);});
+  const sd=days.map(d=>sales.filter(s=>s.date===d).reduce((a,s)=>a+(s.total||0),0));
+  const pd=days.map(d=>purch.filter(p=>p.date===d).reduce((a,p)=>a+(p.amount||0),0));
+  const ss=sd.reduce((a,v)=>a+v,0),ps=pd.reduce((a,v)=>a+v,0);
+  setStats('14일 매출',won(ss),'14일 매입',won(ps),'순이익',won(ss-ps),ss>=ps);
+  drawChart(days.map(d=>d.slice(5)),sd,pd);
+}
+function renderWeekly(sales,purch) {
+  $('#chart-title').textContent='주간 비교';
+  const now=new Date(),dow=now.getDay();
+  const wk=(off,arr,key)=>Array.from({length:7},(_,i)=>{const d=new Date(now);d.setDate(d.getDate()-dow+i+off*7);const ds=d.toISOString().slice(0,10);return arr.filter(x=>x.date===ds).reduce((a,x)=>a+(x[key]||0),0);});
+  const sT=wk(0,sales,'total'),pT=wk(0,purch,'amount');
+  const sL=wk(-1,sales,'total');
+  const ss=sT.reduce((a,v)=>a+v,0),sl=sL.reduce((a,v)=>a+v,0);
+  setStats('이번 주 매출',won(ss),'지난 주 매출',won(sl),'증감',(ss-sl>=0?'+':'')+won(ss-sl),ss>=sl);
+  drawChart(['일','월','화','수','목','금','토'],sT,pT);
+}
+function renderMonthly(sales,purch) {
+  $('#chart-title').textContent='월별 (6개월)';
+  const now=new Date();
+  const mos=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-(5-i),1);return`${d.getFullYear()}-${pad2(d.getMonth()+1)}`;});
+  const sd=mos.map(m=>sales.filter(s=>s.date.startsWith(m)).reduce((a,s)=>a+(s.total||0),0));
+  const pd=mos.map(m=>purch.filter(p=>p.date.startsWith(m)).reduce((a,p)=>a+(p.amount||0),0));
+  const ss=sd.reduce((a,v)=>a+v,0),ps=pd.reduce((a,v)=>a+v,0);
+  setStats('6개월 매출',won(ss),'6개월 매입',won(ps),'순이익',won(ss-ps),ss>=ps);
+  drawChart(mos.map(m=>m.slice(5)+'월'),sd,pd);
+}
+function setStats(l1,v1,l2,v2,l3,v3,pos) {
+  $('#as1-l').textContent=l1;$('#as1-v').textContent=v1;
+  $('#as2-l').textContent=l2;$('#as2-v').textContent=v2;
+  $('#as3-l').textContent=l3;$('#as3-v').textContent=v3;
+  $('#as3-v').className='sc-val '+(pos?'green':'red');
+}
+function drawChart(labels,sData,pData) {
+  chartInst=new Chart($('#main-chart').getContext('2d'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'매출',data:sData,backgroundColor:'rgba(251,191,36,.8)',borderRadius:4},
+      {label:'매입',data:pData,backgroundColor:'rgba(248,113,113,.6)',borderRadius:4}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{family:'Noto Sans KR',size:15,weight:'700'},color:'#9ca3af'}}},
+      scales:{
+        x:{ticks:{font:{family:'Noto Sans KR',size:13},color:'#6b7280'},grid:{color:'#1f2937'}},
+        y:{ticks:{font:{family:'Noto Sans KR',size:13},color:'#6b7280',callback:v=>v>=10000?(v/10000)+'만':v},grid:{color:'#1f2937'}}
+      }
+    }
+  });
+}
+
+// ── AI PARSING ────────────────────────────
+let _parsed={sales:[],purchase:[]};
+
+async function parseAI(type) {
+  const taId=type==='sales'?'sales-ta':'purch-ta';
+  const text=$(('#'+taId)).value.trim();
+  if(!text){alert('텍스트를 입력하거나 말해주세요');return;}
+
+  const btn=$('#ai-'+type);
+  btn.innerHTML='<span class="spin"></span> 파싱 중...';
+  btn.disabled=true;
+
+  const t=today();
+  const prompt=type==='sales'
+    ?`다음 텍스트에서 초코렛 매출 정보를 추출하여 JSON 배열로만 반환하세요.
+오늘 날짜: ${t}
+
+필드: date(YYYY-MM-DD, 없으면 오늘), customer(손님명, 없으면 "손님"), card(카드금액 숫자), cash(현금금액 숫자), credit(외상금액 숫자), total(합계=card+cash+credit), memo
+한국어 숫자(백만원=1000000, 오십만=500000 등) 변환 필수.
+설명 없이 JSON 배열만 반환:
+${text}`
+    :`다음 텍스트에서 초코렛 매입 정보를 추출하여 JSON 배열로만 반환하세요.
+오늘 날짜: ${t}
+
+필드: date(YYYY-MM-DD, 없으면 오늘), vendor(업체명), category(품목), amount(금액 숫자), payment("card" 또는 "cash"), memo
+한국어 숫자(백만원=1000000, 오십만=500000 등) 변환 필수.
+설명 없이 JSON 배열만 반환:
+${text}`;
+
+  try {
+    const res=await fetch('/chocolate/api/parse',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt})
+    });
+    if(!res.ok){const e=await res.json();throw new Error(e.detail||'HTTP '+res.status);}
+    const data=await res.json();
+    const raw=data.text.trim();
+    const match=raw.match(/\[[\s\S]*\]/);
+    if(!match)throw new Error('JSON을 찾을 수 없습니다');
+    const items=JSON.parse(match[0]);
+    _parsed[type]=items;
+    showParsed(type,items);
+    $(('#'+taId)).value='';
+  } catch(e) {
+    alert('AI 파싱 오류: '+e.message);
+  } finally {
+    btn.innerHTML='✨ AI 파싱';
+    btn.disabled=false;
+  }
+}
+
+function showParsed(type,items) {
+  const elId=type==='sales'?'sales-parsed':'purch-parsed';
+  if(!items||items.length===0){$('#'+elId).innerHTML=`<div style="color:#c0392b;padding:8px">파싱된 데이터가 없습니다</div>`;return;}
+  const html=items.map((x,i)=>type==='sales'
+    ?`<div class="pi" id="pi-${type}-${i}">
+        <div class="pi-row"><span class="pi-lbl">날짜</span><span class="pi-val">${dl(x.date)}</span></div>
+        <div class="pi-row"><span class="pi-lbl">손님</span><span class="pi-val">${x.customer||'손님'}</span></div>
+        <div class="pi-row"><span class="pi-lbl">합계</span><span class="pi-val pos">${won(x.total||0)}</span></div>
+        ${x.card?`<div class="pi-row"><span class="pi-lbl">카드</span><span class="pi-val">${won(x.card)}</span></div>`:''}
+        ${x.cash?`<div class="pi-row"><span class="pi-lbl">현금</span><span class="pi-val">${won(x.cash)}</span></div>`:''}
+        ${x.credit?`<div class="pi-row"><span class="pi-lbl">외상</span><span class="pi-val neg">${won(x.credit)}</span></div>`:''}
+        ${x.memo?`<div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val">${x.memo}</span></div>`:''}
+        <button class="btn btn-green" style="margin-top:8px" onclick="saveParsed('sales',${i})">✓ 저장</button>
+      </div>`
+    :`<div class="pi" id="pi-${type}-${i}">
+        <div class="pi-row"><span class="pi-lbl">날짜</span><span class="pi-val">${dl(x.date)}</span></div>
+        <div class="pi-row"><span class="pi-lbl">업체</span><span class="pi-val">${x.vendor||'미상'}</span></div>
+        <div class="pi-row"><span class="pi-lbl">품목</span><span class="pi-val">${x.category||''}</span></div>
+        <div class="pi-row"><span class="pi-lbl">금액</span><span class="pi-val neg">${won(x.amount||0)}</span></div>
+        <div class="pi-row"><span class="pi-lbl">구분</span><span class="pi-val">${x.payment==='cash'?'현금':'카드'}</span></div>
+        ${x.memo?`<div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val">${x.memo}</span></div>`:''}
+        <button class="btn btn-green" style="margin-top:8px" onclick="saveParsed('purchase',${i})">✓ 저장</button>
+      </div>`
+  ).join('');
+  $('#'+elId).innerHTML=`<div style="font-size:15px;font-weight:700;color:#1565c0;margin-bottom:8px">✨ ${items.length}건 파싱 완료</div>`+html;
+}
+
+function saveParsed(type,idx) {
+  const item=_parsed[type]?.[idx];
+  if(!item)return;
+  const ok=type==='sales'?addSale(item):addPurchase(item);
+  if(ok){
+    const el=$(`#pi-${type}-${idx}`);
+    if(el){el.style.opacity='.4';const btn=el.querySelector('button');if(btn){btn.textContent='✓ 저장됨';btn.disabled=true;}}
+  }
+}
+
+// ── VOICE STT ─────────────────────────────
+let recognition=null,isListening=false;
+
+function toggleMic(type) {
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('Chrome 또는 Edge에서 사용해 주세요');return;}
+  const btn=$('#mic-'+type);
+  const ta=$(type==='sales'?'#sales-ta':'#purch-ta');
+  if(isListening){recognition.stop();return;}
+  recognition=new SR();
+  recognition.lang='ko-KR';recognition.interimResults=true;recognition.continuous=false;
+  recognition.onstart=()=>{isListening=true;btn.classList.add('on','pulsing');btn.textContent='🔴 듣는 중...';showV('🎤 말씀하세요...');};
+  recognition.onresult=e=>{
+    let fin='',inter='';
+    for(const r of e.results)r.isFinal?fin+=r[0].transcript:inter+=r[0].transcript;
+    const txt=fin||inter;
+    ta.value=(ta.value+(ta.value?'\n':'')+txt).trim();
+    showV('🎤 '+txt);
+  };
+  recognition.onerror=e=>{showV('⚠️ '+e.error);stopMic(type);};
+  recognition.onend=()=>stopMic(type);
+  recognition.start();
+}
+function stopMic(type){
+  isListening=false;
+  const btn=$('#mic-'+type);
+  if(btn){btn.classList.remove('on','pulsing');btn.textContent='🎤 말하기';}
+}
+
+// ── VOICE STATUS ──────────────────────────
+function showV(msg){console.log(msg);}
+
+// ── INIT ──────────────────────────────────
+$('#today-lbl').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+navigate('home');
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  chocolate-api:
+    build: ./backend
+    container_name: chocolate-api
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      - "8000"
+    networks:
+      - portfolio-net
+
+networks:
+  portfolio-net:
+    external: true

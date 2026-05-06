@@ -30,6 +30,7 @@ staticfiles/
 # 개발 문서 (README.md 제외)
 !README.md
 !.gitignore
+!backend/requirements.txt
 
 # Claude 설정
 .claude/
