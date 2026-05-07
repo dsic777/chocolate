@@ -156,6 +156,9 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 <body>
 
 <div id="app">
+  <div id="splash" style="position:absolute;inset:0;background:#000;z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column">
+    <img src="/chocolate/chocolate_kyeonghee_512_v4.png" style="width:240px;height:240px;border-radius:48px">
+  </div>
   <div id="hdr">
     <h1>🍫 초콜릿 운영관리</h1>
     <div id="hdr-sub">
@@ -1115,6 +1118,12 @@ document.getElementById('page-analysis').addEventListener('touchend',e=>{
 // ── INIT ──────────────────────────────────
 updateDateLabel();
 navigate('home');
+setTimeout(()=>{
+  const sp=$('#splash');
+  sp.style.transition='opacity .5s ease';
+  sp.style.opacity='0';
+  setTimeout(()=>sp.remove(),500);
+},1000);
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/chocolate/sw.js');}
 </script>
 </body>
