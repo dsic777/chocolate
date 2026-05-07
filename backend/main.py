@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
-import anthropic, os, psycopg2, psycopg2.extras
+import anthropic, os, psycopg2, psycopg2.extras, uuid
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -56,9 +56,11 @@ def init_db():
                     date DATE NOT NULL,
                     amount INTEGER DEFAULT 0,
                     type VARCHAR(10),
-                    memo TEXT
+                    memo TEXT,
+                    sale_id VARCHAR(50)
                 )
             """)
+            cur.execute("ALTER TABLE choco_credits ADD COLUMN IF NOT EXISTS sale_id VARCHAR(50)")
         conn.commit()
 
 
@@ -88,7 +90,7 @@ async def parse(req: ParseRequest):
 class Sale(BaseModel):
     id: str
     date: str
-    customer: Optional[str] = "손님"
+    customer: Optional[str] = "고객"
     card: Optional[int] = 0
     cash: Optional[int] = 0
     credit: Optional[int] = 0
@@ -121,6 +123,24 @@ def update_sale(id: str, s: Sale):
                 "UPDATE choco_sales SET date=%s,customer=%s,card=%s,cash=%s,credit=%s,total=%s,memo=%s WHERE id=%s",
                 (s.date, s.customer, s.card, s.cash, s.credit, s.total, s.memo, id)
             )
+            # 연결된 외상 항목 동기화
+            cur.execute("SELECT id FROM choco_credits WHERE sale_id=%s AND type='debit'", (id,))
+            existing = cur.fetchone()
+            new_credit = s.credit or 0
+            if existing:
+                if new_credit > 0:
+                    cur.execute(
+                        "UPDATE choco_credits SET name=%s, date=%s, amount=%s WHERE sale_id=%s AND type='debit'",
+                        (s.customer, s.date, new_credit, id)
+                    )
+                else:
+                    cur.execute("DELETE FROM choco_credits WHERE sale_id=%s AND type='debit'", (id,))
+            elif new_credit > 0:
+                new_id = uuid.uuid4().hex[:15]
+                cur.execute(
+                    "INSERT INTO choco_credits (id,name,date,amount,type,memo,sale_id) VALUES (%s,%s,%s,%s,'debit','매출 외상',%s)",
+                    (new_id, s.customer, s.date, new_credit, id)
+                )
         conn.commit()
     return {"ok": True}
 
@@ -129,6 +149,7 @@ def del_sale(id: str):
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute("DELETE FROM choco_sales WHERE id=%s", (id,))
+            cur.execute("DELETE FROM choco_credits WHERE sale_id=%s AND type='debit'", (id,))
         conn.commit()
     return {"ok": True}
 
@@ -191,6 +212,7 @@ class Credit(BaseModel):
     amount: int
     type: str
     memo: Optional[str] = ""
+    sale_id: Optional[str] = None
 
 @app.get("/api/credits")
 def get_credits():
@@ -204,8 +226,8 @@ def add_credit(c: Credit):
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO choco_credits (id,name,date,amount,type,memo) VALUES (%s,%s,%s,%s,%s,%s)",
-                (c.id, c.name, c.date, c.amount, c.type, c.memo)
+                "INSERT INTO choco_credits (id,name,date,amount,type,memo,sale_id) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                (c.id, c.name, c.date, c.amount, c.type, c.memo, c.sale_id)
             )
         conn.commit()
     return {"ok": True}

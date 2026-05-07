@@ -458,6 +458,19 @@ async function addSale(data) {
   try {
     if(_saleEditId){
       d.id=_saleEditId;
+      // 외상 변경 시 잔액 초과 여부 확인
+      if((d.credit||0) !== _saleOrigCredit) {
+        const creds=await getCreds();
+        const nm=_saleOrigCustomer||d.customer;
+        const totDeb=creds.filter(c=>c.name===nm&&c.type==='debit').reduce((a,c)=>a+c.amount,0);
+        const totPaid=creds.filter(c=>c.name===nm&&c.type==='credit').reduce((a,c)=>a+c.amount,0);
+        const newBal=totDeb - _saleOrigCredit + (d.credit||0) - totPaid;
+        if(newBal<0){
+          const over=Math.abs(newBal).toLocaleString('ko-KR');
+          const ok=await showConfirm(`변제액이 ${over}원 초과됩니다.\n그래도 수정하시겠습니까?`,'⚠️','수정','mb-ok');
+          if(!ok)return;
+        }
+      }
       await fetch(`${API}/sales/${_saleEditId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
       exitSaleEditMode();
       await renderSales(); showV('✅ 매출 수정 완료');
@@ -465,7 +478,7 @@ async function addSale(data) {
       d.id=uid();
       await apiPost('/sales', d);
       if((d.credit||0)>0){
-        await apiPost('/credits',{id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'매출 외상'+(d.memo?' - '+d.memo:'')});
+        await apiPost('/credits',{id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'매출 외상',sale_id:d.id});
       }
       ['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
       $('#s-total').value='';
@@ -810,7 +823,7 @@ async function saveParsed(type,idx) {
       item.total=(item.card||0)+(item.cash||0)+(item.credit||0);
       await apiPost('/sales',item);
       if((item.credit||0)>0)
-        await apiPost('/credits',{id:uid(),name:item.customer,date:item.date,amount:item.credit,type:'debit',memo:'매출 외상'+(item.memo?' - '+item.memo:'')});
+        await apiPost('/credits',{id:uid(),name:item.customer,date:item.date,amount:item.credit,type:'debit',memo:'매출 외상',sale_id:item.id});
       await renderSales();
     } else {
       await apiPost('/purchases',item);
@@ -831,7 +844,7 @@ async function editParsed(type,idx) {
       item.total=(item.card||0)+(item.cash||0)+(item.credit||0);
       await apiPost('/sales',item);
       if((item.credit||0)>0)
-        await apiPost('/credits',{id:uid(),name:item.customer,date:item.date,amount:item.credit,type:'debit',memo:'매출 외상'+(item.memo?' - '+item.memo:'')});
+        await apiPost('/credits',{id:uid(),name:item.customer,date:item.date,amount:item.credit,type:'debit',memo:'매출 외상',sale_id:item.id});
       await renderSales();
     } else {
       await apiPost('/purchases',item);
@@ -891,12 +904,12 @@ function showAlert(msg,icon='ℹ️'){
     $('#msg-overlay').style.display='flex';
   });
 }
-function showConfirm(msg,icon='🗑️'){
+function showConfirm(msg,icon='🗑️',okLabel='삭제',okClass='mb-del'){
   return new Promise(r=>{
     _msgResolve=r;
     $('#msg-icon').textContent=icon;
     $('#msg-text').textContent=msg;
-    $('#msg-btns').innerHTML=`<button class="mb mb-cancel" onclick="_closeMsg(false)">취소</button><button class="mb mb-del" onclick="_closeMsg(true)">삭제</button>`;
+    $('#msg-btns').innerHTML=`<button class="mb mb-cancel" onclick="_closeMsg(false)">취소</button><button class="mb ${okClass}" onclick="_closeMsg(true)">${okLabel}</button>`;
     $('#msg-overlay').style.display='flex';
   });
 }
@@ -928,10 +941,12 @@ function exitPurchEditMode(){
 }
 
 // ── SALES EDIT MODE ───────────────────────
-let _saleEditId=null;
+let _saleEditId=null, _saleOrigCredit=0, _saleOrigCustomer='';
 
 function enterSaleEditMode(item){
   _saleEditId=item.id;
+  _saleOrigCredit=item.credit||0;
+  _saleOrigCustomer=item.customer||'';
   $('#s-date').value=item.date||'';
   $('#s-cust').value=item.customer||'';
   $('#s-card').value=item.card?Number(item.card).toLocaleString('ko-KR'):'';
