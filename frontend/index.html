@@ -139,6 +139,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .mb-cancel{background:#374151;color:#9ca3af}
 .mb-del{background:#7f1d1d;color:#fca5a5}
 @keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes splashIn{0%{opacity:0}25%{opacity:1}75%{opacity:1}100%{opacity:0}}
+#splash{position:absolute;inset:0;background:#000;z-index:999;display:flex;align-items:center;justify-content:center;animation:splashIn 3s ease forwards;pointer-events:none}
 
 
 /* ── Calendar Modal ── */
@@ -156,6 +158,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 <body>
 
 <div id="app">
+  <div id="splash"><img src="/chocolate/chocolate_kyeonghee_512_v4.png" style="width:260px;height:260px;border-radius:52px"></div>
   <div id="hdr">
     <h1>🍫 초콜릿 운영관리</h1>
     <div id="hdr-sub">
@@ -1115,6 +1118,7 @@ document.getElementById('page-analysis').addEventListener('touchend',e=>{
 // ── INIT ──────────────────────────────────
 updateDateLabel();
 navigate('home');
+setTimeout(()=>{const sp=$('#splash');if(sp)sp.remove();},3100);
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/chocolate/sw.js');}
 </script>
 </body>
