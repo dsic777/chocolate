@@ -194,7 +194,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         </div>
         <div id="sales-parsed"></div>
       </div>
-      <div class="card" id="s-form-card">
+      <div class="card" id="s-form-card" style="display:none">
         <div id="s-edit-banner" style="display:none;background:#1a3a2a;border:1px solid #166534;border-radius:8px;padding:10px 14px;margin-bottom:12px;align-items:center;justify-content:space-between">
           <span style="color:#4ade80;font-size:17px;font-weight:700">🔧 매출 수정 중</span>
           <button onclick="exitSaleEditMode()" style="background:none;border:1px solid #374151;color:#9ca3af;padding:6px 12px;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
@@ -234,7 +234,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         </div>
         <div id="purch-parsed"></div>
       </div>
-      <div class="card" id="p-form-card">
+      <div class="card" id="p-form-card" style="display:none">
         <div id="p-edit-banner" style="display:none;background:#1a3a2a;border:1px solid #166534;border-radius:8px;padding:10px 14px;margin-bottom:12px;align-items:center;justify-content:space-between">
           <span style="color:#4ade80;font-size:17px;font-weight:700">🔧 매입 수정 중</span>
           <button onclick="exitPurchEditMode()" style="background:none;border:1px solid #374151;color:#9ca3af;padding:6px 12px;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
@@ -949,6 +949,7 @@ function enterPurchEditMode(item){
   $('#p-pay').value=item.payment||'cash';
   $('#p-amt').value=item.amount?Number(item.amount).toLocaleString('ko-KR'):'';
   $('#p-memo').value=item.memo||'';
+  $('#p-form-card').style.display='block';
   $('#p-edit-banner').style.display='flex';
   $('#p-form-ttl').textContent='매입 수정';
   $('#p-save-btn').textContent='매입 수정 저장';
@@ -958,6 +959,7 @@ function enterPurchEditMode(item){
 function exitPurchEditMode(){
   _purchEditId=null;
   ['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+  $('#p-form-card').style.display='none';
   $('#p-edit-banner').style.display='none';
   $('#p-form-ttl').textContent='직접 입력';
   $('#p-save-btn').textContent='매입 저장';
@@ -978,6 +980,7 @@ function enterSaleEditMode(item){
   $('#s-cred').value=item.credit?Number(item.credit).toLocaleString('ko-KR'):'';
   $('#s-memo').value=item.memo||'';
   calcTotal();
+  $('#s-form-card').style.display='block';
   $('#s-edit-banner').style.display='flex';
   $('#s-form-ttl').textContent='매출 수정';
   $('#s-save-btn').textContent='매출 수정 저장';
@@ -988,6 +991,7 @@ function exitSaleEditMode(){
   _saleEditId=null;
   ['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
   $('#s-total').value='';
+  $('#s-form-card').style.display='none';
   $('#s-edit-banner').style.display='none';
   $('#s-form-ttl').textContent='직접 입력';
   $('#s-save-btn').textContent='매출 저장';
