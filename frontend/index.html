@@ -39,14 +39,16 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .card{background:#111827;border:1px solid #1f2937;border-radius:6px;padding:14px;margin-bottom:12px}
 .card-ttl{font-size:18px;font-weight:900;color:#fff;margin-bottom:12px}
 
-/* ── Stats ── */
-.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.sc{background:#111827;border:1px solid #1f2937;border-radius:6px;padding:12px 8px;text-align:center}
-.sc-lbl{font-size:16px;font-weight:700;color:#9ca3af;margin-bottom:5px}
-.sc-val{font-size:20px;font-weight:900;color:#fff}
-.sc-val.amber{color:#fbbf24}
-.sc-val.red{color:#f87171}
-.sc-val.green{color:#4ade80}
+/* ── Stats table ── */
+.stat-table{background:#111827;border:1px solid #1f2937;border-radius:8px;margin-bottom:12px;overflow:hidden}
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:13px 16px}
+.stat-row+.stat-row{border-top:1px solid #1f2937}
+.stat-lbl{font-size:17px;font-weight:700;color:#9ca3af}
+.stat-val{font-size:21px;font-weight:900;color:#fff}
+.stat-val.amber{color:#fbbf24}
+.stat-val.red{color:#f87171}
+.stat-val.green{color:#4ade80}
+.stat-val.blue{color:#60a5fa}
 
 /* ── Voice box ── */
 .vbox{background:#0a0a0a;border:1px solid #374151;border-radius:6px;padding:12px;margin-bottom:10px}
@@ -165,10 +167,10 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 
     <!-- ═══ HOME ═══ -->
     <div class="page on" id="page-home">
-      <div class="stats3">
-        <div class="sc"><div class="sc-lbl">오늘 매출</div><div class="sc-val amber" id="h-sales">-</div></div>
-        <div class="sc"><div class="sc-lbl">오늘 매입</div><div class="sc-val red" id="h-purch">-</div></div>
-        <div class="sc"><div class="sc-lbl">외상 잔액</div><div class="sc-val navy" id="h-cred">-</div></div>
+      <div class="stat-table">
+        <div class="stat-row"><span class="stat-lbl">오늘 매출</span><span class="stat-val amber" id="h-sales">-</span></div>
+        <div class="stat-row"><span class="stat-lbl">오늘 매입</span><span class="stat-val red"   id="h-purch">-</span></div>
+        <div class="stat-row"><span class="stat-lbl">외상 잔액</span><span class="stat-val blue"  id="h-cred">-</span></div>
       </div>
       <div class="card">
         <div class="card-ttl">오늘 손익 (매출 - 매입)</div>
@@ -305,10 +307,10 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div class="card-ttl" id="chart-title">최근 14일</div>
         <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
       </div>
-      <div class="stats3">
-        <div class="sc"><div class="sc-lbl" id="as1-l">기간 매출</div><div class="sc-val navy"  id="as1-v">-</div></div>
-        <div class="sc"><div class="sc-lbl" id="as2-l">기간 매입</div><div class="sc-val red"   id="as2-v">-</div></div>
-        <div class="sc"><div class="sc-lbl" id="as3-l">순이익</div>  <div class="sc-val green" id="as3-v">-</div></div>
+      <div class="stat-table">
+        <div class="stat-row"><span class="stat-lbl" id="as1-l">기간 매출</span><span class="stat-val amber" id="as1-v">-</span></div>
+        <div class="stat-row"><span class="stat-lbl" id="as2-l">기간 매입</span><span class="stat-val red"   id="as2-v">-</span></div>
+        <div class="stat-row"><span class="stat-lbl" id="as3-l">순이익</span>  <span class="stat-val green" id="as3-v">-</span></div>
       </div>
     </div>
 
@@ -738,7 +740,7 @@ function setStats(l1,v1,l2,v2,l3,v3,pos) {
   $('#as1-l').textContent=l1;$('#as1-v').textContent=v1;
   $('#as2-l').textContent=l2;$('#as2-v').textContent=v2;
   $('#as3-l').textContent=l3;$('#as3-v').textContent=v3;
-  $('#as3-v').className='sc-val '+(pos?'green':'red');
+  $('#as3-v').className='stat-val '+(pos?'green':'red');
 }
 function drawChart(labels,sData,pData) {
   chartInst=new Chart($('#main-chart').getContext('2d'),{
