@@ -126,6 +126,18 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .pulsing{animation:pulse 1s infinite}
 
+/* ── Alert / Confirm Modal ── */
+#msg-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:400;align-items:center;justify-content:center}
+#msg-box{background:#1f2937;border:1px solid #374151;border-radius:18px;padding:24px 20px 18px;width:268px;text-align:center;animation:popIn .22s cubic-bezier(.34,1.56,.64,1)}
+#msg-icon{font-size:30px;margin-bottom:8px}
+#msg-text{font-size:17px;font-weight:700;color:#f3f4f6;margin-bottom:18px;line-height:1.55;word-break:keep-all}
+#msg-btns{display:flex;gap:8px}
+.mb{flex:1;padding:12px 0;border:none;border-radius:10px;font-size:17px;font-weight:900;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
+.mb-ok{background:#fbbf24;color:#000}
+.mb-cancel{background:#374151;color:#9ca3af}
+.mb-del{background:#7f1d1d;color:#fca5a5}
+@keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+
 /* ── Edit Modal ── */
 .edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:flex-end;justify-content:center}
 .edit-box{background:#111827;border:1px solid #374151;border-radius:14px 14px 0 0;padding:20px;width:100%;max-width:390px;max-height:90svh;overflow-y:auto}
@@ -303,6 +315,15 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
   </div>
 </div><!-- /app -->
 
+<!-- ═══ ALERT / CONFIRM MODAL ═══ -->
+<div id="msg-overlay">
+  <div id="msg-box">
+    <div id="msg-icon"></div>
+    <div id="msg-text"></div>
+    <div id="msg-btns"></div>
+  </div>
+</div>
+
 <!-- ═══ PURCHASE EDIT MODAL ═══ -->
 <div id="purch-edit-modal" class="edit-modal" onclick="if(event.target===this)closePurchEdit()">
   <div class="edit-box">
@@ -476,9 +497,9 @@ async function addSale(data) {
     card:parseNum($('#s-card').value), cash:parseNum($('#s-cash').value),
     credit:parseNum($('#s-cred').value), memo:$('#s-memo').value.trim()
   };
-  if(!d.date){alert('날짜를 입력하세요');return;}
+  if(!d.date){await showAlert('날짜를 입력하세요','📅');return;}
   d.total=(d.card||0)+(d.cash||0)+(d.credit||0);
-  if(!d.total){alert('금액을 입력하세요');return;}
+  if(!d.total){await showAlert('금액을 입력하세요','💰');return;}
   d.id=uid();
   try {
     await apiPost('/sales', d);
@@ -488,10 +509,10 @@ async function addSale(data) {
     ['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
     $('#s-total').value='';
     await renderSales(); showV('✅ 매출 저장: '+won(d.total)); return true;
-  } catch(e) { alert('저장 실패: '+e.message); }
+  } catch(e) { await showAlert('저장 실패: '+e.message,'❌'); }
 }
 
-async function delSale(id){if(!confirm('삭제할까요?'))return;await apiDel('/sales/'+id);renderSales();}
+async function delSale(id){if(!await showConfirm('매출을 삭제할까요?'))return;await apiDel('/sales/'+id);renderSales();}
 
 const _saleRows={};
 async function renderSales() {
@@ -526,17 +547,17 @@ async function addPurchase(data) {
     category:$('#p-cat').value.trim(), amount:parseNum($('#p-amt').value),
     payment:$('#p-pay').value, memo:$('#p-memo').value.trim()
   };
-  if(!d.date){alert('날짜를 입력하세요');return;}
-  if(!d.amount){alert('금액을 입력하세요');return;}
+  if(!d.date){await showAlert('날짜를 입력하세요','📅');return;}
+  if(!d.amount){await showAlert('금액을 입력하세요','💰');return;}
   d.id=uid();
   try {
     await apiPost('/purchases', d);
     ['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
     await renderPurchase(); showV('✅ 매입 저장: '+(d.vendor||'')+' '+won(d.amount)); return true;
-  } catch(e) { alert('저장 실패: '+e.message); }
+  } catch(e) { await showAlert('저장 실패: '+e.message,'❌'); }
 }
 
-async function delPurchase(id){if(!confirm('삭제할까요?'))return;await apiDel('/purchases/'+id);renderPurchase();}
+async function delPurchase(id){if(!await showConfirm('매입을 삭제할까요?'))return;await apiDel('/purchases/'+id);renderPurchase();}
 
 const _purchRows={};
 async function renderPurchase() {
@@ -590,16 +611,16 @@ async function addPayment() {
   const name=$('#pay-name').value.trim(), date=$('#pay-date').value,
         card=parseNum($('#pay-card').value), cash=parseNum($('#pay-cash').value),
         amount=card+cash;
-  if(!name){alert('손님명을 입력하세요');return;}
-  if(!date){alert('날짜를 입력하세요');return;}
-  if(!amount){alert('금액을 입력하세요');return;}
+  if(!name){await showAlert('손님명을 입력하세요','👤');return;}
+  if(!date){await showAlert('날짜를 입력하세요','📅');return;}
+  if(!amount){await showAlert('금액을 입력하세요','💰');return;}
   const bal=parseNum($('#pay-cred-bal').value);
   if(bal>0&&amount>bal)return;
   try {
     await apiPost('/credits',{id:uid(),name,date,amount,type:'credit',memo:''});
     ['pay-card','pay-cash','pay-total','pay-cred-bal'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
     await renderCredit(); showV('✅ '+name+' 변제 '+won(amount));
-  } catch(e) { alert('저장 실패: '+e.message); }
+  } catch(e) { await showAlert('저장 실패: '+e.message,'❌'); }
 }
 
 async function renderCredit() {
@@ -730,7 +751,7 @@ let _parsed={sales:[],purchase:[]};
 async function parseAI(type) {
   const taId=type==='sales'?'sales-ta':'purch-ta';
   const text=$(('#'+taId)).value.trim();
-  if(!text){alert('텍스트를 입력하거나 말해주세요');return;}
+  if(!text){await showAlert('텍스트를 입력하거나 말해주세요','🎤');return;}
 
   const btn=$('#ai-'+type);
   btn.innerHTML='<span class="spin"></span> 파싱 중...';
@@ -769,7 +790,7 @@ ${text}`;
     showParsed(type,items);
     $(('#'+taId)).value='';
   } catch(e) {
-    alert('AI 파싱 오류: '+e.message);
+    await showAlert('AI 파싱 오류: '+e.message,'⚠️');
   } finally {
     btn.innerHTML='✨ AI 파싱';
     btn.disabled=false;
@@ -847,7 +868,7 @@ let recognition=null,isListening=false;
 
 function toggleMic(type) {
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert('Chrome 또는 Edge에서 사용해 주세요');return;}
+  if(!SR){showAlert('Chrome 또는 Edge에서 사용해 주세요','🌐');return;}
   const btn=$('#mic-'+type);
   const ta=$(type==='sales'?'#sales-ta':'#purch-ta');
   if(isListening){recognition.stop();return;}
@@ -875,6 +896,29 @@ function stopMic(type){
 
 // ── VOICE STATUS ──────────────────────────
 function showV(msg){console.log(msg);}
+
+// ── CUSTOM MODAL ──────────────────────────
+let _msgResolve=null;
+function _closeMsg(v){$('#msg-overlay').style.display='none';if(_msgResolve)_msgResolve(v);}
+
+function showAlert(msg,icon='ℹ️'){
+  return new Promise(r=>{
+    _msgResolve=r;
+    $('#msg-icon').textContent=icon;
+    $('#msg-text').textContent=msg;
+    $('#msg-btns').innerHTML=`<button class="mb mb-ok" onclick="_closeMsg(true)">확인</button>`;
+    $('#msg-overlay').style.display='flex';
+  });
+}
+function showConfirm(msg,icon='🗑️'){
+  return new Promise(r=>{
+    _msgResolve=r;
+    $('#msg-icon').textContent=icon;
+    $('#msg-text').textContent=msg;
+    $('#msg-btns').innerHTML=`<button class="mb mb-cancel" onclick="_closeMsg(false)">취소</button><button class="mb mb-del" onclick="_closeMsg(true)">삭제</button>`;
+    $('#msg-overlay').style.display='flex';
+  });
+}
 
 // ── PURCHASE EDIT MODAL ───────────────────
 let _purchOrig=null, _purchEditId=null;
@@ -909,7 +953,7 @@ async function savePurchEdit(){
   try{
     await fetch(`${API}/purchases/${_purchEditId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
     closePurchEdit(); await renderPurchase(); showV('✅ 매입 수정 완료');
-  }catch(e){alert('수정 실패: '+e.message);}
+  }catch(e){await showAlert('수정 실패: '+e.message,'❌');}
 }
 
 // ── SALES EDIT MODAL ──────────────────────
@@ -949,7 +993,7 @@ async function saveSaleEdit(){
   try{
     await fetch(`${API}/sales/${_saleEditId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
     closeSaleEdit(); await renderSales(); showV('✅ 매출 수정 완료');
-  }catch(e){alert('수정 실패: '+e.message);}
+  }catch(e){await showAlert('수정 실패: '+e.message,'❌');}
 }
 
 // ── DATE LABEL ────────────────────────────
