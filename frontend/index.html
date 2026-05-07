@@ -202,7 +202,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div class="card-ttl" id="s-form-ttl">직접 입력</div>
         <div class="fg2">
           <div class="fg"><label>날짜</label><input type="date" id="s-date"></div>
-          <div class="fg"><label>손님명</label><input type="text" id="s-cust" placeholder="손님1"></div>
+          <div class="fg"><label>고객명</label><input type="text" id="s-cust" placeholder="고객명"></div>
         </div>
         <div class="fg2">
           <div class="fg"><label>카드</label><input type="text" inputmode="numeric" id="s-card" placeholder="0" oninput="calcTotal()"></div>
@@ -268,7 +268,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div class="card-ttl">변제 입력</div>
         <div class="fg2">
           <div class="fg"><label>날짜</label><input type="date" id="pay-date"></div>
-          <div class="fg"><label>손님명</label><input type="text" id="pay-name" placeholder="손님명"></div>
+          <div class="fg"><label>고객명</label><input type="text" id="pay-name" placeholder="고객명"></div>
         </div>
         <div class="fg2">
           <div class="fg"><label>카드</label><input type="text" inputmode="numeric" id="pay-card" placeholder="0" oninput="calcPayTotal()"></div>
@@ -582,7 +582,7 @@ async function addPayment() {
   const name=$('#pay-name').value.trim(), date=$('#pay-date').value,
         card=parseNum($('#pay-card').value), cash=parseNum($('#pay-cash').value),
         amount=card+cash;
-  if(!name){await showAlert('손님명을 입력하세요','👤');return;}
+  if(!name){await showAlert('고객명을 입력하세요','👤');return;}
   if(!date){await showAlert('날짜를 입력하세요','📅');return;}
   if(!amount){await showAlert('금액을 입력하세요','💰');return;}
   const bal=parseNum($('#pay-cred-bal').value);
@@ -733,7 +733,7 @@ async function parseAI(type) {
     ?`다음 텍스트에서 초콜릿 매출 정보를 추출하여 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
-필드: date(YYYY-MM-DD, 없으면 오늘), customer(손님명, 없으면 "손님"), card(카드금액 숫자), cash(현금금액 숫자), credit(외상금액 숫자), total(합계=card+cash+credit), memo
+필드: date(YYYY-MM-DD, 없으면 오늘), customer(고객명, 없으면 "손님"), card(카드금액 숫자), cash(현금금액 숫자), credit(외상금액 숫자), total(합계=card+cash+credit), memo
 한국어 숫자(백만원=1000000, 오십만=500000 등) 변환 필수.
 설명 없이 JSON 배열만 반환:
 ${text}`
