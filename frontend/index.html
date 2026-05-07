@@ -395,7 +395,8 @@ async function apiDel(path) {
 // ── HOME ──────────────────────────────────
 async function renderHome() {
   const [sales,purch,creds]=[await getSales(),await getPurchs(),await getCreds()], t=selectedDate;
-  const sTotal=sales.filter(s=>s.date===t).reduce((a,s)=>a+(s.total||0),0);
+  const sTotal=sales.filter(s=>s.date===t).reduce((a,s)=>a+(s.card||0)+(s.cash||0),0)
+             +creds.filter(c=>c.date===t&&c.type==='credit').reduce((a,c)=>a+c.amount,0);
   const pTotal=purch.filter(p=>p.date===t).reduce((a,p)=>a+(p.amount||0),0);
   const cBal=creds.filter(c=>c.type==='debit').reduce((a,c)=>a+c.amount,0)
             -creds.filter(c=>c.type==='credit').reduce((a,c)=>a+c.amount,0);
@@ -688,36 +689,42 @@ function switchPeriod(p,btn){
 }
 async function renderAnalysis(p) {
   if(chartInst){chartInst.destroy();chartInst=null;}
-  const [s,pu]=[await getSales(),await getPurchs()];
-  if(p==='daily')   renderDaily(s,pu);
-  else if(p==='weekly') renderWeekly(s,pu);
-  else              renderMonthly(s,pu);
+  const [s,pu,cr]=[await getSales(),await getPurchs(),await getCreds()];
+  if(p==='daily')   renderDaily(s,pu,cr);
+  else if(p==='weekly') renderWeekly(s,pu,cr);
+  else              renderMonthly(s,pu,cr);
 }
-function renderDaily(sales,purch) {
+function realSales(sales,creds,dateFilter){
+  return sales.filter(s=>dateFilter(s.date)).reduce((a,s)=>a+(s.card||0)+(s.cash||0),0)
+        +creds.filter(c=>c.type==='credit'&&dateFilter(c.date)).reduce((a,c)=>a+c.amount,0);
+}
+function renderDaily(sales,purch,creds) {
   $('#chart-title').textContent='최근 14일';
-  const now=new Date();
-  const days=Array.from({length:14},(_,i)=>{const d=new Date(now);d.setDate(d.getDate()-(13-i));return d.toISOString().slice(0,10);});
-  const sd=days.map(d=>sales.filter(s=>s.date===d).reduce((a,s)=>a+(s.total||0),0));
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Seoul'}));
+  const days=Array.from({length:14},(_,i)=>{const d=new Date(now);d.setDate(d.getDate()-(13-i));return`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;});
+  const sd=days.map(d=>realSales(sales,creds,dt=>dt===d));
   const pd=days.map(d=>purch.filter(p=>p.date===d).reduce((a,p)=>a+(p.amount||0),0));
   const ss=sd.reduce((a,v)=>a+v,0),ps=pd.reduce((a,v)=>a+v,0);
   setStats('14일 매출',won(ss),'14일 매입',won(ps),'순이익',won(ss-ps),ss>=ps);
   drawChart(days.map(d=>d.slice(5)),sd,pd);
 }
-function renderWeekly(sales,purch) {
+function renderWeekly(sales,purch,creds) {
   $('#chart-title').textContent='주간 비교';
-  const now=new Date(),dow=now.getDay();
-  const wk=(off,arr,key)=>Array.from({length:7},(_,i)=>{const d=new Date(now);d.setDate(d.getDate()-dow+i+off*7);const ds=d.toISOString().slice(0,10);return arr.filter(x=>x.date===ds).reduce((a,x)=>a+(x[key]||0),0);});
-  const sT=wk(0,sales,'total'),pT=wk(0,purch,'amount');
-  const sL=wk(-1,sales,'total');
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Seoul'})),dow=now.getDay();
+  const wkDates=(off)=>Array.from({length:7},(_,i)=>{const d=new Date(now);d.setDate(d.getDate()-dow+i+off*7);return`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;});
+  const thisDates=wkDates(0),lastDates=wkDates(-1);
+  const sT=thisDates.map(d=>realSales(sales,creds,dt=>dt===d));
+  const pT=thisDates.map(d=>purch.filter(p=>p.date===d).reduce((a,p)=>a+(p.amount||0),0));
+  const sL=lastDates.map(d=>realSales(sales,creds,dt=>dt===d));
   const ss=sT.reduce((a,v)=>a+v,0),sl=sL.reduce((a,v)=>a+v,0);
   setStats('이번 주 매출',won(ss),'지난 주 매출',won(sl),'증감',(ss-sl>=0?'+':'')+won(ss-sl),ss>=sl);
   drawChart(['일','월','화','수','목','금','토'],sT,pT);
 }
-function renderMonthly(sales,purch) {
+function renderMonthly(sales,purch,creds) {
   $('#chart-title').textContent='월별 (6개월)';
-  const now=new Date();
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Seoul'}));
   const mos=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-(5-i),1);return`${d.getFullYear()}-${pad2(d.getMonth()+1)}`;});
-  const sd=mos.map(m=>sales.filter(s=>s.date.startsWith(m)).reduce((a,s)=>a+(s.total||0),0));
+  const sd=mos.map(m=>realSales(sales,creds,dt=>dt.startsWith(m)));
   const pd=mos.map(m=>purch.filter(p=>p.date.startsWith(m)).reduce((a,p)=>a+(p.amount||0),0));
   const ss=sd.reduce((a,v)=>a+v,0),ps=pd.reduce((a,v)=>a+v,0);
   setStats('6개월 매출',won(ss),'6개월 매입',won(ps),'순이익',won(ss-ps),ss>=ps);
