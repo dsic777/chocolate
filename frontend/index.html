@@ -139,8 +139,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .mb-cancel{background:#374151;color:#9ca3af}
 .mb-del{background:#7f1d1d;color:#fca5a5}
 @keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
-@keyframes splashFade{0%{opacity:0}40%{opacity:1}60%{opacity:1}100%{opacity:0}}
-#splash{position:absolute;inset:0;background:#000;z-index:999;display:flex;align-items:center;justify-content:center;pointer-events:none;animation:splashFade 3s ease forwards}
+@keyframes splashFade{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+#splash{position:absolute;inset:0;background:#000;z-index:999;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;animation:splashFade 3s ease-in-out forwards}
 
 
 /* ── Calendar Modal ── */
@@ -1142,18 +1142,13 @@ document.getElementById('page-analysis').addEventListener('touchend',e=>{
 
 // ── INIT ──────────────────────────────────
 function showSplash(){
-  let sp=document.getElementById('splash');
-  if(!sp){
-    sp=document.createElement('div');
-    sp.id='splash';
-    sp.innerHTML='<img src="/chocolate/chocolate_kyeonghee_512_v4.png" style="width:260px;height:260px;border-radius:52px">';
-    document.getElementById('app').prepend(sp);
-  }
-  sp.style.animation='none';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    sp.style.animation='splashFade 3s ease forwards';
-    setTimeout(()=>{if(sp.parentNode)sp.remove();},3100);
-  }));
+  const old=document.getElementById('splash');
+  if(old)old.remove();
+  const sp=document.createElement('div');
+  sp.id='splash';
+  sp.innerHTML='<img src="/chocolate/chocolate_kyeonghee_512_v4.png" style="width:260px;height:260px;border-radius:52px">';
+  document.getElementById('app').prepend(sp);
+  setTimeout(()=>{if(sp.parentNode)sp.remove();},3100);
 }
 window.addEventListener('pageshow',e=>{if(e.persisted)showSplash();});
 updateDateLabel();
