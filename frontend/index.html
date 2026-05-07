@@ -488,7 +488,24 @@ async function addSale(data) {
   } catch(e) { await showAlert('저장 실패: '+e.message,'❌'); }
 }
 
-async function delSale(id){if(!await showConfirm('매출을 삭제할까요?'))return;await apiDel('/sales/'+id);renderSales();}
+async function delSale(id){
+  const sale=_saleRows[id];
+  if(sale&&(sale.credit||0)>0){
+    const creds=await getCreds();
+    const paid=creds.filter(c=>c.name===sale.customer&&c.type==='credit').reduce((a,c)=>a+c.amount,0);
+    if(paid>0){
+      const ok=await showConfirm(
+        `${sale.customer} 고객의 외상 ${won(sale.credit)} 중\n변제 ${won(paid)}이 있습니다.\n매출 삭제 시 외상 내역도 삭제됩니다.\n계속하시겠습니까?`,
+        '⚠️','삭제','mb-del');
+      if(!ok)return;
+    } else {
+      if(!await showConfirm('매출을 삭제할까요?'))return;
+    }
+  } else {
+    if(!await showConfirm('매출을 삭제할까요?'))return;
+  }
+  await apiDel('/sales/'+id);renderSales();
+}
 
 const _saleRows={};
 async function renderSales() {
