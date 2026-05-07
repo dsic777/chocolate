@@ -1149,6 +1149,11 @@ function showSplash(){
   document.getElementById('app').prepend(sp);
   setTimeout(()=>{if(sp.parentNode)sp.remove();},3100);
 }
+let _hiddenAt=0;
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){_hiddenAt=Date.now();}
+  else if(_hiddenAt>0&&Date.now()-_hiddenAt>5000){showSplash();}
+});
 window.addEventListener('pageshow',e=>{if(e.persisted)showSplash();});
 updateDateLabel();
 navigate('home');
