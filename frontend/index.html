@@ -139,7 +139,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .mb-cancel{background:#374151;color:#9ca3af}
 .mb-del{background:#7f1d1d;color:#fca5a5}
 @keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
-#splash{position:absolute;inset:0;background:#000;z-index:999;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .4s ease}
+#splash{position:absolute;inset:0;background:#000;z-index:999;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity 1s ease}
 
 
 /* ── Calendar Modal ── */
@@ -1126,8 +1126,13 @@ function showSplash(){
     sp.innerHTML='<img src="/chocolate/chocolate_kyeonghee_512_v4.png" style="width:260px;height:260px;border-radius:52px">';
     document.getElementById('app').prepend(sp);
   }
-  sp.style.opacity='1';
-  setTimeout(()=>{sp.style.opacity='0';setTimeout(()=>{if(sp.parentNode)sp.remove();},400);},1000);
+  sp.style.opacity='0';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    sp.style.opacity='1';                                    // 1s 페이드인 시작
+    setTimeout(()=>{sp.style.opacity='0';                   // 1s 표시 후 페이드아웃 시작
+      setTimeout(()=>{if(sp.parentNode)sp.remove();},1000); // 1s 페이드아웃 완료 후 제거
+    },2000);
+  }));
 }
 window.addEventListener('pageshow',e=>{if(e.persisted)showSplash();});
 updateDateLabel();
