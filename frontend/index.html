@@ -126,6 +126,11 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .pulsing{animation:pulse 1s infinite}
 
+/* ── Edit Modal ── */
+.edit-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:flex-end;justify-content:center}
+.edit-box{background:#111827;border:1px solid #374151;border-radius:14px 14px 0 0;padding:20px;width:100%;max-width:390px;max-height:90svh;overflow-y:auto}
+.edit-ttl{font-size:19px;font-weight:900;color:#fff;margin-bottom:14px}
+
 /* ── Calendar Modal ── */
 #cal-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center}
 #cal-box{background:#111827;border:1px solid #374151;border-radius:14px;padding:20px;width:320px}
@@ -298,6 +303,56 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
   </div>
 </div><!-- /app -->
 
+<!-- ═══ PURCHASE EDIT MODAL ═══ -->
+<div id="purch-edit-modal" class="edit-modal" onclick="if(event.target===this)closePurchEdit()">
+  <div class="edit-box">
+    <div class="edit-ttl">매입 수정</div>
+    <div class="fg2">
+      <div class="fg"><label>날짜</label><input type="date" id="pe-date"></div>
+      <div class="fg"><label>업체명</label><input type="text" id="pe-vendor" placeholder="업체명" oninput="chkPurchEdit()"></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>품목</label><input type="text" id="pe-cat" placeholder="품목" oninput="chkPurchEdit()"></div>
+      <div class="fg"><label>구분</label>
+        <select id="pe-pay" onchange="chkPurchEdit()">
+          <option value="cash">현금</option>
+          <option value="card">카드</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>금액</label><input type="text" inputmode="numeric" id="pe-amt" placeholder="0" oninput="fmtNum(this);chkPurchEdit()"></div>
+    <div class="fg"><label>메모</label><input type="text" id="pe-memo" placeholder="메모" oninput="chkPurchEdit()"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button id="pe-save-btn" class="btn btn-green" style="width:60%;margin:0" disabled onclick="savePurchEdit()">수정 저장</button>
+      <button class="btn btn-outline" style="width:40%;margin:0" onclick="closePurchEdit()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SALES EDIT MODAL ═══ -->
+<div id="sales-edit-modal" class="edit-modal" onclick="if(event.target===this)closeSaleEdit()">
+  <div class="edit-box">
+    <div class="edit-ttl">매출 수정</div>
+    <div class="fg2">
+      <div class="fg"><label>날짜</label><input type="date" id="se-date" onchange="chkSaleEdit()"></div>
+      <div class="fg"><label>손님</label><input type="text" id="se-cust" placeholder="손님" oninput="chkSaleEdit()"></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>카드</label><input type="text" inputmode="numeric" id="se-card" placeholder="0" oninput="fmtNum(this);calcSaleEdit();chkSaleEdit()"></div>
+      <div class="fg"><label>현금</label><input type="text" inputmode="numeric" id="se-cash" placeholder="0" oninput="fmtNum(this);calcSaleEdit();chkSaleEdit()"></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>외상</label><input type="text" inputmode="numeric" id="se-cred" placeholder="0" oninput="fmtNum(this);calcSaleEdit();chkSaleEdit()"></div>
+      <div class="fg"><label>합계</label><input type="text" id="se-total" readonly style="background:#111827;color:#4ade80;font-weight:900"></div>
+    </div>
+    <div class="fg"><label>메모</label><input type="text" id="se-memo" placeholder="메모" oninput="chkSaleEdit()"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button id="se-save-btn" class="btn btn-green" style="width:60%;margin:0" disabled onclick="saveSaleEdit()">수정 저장</button>
+      <button class="btn btn-outline" style="width:40%;margin:0" onclick="closeSaleEdit()">취소</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ CALENDAR MODAL ═══ -->
 <div id="cal-modal" onclick="if(event.target===this)closeCal()">
   <div id="cal-box">
@@ -430,17 +485,19 @@ async function addSale(data) {
     if((d.credit||0)>0){
       await apiPost('/credits',{id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'매출 외상'+(d.memo?' - '+d.memo:'')});
     }
-    if(!data)['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
-    if(!data)$('#s-total').value='';
+    ['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+    $('#s-total').value='';
     await renderSales(); showV('✅ 매출 저장: '+won(d.total)); return true;
   } catch(e) { alert('저장 실패: '+e.message); }
 }
 
 async function delSale(id){if(!confirm('삭제할까요?'))return;await apiDel('/sales/'+id);renderSales();}
 
+const _saleRows={};
 async function renderSales() {
   if(!$('#s-date').value)$('#s-date').value=today();
   const list=[...await getSales()].sort((a,b)=>b.date.localeCompare(a.date));
+  list.forEach(s=>{_saleRows[s.id]=s;});
   $('#sales-list').innerHTML=list.length===0?`<div class="empty">매출 내역이 없습니다</div>`
     :list.map(s=>`<div class="li">
       <div class="li-body">
@@ -454,7 +511,10 @@ async function renderSales() {
       </div>
       <div class="li-right">
         <div class="li-main pos">${won(s.total||0)}</div>
-        <button class="btn-sm bsm-red" style="margin-top:6px" onclick="delSale('${s.id}')">삭제</button>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="btn-sm bsm-green" onclick="_saleRows['${s.id}']&&openSaleEdit(_saleRows['${s.id}'])">수정</button>
+          <button class="btn-sm bsm-red" onclick="delSale('${s.id}')">삭제</button>
+        </div>
       </div>
     </div>`).join('');
 }
@@ -471,16 +531,18 @@ async function addPurchase(data) {
   d.id=uid();
   try {
     await apiPost('/purchases', d);
-    if(!data)['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+    ['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
     await renderPurchase(); showV('✅ 매입 저장: '+(d.vendor||'')+' '+won(d.amount)); return true;
   } catch(e) { alert('저장 실패: '+e.message); }
 }
 
 async function delPurchase(id){if(!confirm('삭제할까요?'))return;await apiDel('/purchases/'+id);renderPurchase();}
 
+const _purchRows={};
 async function renderPurchase() {
   if(!$('#p-date').value)$('#p-date').value=today();
   const list=[...await getPurchs()].sort((a,b)=>b.date.localeCompare(a.date));
+  list.forEach(p=>{_purchRows[p.id]=p;});
   $('#purch-list').innerHTML=list.length===0?`<div class="empty">매입 내역이 없습니다</div>`
     :list.map(p=>`<div class="li">
       <div class="li-body">
@@ -492,7 +554,10 @@ async function renderPurchase() {
       </div>
       <div class="li-right">
         <div class="li-main neg">-${won(p.amount||0)}</div>
-        <button class="btn-sm bsm-red" style="margin-top:6px" onclick="delPurchase('${p.id}')">삭제</button>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="btn-sm bsm-green" onclick="_purchRows['${p.id}']&&openPurchEdit(_purchRows['${p.id}'])">수정</button>
+          <button class="btn-sm bsm-red" onclick="delPurchase('${p.id}')">삭제</button>
+        </div>
       </div>
     </div>`).join('');
 }
@@ -810,6 +875,82 @@ function stopMic(type){
 
 // ── VOICE STATUS ──────────────────────────
 function showV(msg){console.log(msg);}
+
+// ── PURCHASE EDIT MODAL ───────────────────
+let _purchOrig=null, _purchEditId=null;
+
+function openPurchEdit(p) {
+  _purchEditId=p.id; _purchOrig={...p};
+  $('#pe-date').value=p.date||'';
+  $('#pe-vendor').value=p.vendor||'';
+  $('#pe-cat').value=p.category||'';
+  $('#pe-pay').value=p.payment||'cash';
+  $('#pe-amt').value=p.amount?Number(p.amount).toLocaleString('ko-KR'):'';
+  $('#pe-memo').value=p.memo||'';
+  $('#pe-save-btn').disabled=true;
+  $('#purch-edit-modal').style.display='flex';
+}
+function closePurchEdit(){$('#purch-edit-modal').style.display='none';}
+function chkPurchEdit(){
+  if(!_purchOrig)return;
+  const changed=
+    $('#pe-date').value!==_purchOrig.date||
+    $('#pe-vendor').value!==(_purchOrig.vendor||'')||
+    $('#pe-cat').value!==(_purchOrig.category||'')||
+    $('#pe-pay').value!==(_purchOrig.payment||'cash')||
+    parseNum($('#pe-amt').value)!==(_purchOrig.amount||0)||
+    $('#pe-memo').value!==(_purchOrig.memo||'');
+  $('#pe-save-btn').disabled=!changed;
+}
+async function savePurchEdit(){
+  const d={id:_purchEditId,date:$('#pe-date').value,vendor:$('#pe-vendor').value,
+    category:$('#pe-cat').value,amount:parseNum($('#pe-amt').value),
+    payment:$('#pe-pay').value,memo:$('#pe-memo').value};
+  try{
+    await fetch(`${API}/purchases/${_purchEditId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+    closePurchEdit(); await renderPurchase(); showV('✅ 매입 수정 완료');
+  }catch(e){alert('수정 실패: '+e.message);}
+}
+
+// ── SALES EDIT MODAL ──────────────────────
+let _saleOrig=null, _saleEditId=null;
+
+function openSaleEdit(s) {
+  _saleEditId=s.id; _saleOrig={...s};
+  $('#se-date').value=s.date||'';
+  $('#se-cust').value=s.customer||'';
+  $('#se-card').value=s.card?Number(s.card).toLocaleString('ko-KR'):'';
+  $('#se-cash').value=s.cash?Number(s.cash).toLocaleString('ko-KR'):'';
+  $('#se-cred').value=s.credit?Number(s.credit).toLocaleString('ko-KR'):'';
+  $('#se-memo').value=s.memo||'';
+  calcSaleEdit(); $('#se-save-btn').disabled=true;
+  $('#sales-edit-modal').style.display='flex';
+}
+function closeSaleEdit(){$('#sales-edit-modal').style.display='none';}
+function calcSaleEdit(){
+  const v=parseNum($('#se-card').value)+parseNum($('#se-cash').value)+parseNum($('#se-cred').value);
+  $('#se-total').value=v?v.toLocaleString('ko-KR'):'';
+}
+function chkSaleEdit(){
+  if(!_saleOrig)return;
+  const changed=
+    $('#se-date').value!==_saleOrig.date||
+    $('#se-cust').value!==(_saleOrig.customer||'')||
+    parseNum($('#se-card').value)!==(_saleOrig.card||0)||
+    parseNum($('#se-cash').value)!==(_saleOrig.cash||0)||
+    parseNum($('#se-cred').value)!==(_saleOrig.credit||0)||
+    $('#se-memo').value!==(_saleOrig.memo||'');
+  $('#se-save-btn').disabled=!changed;
+}
+async function saveSaleEdit(){
+  const card=parseNum($('#se-card').value),cash=parseNum($('#se-cash').value),credit=parseNum($('#se-cred').value);
+  const d={id:_saleEditId,date:$('#se-date').value,customer:$('#se-cust').value,
+    card,cash,credit,total:card+cash+credit,memo:$('#se-memo').value};
+  try{
+    await fetch(`${API}/sales/${_saleEditId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+    closeSaleEdit(); await renderSales(); showV('✅ 매출 수정 완료');
+  }catch(e){alert('수정 실패: '+e.message);}
+}
 
 // ── DATE LABEL ────────────────────────────
 const DOW_KO=['일','월','화','수','목','금','토'];

@@ -113,6 +113,17 @@ def add_sale(s: Sale):
         conn.commit()
     return {"ok": True}
 
+@app.put("/api/sales/{id}")
+def update_sale(id: str, s: Sale):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE choco_sales SET date=%s,customer=%s,card=%s,cash=%s,credit=%s,total=%s,memo=%s WHERE id=%s",
+                (s.date, s.customer, s.card, s.cash, s.credit, s.total, s.memo, id)
+            )
+        conn.commit()
+    return {"ok": True}
+
 @app.delete("/api/sales/{id}")
 def del_sale(id: str):
     with get_conn() as conn:
@@ -147,6 +158,17 @@ def add_purchase(p: Purchase):
             cur.execute(
                 "INSERT INTO choco_purchases (id,date,vendor,category,amount,payment,memo) VALUES (%s,%s,%s,%s,%s,%s,%s)",
                 (p.id, p.date, p.vendor, p.category, p.amount, p.payment, p.memo)
+            )
+        conn.commit()
+    return {"ok": True}
+
+@app.put("/api/purchases/{id}")
+def update_purchase(id: str, p: Purchase):
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE choco_purchases SET date=%s,vendor=%s,category=%s,amount=%s,payment=%s,memo=%s WHERE id=%s",
+                (p.date, p.vendor, p.category, p.amount, p.payment, p.memo, id)
             )
         conn.commit()
     return {"ok": True}
