@@ -185,8 +185,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div class="card-ttl">🎤 AI 음성 입력</div>
         <div class="vbox">
           <textarea id="sales-ta" rows="4" placeholder="말하거나 직접 입력하세요.
-예) 오늘 손님1 카드 80만원 현금 20만원
-    손님2 합계 50만원 외상 30만원"></textarea>
+예) 오늘 고객1 카드 80만원 현금 20만원
+    고객2 합계 50만원 외상 30만원"></textarea>
           <div class="vbtns">
             <button class="vb vb-mic" id="mic-sales" onclick="toggleMic('sales')">🎤 말하기</button>
             <button class="vb vb-ai"  id="ai-sales"  onclick="parseAI('sales')">✨ AI 파싱</button>
@@ -261,7 +261,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
     <!-- ═══ 외상 ═══ -->
     <div class="page" id="page-credit">
       <div class="card">
-        <div class="card-ttl">손님별 외상 현황</div>
+        <div class="card-ttl">고객별 외상 현황</div>
         <div id="cred-summary"></div>
       </div>
       <div class="card" id="pay-form">
@@ -419,7 +419,7 @@ async function renderHome() {
     :all.map(x=>x._t==='sale'
       ?`<div class="li">
           <div class="li-body">
-            <div class="li-title">💰 ${x.customer||'손님'}</div>
+            <div class="li-title">💰 ${x.customer||'고객'}</div>
             <div class="li-sub">${dl(x.date)}${x.memo?' · '+x.memo:''}</div>
             <div class="li-sub" style="margin-top:3px">
               ${x.card?`<span class="badge b-card">카드 ${won(x.card)}</span>`:''}
@@ -448,7 +448,7 @@ function calcTotal() {
 
 async function addSale(data) {
   const d=data||{
-    date:$('#s-date').value, customer:$('#s-cust').value.trim()||'손님',
+    date:$('#s-date').value, customer:$('#s-cust').value.trim()||'고객',
     card:parseNum($('#s-card').value), cash:parseNum($('#s-cash').value),
     credit:parseNum($('#s-cred').value), memo:$('#s-memo').value.trim()
   };
@@ -485,7 +485,7 @@ async function renderSales() {
   $('#sales-list').innerHTML=list.length===0?`<div class="empty">매출 내역이 없습니다</div>`
     :list.map(s=>`<div class="li">
       <div class="li-body">
-        <div class="li-title">${dl(s.date)} <strong>${s.customer||'손님'}</strong></div>
+        <div class="li-title">${dl(s.date)} <strong>${s.customer||'고객'}</strong></div>
         <div class="li-sub" style="margin-top:4px">
           ${s.card?`<span class="badge b-card">카드 ${won(s.card)}</span>`:''}
           ${s.cash?`<span class="badge b-cash">현금 ${won(s.cash)}</span>`:''}
@@ -733,7 +733,7 @@ async function parseAI(type) {
     ?`다음 텍스트에서 초콜릿 매출 정보를 추출하여 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
-필드: date(YYYY-MM-DD, 없으면 오늘), customer(고객명, 없으면 "손님"), card(카드금액 숫자), cash(현금금액 숫자), credit(외상금액 숫자), total(합계=card+cash+credit), memo
+필드: date(YYYY-MM-DD, 없으면 오늘), customer(고객명, 없으면 "고객"), card(카드금액 숫자), cash(현금금액 숫자), credit(외상금액 숫자), total(합계=card+cash+credit), memo
 한국어 숫자(백만원=1000000, 오십만=500000 등) 변환 필수.
 설명 없이 JSON 배열만 반환:
 ${text}`
@@ -774,7 +774,7 @@ function showParsed(type,items) {
   const html=items.map((x,i)=>type==='sales'
     ?`<div class="pi" id="pi-${type}-${i}">
         <div class="pi-row"><span class="pi-lbl">날짜</span><span class="pi-val">${dl(x.date)}</span></div>
-        <div class="pi-row"><span class="pi-lbl">손님</span><span class="pi-val">${x.customer||'손님'}</span></div>
+        <div class="pi-row"><span class="pi-lbl">고객명</span><span class="pi-val">${x.customer||'고객'}</span></div>
         <div class="pi-row"><span class="pi-lbl">합계</span><span class="pi-val pos">${won(x.total||0)}</span></div>
         ${x.card?`<div class="pi-row"><span class="pi-lbl">카드</span><span class="pi-val">${won(x.card)}</span></div>`:''}
         ${x.cash?`<div class="pi-row"><span class="pi-lbl">현금</span><span class="pi-val">${won(x.cash)}</span></div>`:''}
