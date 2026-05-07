@@ -195,9 +195,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div id="sales-parsed"></div>
       </div>
       <div class="card" id="s-form-card" style="display:none">
-        <div id="s-edit-banner" style="display:none;background:#1a3a2a;border:1px solid #166534;border-radius:8px;padding:10px 14px;margin-bottom:12px;align-items:center;justify-content:space-between">
-          <span style="color:#4ade80;font-size:17px;font-weight:700">🔧 매출 수정 중</span>
-          <button onclick="exitSaleEditMode()" style="background:none;border:1px solid #374151;color:#9ca3af;padding:6px 12px;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
+        <div id="s-edit-banner" style="display:none;background:#1a3a2a;border:1px solid #166534;border-radius:8px;padding:10px 14px;margin-bottom:12px">
+          <span class="pulsing" style="color:#4ade80;font-size:17px;font-weight:700">🔧 매출 수정 중</span>
         </div>
         <div class="card-ttl" id="s-form-ttl">직접 입력</div>
         <div class="fg2">
@@ -213,7 +212,10 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           <div class="fg"><label>합계</label><input type="text" id="s-total" placeholder="자동" readonly style="background:#111827;color:#4ade80;font-size:22px;font-weight:900"></div>
         </div>
         <div class="fg"><label>메모</label><input type="text" id="s-memo" placeholder="메모"></div>
-        <button class="btn btn-navy" id="s-save-btn" onclick="addSale()">매출 저장</button>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-navy" id="s-save-btn" onclick="addSale()" style="flex:1">매출 저장</button>
+          <button id="s-cancel-btn" onclick="exitSaleEditMode()" style="display:none;flex:0 0 90px;background:#374151;color:#e5e7eb;border:none;border-radius:8px;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
+        </div>
       </div>
       <div class="stl">매출 내역</div>
       <div class="card" id="sales-list"></div>
@@ -235,9 +237,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div id="purch-parsed"></div>
       </div>
       <div class="card" id="p-form-card" style="display:none">
-        <div id="p-edit-banner" style="display:none;background:#1a3a2a;border:1px solid #166534;border-radius:8px;padding:10px 14px;margin-bottom:12px;align-items:center;justify-content:space-between">
-          <span style="color:#4ade80;font-size:17px;font-weight:700">🔧 매입 수정 중</span>
-          <button onclick="exitPurchEditMode()" style="background:none;border:1px solid #374151;color:#9ca3af;padding:6px 12px;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
+        <div id="p-edit-banner" style="display:none;background:#1a3a2a;border:1px solid #166534;border-radius:8px;padding:10px 14px;margin-bottom:12px">
+          <span class="pulsing" style="color:#4ade80;font-size:17px;font-weight:700">🔧 매입 수정 중</span>
         </div>
         <div class="card-ttl" id="p-form-ttl">직접 입력</div>
         <div class="fg2">
@@ -252,7 +253,10 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         </div>
         <div class="fg"><label>금액</label><input type="text" inputmode="numeric" id="p-amt" placeholder="0" oninput="fmtNum(this)"></div>
         <div class="fg"><label>메모</label><input type="text" id="p-memo" placeholder="메모"></div>
-        <button class="btn btn-navy" id="p-save-btn" onclick="addPurchase()">매입 저장</button>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-navy" id="p-save-btn" onclick="addPurchase()" style="flex:1">매입 저장</button>
+          <button id="p-cancel-btn" onclick="exitPurchEditMode()" style="display:none;flex:0 0 90px;background:#374151;color:#e5e7eb;border:none;border-radius:8px;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
+        </div>
       </div>
       <div class="stl">매입 내역</div>
       <div class="card" id="purch-list"></div>
@@ -950,10 +954,11 @@ function enterPurchEditMode(item){
   $('#p-amt').value=item.amount?Number(item.amount).toLocaleString('ko-KR'):'';
   $('#p-memo').value=item.memo||'';
   $('#p-form-card').style.display='block';
-  $('#p-edit-banner').style.display='flex';
+  $('#p-edit-banner').style.display='block';
   $('#p-form-ttl').textContent='매입 수정';
   $('#p-save-btn').textContent='매입 수정 저장';
   $('#p-save-btn').className='btn btn-green';
+  $('#p-cancel-btn').style.display='block';
   $('#p-form-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function exitPurchEditMode(){
@@ -964,6 +969,7 @@ function exitPurchEditMode(){
   $('#p-form-ttl').textContent='직접 입력';
   $('#p-save-btn').textContent='매입 저장';
   $('#p-save-btn').className='btn btn-navy';
+  $('#p-cancel-btn').style.display='none';
 }
 
 // ── SALES EDIT MODE ───────────────────────
@@ -981,10 +987,11 @@ function enterSaleEditMode(item){
   $('#s-memo').value=item.memo||'';
   calcTotal();
   $('#s-form-card').style.display='block';
-  $('#s-edit-banner').style.display='flex';
+  $('#s-edit-banner').style.display='block';
   $('#s-form-ttl').textContent='매출 수정';
   $('#s-save-btn').textContent='매출 수정 저장';
   $('#s-save-btn').className='btn btn-green';
+  $('#s-cancel-btn').style.display='block';
   $('#s-form-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function exitSaleEditMode(){
@@ -996,6 +1003,7 @@ function exitSaleEditMode(){
   $('#s-form-ttl').textContent='직접 입력';
   $('#s-save-btn').textContent='매출 저장';
   $('#s-save-btn').className='btn btn-navy';
+  $('#s-cancel-btn').style.display='none';
 }
 
 // ── DATE LABEL ────────────────────────────
