@@ -50,6 +50,16 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .stat-val.green{color:#4ade80}
 .stat-val.blue{color:#60a5fa}
 
+/* ── Weekly grid ── */
+.wk-grid{background:#111827;border:1px solid #1f2937;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.wk-row{display:grid;grid-template-columns:38px 1fr 1fr 1fr}
+.wk-row+.wk-row{border-top:1px solid #1f2937}
+.wk-hdr-row{background:#0d1117}
+.wk-cell{padding:10px 4px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.wk-col-head,.wk-row-head{color:#9ca3af}
+.wk-row-head{border-right:1px solid #1f2937;font-size:13px}
+.wk-val{font-size:13px;font-weight:900;justify-content:flex-end;padding-right:8px}
+
 /* ── Voice box ── */
 .vbox{background:#0a0a0a;border:1px solid #374151;border-radius:6px;padding:12px;margin-bottom:10px}
 .vbox textarea{width:100%;border:none;background:transparent;font-size:18px;font-family:'Noto Sans KR',sans-serif;font-weight:700;resize:none;outline:none;color:#d1d5db;line-height:1.5}
@@ -314,10 +324,12 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div class="card-ttl" id="chart-title">최근 14일</div>
         <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
       </div>
-      <div class="stat-table">
-        <div class="stat-row"><span class="stat-lbl" id="as1-l">기간 매출</span><span class="stat-val amber" id="as1-v">-</span></div>
-        <div class="stat-row"><span class="stat-lbl" id="as2-l">기간 매입</span><span class="stat-val red"   id="as2-v">-</span></div>
-        <div class="stat-row"><span class="stat-lbl" id="as3-l">순이익</span>  <span class="stat-val green" id="as3-v">-</span></div>
+      <div id="stat-area">
+        <div class="stat-table">
+          <div class="stat-row"><span class="stat-lbl" id="as1-l">기간 매출</span><span class="stat-val amber" id="as1-v">-</span></div>
+          <div class="stat-row"><span class="stat-lbl" id="as2-l">기간 매입</span><span class="stat-val red"   id="as2-v">-</span></div>
+          <div class="stat-row"><span class="stat-lbl" id="as3-l">순이익</span>  <span class="stat-val blue"  id="as3-v">-</span></div>
+        </div>
       </div>
     </div>
 
@@ -368,6 +380,7 @@ async function getCreds()  { const r=await fetch(`${API}/credits`); return r.ok?
 
 // ── UTILS ─────────────────────────────────
 const won = n  => Number(n||0).toLocaleString('ko-KR')+'원';
+const numK = n => { const a=Math.abs(n||0); return a>=10000?(n<0?'-':'')+Math.round(Math.abs(n||0)/10000).toLocaleString('ko-KR')+'만':Number(n||0).toLocaleString('ko-KR'); };
 function fmtNum(el){const r=el.value.replace(/[^0-9]/g,'');el.value=r?Number(r).toLocaleString('ko-KR'):'';}
 function parseNum(v){return parseInt((v||'').replace(/,/g,''))||0;}
 function today() {
@@ -794,11 +807,26 @@ function renderWeekly(sales,purch,creds) {
   const now=analysisDateObj(),dow=now.getDay();
   const wkDates=(off)=>Array.from({length:7},(_,i)=>{const d=new Date(now);d.setDate(d.getDate()-dow+i+off*7);return`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;});
   const thisDates=wkDates(0),lastDates=wkDates(-1);
+  const ss=realSales(sales,creds,d=>thisDates.includes(d));
+  const sl=realSales(sales,creds,d=>lastDates.includes(d));
+  const ps=thisDates.reduce((a,d)=>a+purch.filter(p=>p.date===d).reduce((b,p)=>b+(p.amount||0),0),0);
+  const pl=lastDates.reduce((a,d)=>a+purch.filter(p=>p.date===d).reduce((b,p)=>b+(p.amount||0),0),0);
+  const cs=thisDates.reduce((a,d)=>a+sales.filter(s=>s.date===d).reduce((b,s)=>b+(s.credit||0),0),0);
+  const cl=lastDates.reduce((a,d)=>a+sales.filter(s=>s.date===d).reduce((b,s)=>b+(s.credit||0),0),0);
+  const balance=creds.filter(c=>c.type==='debit').reduce((a,c)=>a+(c.amount||0),0)
+               -creds.filter(c=>c.type==='credit').reduce((a,c)=>a+(c.amount||0),0);
+  const sign=(v)=>v>=0?'+':'';
+  const clr=(v)=>v>=0?'#4ade80':'#f87171';
+  $('#stat-area').innerHTML=
+    `<div class="stat-table" style="margin-bottom:12px"><div class="stat-row"><span class="stat-lbl">외상 잔액</span><span class="stat-val red">${won(balance)}</span></div></div>`+
+    `<div class="wk-grid">`+
+      `<div class="wk-row wk-hdr-row"><div class="wk-cell wk-row-head" style="border-right:none"></div><div class="wk-cell wk-col-head">매출</div><div class="wk-cell wk-col-head">매입</div><div class="wk-cell wk-col-head">외상</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">전주</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sl)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pl)}</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cl)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">금주</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(ss)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(ps)}</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cs)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">증감</div><div class="wk-cell wk-val" style="color:${clr(ss-sl)}">${sign(ss-sl)+numK(ss-sl)}</div><div class="wk-cell wk-val" style="color:${clr(ps-pl)}">${sign(ps-pl)+numK(ps-pl)}</div><div class="wk-cell wk-val" style="color:${clr(cs-cl)}">${sign(cs-cl)+numK(cs-cl)}</div></div>`+
+    `</div>`;
   const sT=thisDates.map(d=>realSales(sales,creds,dt=>dt===d));
   const pT=thisDates.map(d=>purch.filter(p=>p.date===d).reduce((a,p)=>a+(p.amount||0),0));
-  const sL=lastDates.map(d=>realSales(sales,creds,dt=>dt===d));
-  const ss=sT.reduce((a,v)=>a+v,0),sl=sL.reduce((a,v)=>a+v,0);
-  setStats('당주 매출',won(ss),'전주 매출',won(sl),'증감',(ss-sl>=0?'+':'')+won(ss-sl),ss>=sl);
   drawChart(['일','월','화','수','목','금','토'],sT,pT);
 }
 function renderMonthly(sales,purch,creds) {
@@ -811,7 +839,16 @@ function renderMonthly(sales,purch,creds) {
   setStats('6개월 매출',won(ss),'6개월 매입',won(ps),'순이익',won(ss-ps),ss>=ps);
   drawChart(mos.map(m=>m.slice(5)+'월'),sd,pd);
 }
+function restoreStatTable() {
+  $('#stat-area').innerHTML=
+    '<div class="stat-table">'+
+    '<div class="stat-row"><span class="stat-lbl" id="as1-l">기간 매출</span><span class="stat-val amber" id="as1-v">-</span></div>'+
+    '<div class="stat-row"><span class="stat-lbl" id="as2-l">기간 매입</span><span class="stat-val red" id="as2-v">-</span></div>'+
+    '<div class="stat-row"><span class="stat-lbl" id="as3-l">순이익</span><span class="stat-val blue" id="as3-v">-</span></div>'+
+    '</div>';
+}
 function setStats(l1,v1,l2,v2,l3,v3,pos) {
+  restoreStatTable();
   $('#as1-l').textContent=l1;$('#as1-v').textContent=v1;$('#as1-v').className='stat-val amber';
   $('#as2-l').textContent=l2;$('#as2-v').textContent=v2;$('#as2-v').className='stat-val red';
   $('#as3-l').textContent=l3;$('#as3-v').textContent=v3;$('#as3-v').className='stat-val blue';
