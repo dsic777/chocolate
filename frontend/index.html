@@ -383,18 +383,38 @@ const pad2 = n  => String(n).padStart(2,'0');
 let curPage='home', chartInst=null;
 document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.p)));
 
+function updateAnalysisHeader(){
+  const dt=analysisDateObj(),y=dt.getFullYear(),mo=dt.getMonth()+1,d=dt.getDate(),dw=dt.getDay();
+  const DW=['일','월','화','수','목','금','토'];
+  const DC=['#f87171','#e5e7eb','#e5e7eb','#e5e7eb','#e5e7eb','#e5e7eb','#93c5fd'];
+  let html='';
+  if(_analysisPeriod==='weekly'){
+    const sun=new Date(dt);sun.setDate(d-dw);
+    const sat=new Date(sun);sat.setDate(sun.getDate()+6);
+    html=`<span style="font-size:17px;font-weight:900;color:#e5e7eb">`+
+         `${sun.getFullYear()}년 ${sun.getMonth()+1}월 ${sun.getDate()}일 ~ ${sat.getMonth()+1}월 ${sat.getDate()}일</span>`;
+  }else if(_analysisPeriod==='monthly'){
+    html=`<span style="font-size:20px;font-weight:900;color:#e5e7eb">${y}년 ${mo}월</span>`;
+  }else{
+    html=`<span style="font-size:20px;font-weight:900;color:#e5e7eb">${y}년 ${mo}월 ${d}일</span>`+
+         `<span style="font-size:20px;font-weight:900;color:${DC[dw]};margin-left:4px">(${DW[dw]})</span>`;
+  }
+  $('#today-lbl').innerHTML=html;
+  $('#today-btn').style.display='none';
+}
 function navigate(p) {
   curPage=p;
   document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('on',el.dataset.p===p));
   document.querySelectorAll('.page').forEach(el=>el.classList.toggle('on',el.id==='page-'+p));
-  if(p==='home')     renderHome();
-  if(p==='sales')    renderSales();
-  if(p==='purchase') renderPurchase();
-  if(p==='credit')   renderCredit();
+  if(p==='home')     { updateDateLabel(); renderHome(); }
+  if(p==='sales')    { updateDateLabel(); renderSales(); }
+  if(p==='purchase') { updateDateLabel(); renderPurchase(); }
+  if(p==='credit')   { updateDateLabel(); renderCredit(); }
   if(p==='analysis'){
     analysisDate=selectedDate;
     document.querySelectorAll('.pt').forEach((b,i)=>b.classList.toggle('on',['daily','weekly','monthly'][i]===_analysisPeriod));
     renderAnalysis();
+    updateAnalysisHeader();
   }
 }
 
@@ -734,7 +754,7 @@ function shiftAnalysis(dir){
     analysisDate=`${nm.getFullYear()}-${pad2(nm.getMonth()+1)}-01`;
   }
   selectedDate=analysisDate;
-  updateDateLabel();
+  updateAnalysisHeader();
   updateAnalysisPeriodLabel();
   renderAnalysis();
 }
@@ -742,6 +762,8 @@ function switchPeriod(p,btn){
   document.querySelectorAll('.pt').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
   _analysisPeriod=p;
+  updateAnalysisHeader();
+  updateAnalysisPeriodLabel();
   renderAnalysis();
 }
 async function renderAnalysis(p) {
@@ -1114,7 +1136,7 @@ let _swX=0;
 document.getElementById('page-analysis').addEventListener('touchstart',e=>{_swX=e.touches[0].clientX;},{passive:true});
 document.getElementById('page-analysis').addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-_swX;
-  if(Math.abs(dx)>60)shiftAnalysis(dx<0?1:-1);
+  if(Math.abs(dx)>60)shiftAnalysis(dx<0?-1:1);
 },{passive:true});
 
 // ── INIT ──────────────────────────────────
