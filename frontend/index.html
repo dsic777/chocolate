@@ -242,7 +242,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div class="card-ttl" id="p-form-ttl">직접 입력</div>
         <div class="fg2">
           <div class="fg"><label>날짜</label><input type="date" id="p-date"></div>
-          <div class="fg"><label>업체명</label><input type="text" id="p-vendor" placeholder="대선주류"></div>
+          <div class="fg"><label>거래처명</label><input type="text" id="p-vendor" placeholder="거래처명"></div>
         </div>
         <div class="fg2">
           <div class="fg"><label>품목</label><input type="text" id="p-cat" placeholder="주류,음료"></div>
@@ -740,7 +740,7 @@ ${text}`
     :`다음 텍스트에서 초콜릿 매입 정보를 추출하여 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
-필드: date(YYYY-MM-DD, 없으면 오늘), vendor(업체명), category(품목), amount(금액 숫자), payment("card" 또는 "cash"), memo
+필드: date(YYYY-MM-DD, 없으면 오늘), vendor(거래처명), category(품목), amount(금액 숫자), payment("card" 또는 "cash"), memo
 한국어 숫자(백만원=1000000, 오십만=500000 등) 변환 필수.
 설명 없이 JSON 배열만 반환:
 ${text}`;
