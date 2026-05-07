@@ -737,10 +737,9 @@ function renderMonthly(sales,purch,creds) {
   drawChart(mos.map(m=>m.slice(5)+'월'),sd,pd);
 }
 function setStats(l1,v1,l2,v2,l3,v3,pos) {
-  $('#as1-l').textContent=l1;$('#as1-v').textContent=v1;
-  $('#as2-l').textContent=l2;$('#as2-v').textContent=v2;
-  $('#as3-l').textContent=l3;$('#as3-v').textContent=v3;
-  $('#as3-v').className='stat-val '+(pos?'green':'red');
+  $('#as1-l').textContent=l1;$('#as1-v').textContent=v1;$('#as1-v').className='stat-val amber';
+  $('#as2-l').textContent=l2;$('#as2-v').textContent=v2;$('#as2-v').className='stat-val red';
+  $('#as3-l').textContent=l3;$('#as3-v').textContent=v3;$('#as3-v').className='stat-val blue';
 }
 function drawChart(labels,sData,pData) {
   chartInst=new Chart($('#main-chart').getContext('2d'),{
