@@ -310,13 +310,19 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 
     <!-- ═══ 분석 ═══ -->
     <div class="page" id="page-analysis">
-      <div style="display:flex;align-items:center;gap:5px;padding:4px 0 10px;position:sticky;top:0;background:#000;z-index:10">
-        <button onclick="shiftAnalysis(-1)" style="background:#1f2937;border:1px solid #374151;color:#e5e7eb;width:36px;height:36px;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0">‹</button>
-        <button class="pt on" id="pt-daily"   onclick="switchPeriod('daily',this)">일별</button>
-        <button class="pt"    id="pt-weekly"  onclick="switchPeriod('weekly',this)">주간</button>
-        <button class="pt"    id="pt-monthly" onclick="switchPeriod('monthly',this)">월별</button>
-        <span id="analysis-period-lbl" style="font-size:14px;font-weight:700;color:#e5e7eb;flex:1;text-align:right;white-space:nowrap"></span>
-        <button onclick="shiftAnalysis(1)"  style="background:#1f2937;border:1px solid #374151;color:#e5e7eb;width:36px;height:36px;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0">›</button>
+      <div style="position:sticky;top:0;background:#000;z-index:10;padding:4px 0 8px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <button onclick="shiftAnalysis(-1)" style="background:#1f2937;border:1px solid #374151;color:#e5e7eb;width:36px;height:36px;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0">‹</button>
+          <div style="display:flex;gap:6px;flex:1;justify-content:center">
+            <button class="pt on" id="pt-daily"   onclick="switchPeriod('daily',this)">일별</button>
+            <button class="pt"    id="pt-weekly"  onclick="switchPeriod('weekly',this)">주간</button>
+            <button class="pt"    id="pt-monthly" onclick="switchPeriod('monthly',this)">월별</button>
+          </div>
+          <button onclick="shiftAnalysis(1)"  style="background:#1f2937;border:1px solid #374151;color:#e5e7eb;width:36px;height:36px;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0">›</button>
+        </div>
+        <div style="text-align:center;padding-top:7px">
+          <span id="analysis-period-lbl" style="font-size:16px;font-weight:700;color:#e5e7eb;white-space:nowrap"></span>
+        </div>
       </div>
       <div id="analysis-content">
       <div class="card">
