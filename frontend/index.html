@@ -863,8 +863,25 @@ function renderWeekly(sales,purch,creds) {
   $('#chart-title').textContent='주간 비교';
   const now=analysisDateObj(),dow=now.getDay();
   const wkDates=(off)=>Array.from({length:7},(_,i)=>{const d=new Date(now);d.setDate(d.getDate()-dow+i+off*7);return`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;});
-  const thisDates=wkDates(0);
-  renderStats(sales,purch,creds);
+  const thisDates=wkDates(0),lastDates=wkDates(-1);
+  const ss=realSales(sales,creds,d=>thisDates.includes(d));
+  const sl=realSales(sales,creds,d=>lastDates.includes(d));
+  const ps=thisDates.reduce((a,d)=>a+purch.filter(p=>p.date===d).reduce((b,p)=>b+(p.amount||0),0),0);
+  const pl=lastDates.reduce((a,d)=>a+purch.filter(p=>p.date===d).reduce((b,p)=>b+(p.amount||0),0),0);
+  const cs=thisDates.reduce((a,d)=>a+sales.filter(s=>s.date===d).reduce((b,s)=>b+(s.credit||0),0),0);
+  const cl=lastDates.reduce((a,d)=>a+sales.filter(s=>s.date===d).reduce((b,s)=>b+(s.credit||0),0),0);
+  const balance=creds.filter(c=>c.type==='debit').reduce((a,c)=>a+(c.amount||0),0)
+               -creds.filter(c=>c.type==='credit').reduce((a,c)=>a+(c.amount||0),0);
+  const sign=(v)=>v>=0?'+':'';
+  const clr=(v)=>v>=0?'#4ade80':'#f87171';
+  $('#stat-area').innerHTML=
+    `<div class="stat-table" style="margin-bottom:12px"><div class="stat-row"><span class="stat-lbl">외상 잔액</span><span class="stat-val red">${won(balance)}</span></div></div>`+
+    `<div class="wk-grid">`+
+      `<div class="wk-row wk-hdr-row"><div class="wk-cell wk-row-head" style="border-right:none"></div><div class="wk-cell wk-col-head">매출</div><div class="wk-cell wk-col-head">매입</div><div class="wk-cell wk-col-head">외상</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">전주</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sl)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pl)}</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cl)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">금주</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(ss)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(ps)}</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cs)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">증감</div><div class="wk-cell wk-val" style="color:${clr(ss-sl)}">${sign(ss-sl)+numK(ss-sl)}</div><div class="wk-cell wk-val" style="color:${clr(ps-pl)}">${sign(ps-pl)+numK(ps-pl)}</div><div class="wk-cell wk-val" style="color:${clr(cs-cl)}">${sign(cs-cl)+numK(cs-cl)}</div></div>`+
+    `</div>`;
   const sT=thisDates.map(d=>realSales(sales,creds,dt=>dt===d));
   const pT=thisDates.map(d=>purch.filter(p=>p.date===d).reduce((a,p)=>a+(p.amount||0),0));
   drawChart(['일','월','화','수','목','금','토'],sT,pT);
