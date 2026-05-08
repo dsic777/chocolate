@@ -357,16 +357,26 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 <!-- ═══ RESET MODAL ═══ -->
 <div id="reset-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center">
   <div style="background:#1f2937;border:1px solid #374151;border-radius:18px;padding:28px 24px 20px;width:280px;text-align:center;animation:popIn .22s cubic-bezier(.34,1.56,.64,1)">
-    <div style="font-size:34px;margin-bottom:8px">🗑️</div>
-    <div style="font-size:18px;font-weight:900;color:#f87171;margin-bottom:6px">데이터 초기화</div>
-    <div style="font-size:14px;color:#9ca3af;margin-bottom:18px">비밀번호를 입력하세요<br>초기화 후 복구 불가</div>
-    <input id="reset-pw" type="password" inputmode="numeric" maxlength="6"
-      style="width:100%;padding:13px;border-radius:10px;border:1px solid #374151;background:#111827;color:#fff;font-size:22px;font-weight:900;text-align:center;letter-spacing:6px;box-sizing:border-box;outline:none"
-      placeholder="••••••" oninput="onResetPwInput()">
-    <div id="reset-err" style="height:18px;font-size:13px;color:#f87171;margin-top:6px"></div>
-    <div style="display:flex;gap:10px;margin-top:14px">
-      <button class="mb mb-cancel" style="flex:1" onclick="closeResetModal()">취소</button>
-      <button class="mb mb-del" style="flex:1" onclick="confirmReset()">초기화</button>
+    <!-- 비밀번호 화면 -->
+    <div id="reset-pw-view">
+      <div style="font-size:34px;margin-bottom:8px">🔐</div>
+      <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:6px">관리자 인증</div>
+      <div style="font-size:14px;color:#9ca3af;margin-bottom:18px">비밀번호를 입력하세요</div>
+      <input id="reset-pw" type="password" inputmode="numeric" maxlength="6"
+        style="width:100%;padding:13px;border-radius:10px;border:1px solid #374151;background:#111827;color:#fff;font-size:22px;font-weight:900;text-align:center;letter-spacing:6px;box-sizing:border-box;outline:none"
+        placeholder="••••••" oninput="onResetPwInput()">
+      <div id="reset-err" style="height:18px;font-size:13px;color:#f87171;margin-top:6px"></div>
+      <button class="mb mb-cancel" style="width:100%;margin-top:14px" onclick="closeResetModal()">취소</button>
+    </div>
+    <!-- 액션 선택 화면 -->
+    <div id="reset-action-view" style="display:none">
+      <div style="font-size:34px;margin-bottom:8px">⚙️</div>
+      <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:18px">데이터 관리</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="mb" style="background:#0d9488;color:#fff;padding:14px" onclick="doSeed()">📦 기초 데이터 생성</button>
+        <button class="mb mb-del" style="padding:14px" onclick="doReset()">🗑️ 전체 데이터 삭제</button>
+        <button class="mb mb-cancel" style="padding:14px" onclick="closeResetModal()">취소</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1279,28 +1289,45 @@ document.getElementById('page-analysis').addEventListener('touchend',e=>{
   if(Math.abs(dx)>60)shiftAnalysis(dx<0?-1:1);
 },{passive:true});
 
-// ── RESET ─────────────────────────────────
+// ── RESET / SEED ──────────────────────────
 function openResetModal(){
   $('#reset-pw').value='';$('#reset-err').textContent='';
+  $('#reset-pw-view').style.display='block';
+  $('#reset-action-view').style.display='none';
   $('#reset-overlay').style.display='flex';
   setTimeout(()=>$('#reset-pw').focus(),100);
 }
 function closeResetModal(){$('#reset-overlay').style.display='none';}
 function onResetPwInput(){
   $('#reset-err').textContent='';
-  if($('#reset-pw').value.length===6)confirmReset();
-}
-async function confirmReset(){
-  if($('#reset-pw').value!=='030714'){
-    $('#reset-err').textContent='비밀번호가 틀렸습니다';
-    $('#reset-pw').value='';return;
+  if($('#reset-pw').value.length===6){
+    if($('#reset-pw').value!=='030714'){
+      $('#reset-err').textContent='비밀번호가 틀렸습니다';
+      $('#reset-pw').value='';return;
+    }
+    $('#reset-pw-view').style.display='none';
+    $('#reset-action-view').style.display='block';
   }
+}
+async function doReset(){
   closeResetModal();
-  const ok=await showConfirm('매출·매입·외상 전체를 삭제합니다.\n정말 초기화하시겠습니까?','🗑️','초기화','mb-del');
+  const ok=await showConfirm('매출·매입·외상 전체를 삭제합니다.\n정말 초기화하시겠습니까?','🗑️','삭제','mb-del');
   if(!ok)return;
   try{
     await fetch('/chocolate/api/reset',{method:'DELETE'});
     await showAlert('데이터가 초기화되었습니다','✅');
+    location.reload();
+  }catch(e){await showAlert('오류가 발생했습니다','❌');}
+}
+async function doSeed(){
+  closeResetModal();
+  const ok=await showConfirm('1년치 기초 데이터를 생성합니다.\n(기존 데이터에 추가됩니다)','📦','생성','mb-ok');
+  if(!ok)return;
+  try{
+    await showAlert('생성 중... 잠시 기다려주세요','⏳');
+    const res=await fetch('/chocolate/api/seed',{method:'POST'});
+    const d=await res.json();
+    await showAlert(`생성 완료!\n매출 ${d.sales}건 · 매입 ${d.purchases}건`,'✅');
     location.reload();
   }catch(e){await showAlert('오류가 발생했습니다','❌');}
 }
