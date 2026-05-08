@@ -881,10 +881,11 @@ function renderWeekly(sales,purch,creds) {
   $('#stat-area').innerHTML=
     `<div class="stat-table" style="margin-bottom:12px"><div class="stat-row"><span class="stat-lbl">외상 잔액</span><span class="stat-val red">${won(balance)}</span></div></div>`+
     `<div class="wk-grid">`+
-      `<div class="wk-row wk-hdr-row"><div class="wk-cell wk-row-head" style="border-right:none"></div><div class="wk-cell wk-col-head">매출</div><div class="wk-cell wk-col-head">매입</div><div class="wk-cell wk-col-head">외상</div></div>`+
-      `<div class="wk-row"><div class="wk-cell wk-row-head">전주</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sl)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pl)}</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cl)}</div></div>`+
-      `<div class="wk-row"><div class="wk-cell wk-row-head">금주</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(ss)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(ps)}</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cs)}</div></div>`+
-      `<div class="wk-row"><div class="wk-cell wk-row-head">증감</div><div class="wk-cell wk-val" style="color:${clr(ss-sl)}">${sign(ss-sl)+numK(ss-sl)}</div><div class="wk-cell wk-val" style="color:${clr(ps-pl)}">${sign(ps-pl)+numK(ps-pl)}</div><div class="wk-cell wk-val" style="color:${clr(cs-cl)}">${sign(cs-cl)+numK(cs-cl)}</div></div>`+
+      `<div class="wk-row wk-hdr-row"><div class="wk-cell wk-row-head" style="border-right:none"></div><div class="wk-cell wk-col-head">전주</div><div class="wk-cell wk-col-head">금주</div><div class="wk-cell wk-col-head">증감</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">매출</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sl)}</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(ss)}</div><div class="wk-cell wk-val" style="color:${clr(ss-sl)}">${sign(ss-sl)+numK(ss-sl)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">매입</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pl)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(ps)}</div><div class="wk-cell wk-val" style="color:${clr(ps-pl)}">${sign(ps-pl)+numK(ps-pl)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">순익</div><div class="wk-cell wk-val" style="color:${clr(sl-pl)}">${numK(sl-pl)}</div><div class="wk-cell wk-val" style="color:${clr(ss-ps)}">${numK(ss-ps)}</div><div class="wk-cell wk-val" style="color:${clr((ss-ps)-(sl-pl))}">${sign((ss-ps)-(sl-pl))+numK((ss-ps)-(sl-pl))}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">외상</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cl)}</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cs)}</div><div class="wk-cell wk-val" style="color:${clr(cs-cl)}">${sign(cs-cl)+numK(cs-cl)}</div></div>`+
     `</div>`;
   const sT=thisDates.map(d=>realSales(sales,creds,dt=>dt===d));
   const pT=thisDates.map(d=>purch.filter(p=>p.date===d).reduce((a,p)=>a+(p.amount||0),0));
