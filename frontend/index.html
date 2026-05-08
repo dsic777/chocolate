@@ -572,8 +572,11 @@ async function renderSales() {
   if(!$('#s-date').dataset.date){$('#s-date').dataset.date=selectedDate;$('#s-date').value=fmtDate(selectedDate);}
   const all=[...await getSales()].sort((a,b)=>b.date.localeCompare(a.date));
   all.forEach(s=>{_saleRows[s.id]=s;});
-  const list=all.filter(s=>s.date===selectedDate);
-  $('#sales-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 매출 없음</div>`
+  const [sy,sm,sd]=selectedDate.split('-').map(Number);
+  const _sf=new Date(sy,sm-1,sd);_sf.setDate(_sf.getDate()-13);
+  const _sfrom=`${_sf.getFullYear()}-${pad2(_sf.getMonth()+1)}-${pad2(_sf.getDate())}`;
+  const list=all.filter(s=>s.date>=_sfrom&&s.date<=selectedDate);
+  $('#sales-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 기준 14일 매출 없음</div>`
     :list.map(s=>`<div class="li">
       <div class="li-body">
         <div class="li-title">${dl(s.date)} <strong>${s.customer||'고객'}</strong></div>
@@ -626,8 +629,11 @@ async function renderPurchase() {
   if(!$('#p-date').dataset.date){$('#p-date').dataset.date=selectedDate;$('#p-date').value=fmtDate(selectedDate);}
   const all=[...await getPurchs()].sort((a,b)=>b.date.localeCompare(a.date));
   all.forEach(p=>{_purchRows[p.id]=p;});
-  const list=all.filter(p=>p.date===selectedDate);
-  $('#purch-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 매입 없음</div>`
+  const [py,pm,pd]=selectedDate.split('-').map(Number);
+  const _pf=new Date(py,pm-1,pd);_pf.setDate(_pf.getDate()-13);
+  const _pfrom=`${_pf.getFullYear()}-${pad2(_pf.getMonth()+1)}-${pad2(_pf.getDate())}`;
+  const list=all.filter(p=>p.date>=_pfrom&&p.date<=selectedDate);
+  $('#purch-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 기준 14일 매입 없음</div>`
     :list.map(p=>`<div class="li">
       <div class="li-body">
         <div class="li-title">${dl(p.date)} <strong>${p.vendor||'미상'}</strong>${p.category?' <span style="color:#888;font-weight:400">'+p.category+'</span>':''}</div>
