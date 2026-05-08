@@ -214,7 +214,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         </div>
         <div class="card-ttl" id="s-form-ttl">직접 입력</div>
         <div class="fg2">
-          <div class="fg"><label>날짜</label><input type="date" id="s-date"></div>
+          <div class="fg"><label>날짜</label><input type="text" id="s-date" readonly onclick="openCalFor('s-date')" placeholder="날짜 선택" style="cursor:pointer"></div>
           <div class="fg"><label>고객명</label><input type="text" id="s-cust" placeholder="고객명"></div>
         </div>
         <div class="fg2">
@@ -256,7 +256,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         </div>
         <div class="card-ttl" id="p-form-ttl">직접 입력</div>
         <div class="fg2">
-          <div class="fg"><label>날짜</label><input type="date" id="p-date"></div>
+          <div class="fg"><label>날짜</label><input type="text" id="p-date" readonly onclick="openCalFor('p-date')" placeholder="날짜 선택" style="cursor:pointer"></div>
           <div class="fg"><label>거래처명</label><input type="text" id="p-vendor" placeholder="거래처명"></div>
         </div>
         <div class="fg2">
@@ -285,7 +285,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
       <div class="card" id="pay-form">
         <div class="card-ttl">변제 입력</div>
         <div class="fg2">
-          <div class="fg"><label>날짜</label><input type="date" id="pay-date"></div>
+          <div class="fg"><label>날짜</label><input type="text" id="pay-date" readonly onclick="openCalFor('pay-date')" placeholder="날짜 선택" style="cursor:pointer"></div>
           <div class="fg"><label>고객명</label><input type="text" id="pay-name" placeholder="고객명"></div>
         </div>
         <div class="fg2">
@@ -391,6 +391,8 @@ const uid  = () => Date.now().toString(36)+Math.random().toString(36).slice(2,5)
 const $    = s  => document.querySelector(s);
 const dl   = d  => (d||'').replace(/-/g,'.');
 const pad2 = n  => String(n).padStart(2,'0');
+const fmtDate = d => {if(!d)return'';const[y,m,dy]=d.split('-').map(Number);return`${y}년 ${m}월 ${dy}일`;};
+let _calTarget=null;
 
 // ── NAV ───────────────────────────────────
 let curPage='home', chartInst=null;
@@ -499,7 +501,7 @@ function calcTotal() {
 
 async function addSale(data) {
   const d=data||{
-    date:$('#s-date').value, customer:$('#s-cust').value.trim()||'고객',
+    date:$('#s-date').dataset.date||$('#s-date').value, customer:$('#s-cust').value.trim()||'고객',
     card:parseNum($('#s-card').value), cash:parseNum($('#s-cash').value),
     credit:parseNum($('#s-cred').value), memo:$('#s-memo').value.trim()
   };
@@ -563,7 +565,7 @@ async function delSale(id){
 
 const _saleRows={};
 async function renderSales() {
-  if(!$('#s-date').value)$('#s-date').value=selectedDate;
+  if(!$('#s-date').dataset.date){$('#s-date').dataset.date=selectedDate;$('#s-date').value=fmtDate(selectedDate);}
   const list=[...await getSales()].sort((a,b)=>b.date.localeCompare(a.date));
   list.forEach(s=>{_saleRows[s.id]=s;});
   $('#sales-list').innerHTML=list.length===0?`<div class="empty">매출 내역이 없습니다</div>`
@@ -590,7 +592,7 @@ async function renderSales() {
 // ── PURCHASE ──────────────────────────────
 async function addPurchase(data) {
   const d=data||{
-    date:$('#p-date').value, vendor:$('#p-vendor').value.trim(),
+    date:$('#p-date').dataset.date||$('#p-date').value, vendor:$('#p-vendor').value.trim(),
     category:$('#p-cat').value.trim(), amount:parseNum($('#p-amt').value),
     payment:$('#p-pay').value, memo:$('#p-memo').value.trim()
   };
@@ -616,7 +618,7 @@ async function delPurchase(id){if(!await showConfirm('매입을 삭제할까요?
 
 const _purchRows={};
 async function renderPurchase() {
-  if(!$('#p-date').value)$('#p-date').value=selectedDate;
+  if(!$('#p-date').dataset.date){$('#p-date').dataset.date=selectedDate;$('#p-date').value=fmtDate(selectedDate);}
   const list=[...await getPurchs()].sort((a,b)=>b.date.localeCompare(a.date));
   list.forEach(p=>{_purchRows[p.id]=p;});
   $('#purch-list').innerHTML=list.length===0?`<div class="empty">매입 내역이 없습니다</div>`
@@ -663,7 +665,7 @@ function selectCreditor(name,bal){
   $('#pay-form').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function addPayment() {
-  const name=$('#pay-name').value.trim(), date=$('#pay-date').value,
+  const name=$('#pay-name').value.trim(), date=$('#pay-date').dataset.date||$('#pay-date').value,
         card=parseNum($('#pay-card').value), cash=parseNum($('#pay-cash').value),
         amount=card+cash;
   if(!name){await showAlert('고객명을 입력하세요','👤');return;}
@@ -679,7 +681,7 @@ async function addPayment() {
 }
 
 async function renderCredit() {
-  if(!$('#pay-date').value)$('#pay-date').value=selectedDate;
+  if(!$('#pay-date').dataset.date){$('#pay-date').dataset.date=selectedDate;$('#pay-date').value=fmtDate(selectedDate);}
   const cr=await getCreds(), allNames=[...new Set(cr.map(c=>c.name))];
   const balMap={};
   allNames.forEach(n=>{
@@ -984,7 +986,7 @@ function editParsed(type,idx) {
   const el=$(`#pi-${type}-${idx}`);
   if(el)el.remove();
   if(type==='sales'){
-    $('#s-date').value=item.date||selectedDate;
+    const sd=item.date||selectedDate;$('#s-date').dataset.date=sd;$('#s-date').value=fmtDate(sd);
     $('#s-cust').value=item.customer||'고객';
     $('#s-card').value=item.card?Number(item.card).toLocaleString('ko-KR'):'';
     $('#s-cash').value=item.cash?Number(item.cash).toLocaleString('ko-KR'):'';
@@ -994,7 +996,7 @@ function editParsed(type,idx) {
     $('#s-form-card').style.display='block';
     $('#s-form-card').scrollIntoView({behavior:'smooth',block:'start'});
   } else {
-    $('#p-date').value=item.date||selectedDate;
+    const pd=item.date||selectedDate;$('#p-date').dataset.date=pd;$('#p-date').value=fmtDate(pd);
     $('#p-vendor').value=item.vendor||'';
     $('#p-cat').value=item.category||'';
     $('#p-pay').value=item.payment||'cash';
@@ -1067,7 +1069,7 @@ let _purchEditId=null;
 
 function enterPurchEditMode(item){
   _purchEditId=item.id;
-  $('#p-date').value=item.date||'';
+  $('#p-date').dataset.date=item.date||'';$('#p-date').value=item.date?fmtDate(item.date):'';
   $('#p-vendor').value=item.vendor||'';
   $('#p-cat').value=item.category||'';
   $('#p-pay').value=item.payment||'cash';
@@ -1099,7 +1101,7 @@ function enterSaleEditMode(item){
   _saleEditId=item.id;
   _saleOrigCredit=item.credit||0;
   _saleOrigCustomer=item.customer||'';
-  $('#s-date').value=item.date||'';
+  $('#s-date').dataset.date=item.date||'';$('#s-date').value=item.date?fmtDate(item.date):'';
   $('#s-cust').value=item.customer||'';
   $('#s-card').value=item.card?Number(item.card).toLocaleString('ko-KR'):'';
   $('#s-cash').value=item.cash?Number(item.cash).toLocaleString('ko-KR'):'';
@@ -1147,11 +1149,20 @@ function goToday(){selectedDate=today();updateDateLabel();refreshCurPage();}
 let calY,calM;
 
 function openCal(){
+  _calTarget=null;
   const [y,m]=selectedDate.split('-').map(Number);
   calY=y;calM=m;renderCal();
   $('#cal-modal').style.display='flex';
 }
-function closeCal(){$('#cal-modal').style.display='none';}
+function openCalFor(inputId){
+  _calTarget=inputId;
+  const el=$('#'+inputId);
+  const ref=el.dataset.date||selectedDate;
+  const [y,m]=ref.split('-').map(Number);
+  calY=y;calM=m;renderCal();
+  $('#cal-modal').style.display='flex';
+}
+function closeCal(){$('#cal-modal').style.display='none';_calTarget=null;}
 
 function renderCal(){
   $('#cal-title').textContent=calY+'년 '+calM+'월';
@@ -1163,7 +1174,8 @@ function renderCal(){
     const col=i%7;
     if(i<first||day>last){cells+='<div></div>';continue;}
     const ds=`${calY}-${String(calM).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const isSel=ds===selectedDate,isT=ds===t;
+    const selDate=_calTarget?(($('#'+_calTarget)?.dataset.date||selectedDate)):selectedDate;
+    const isSel=ds===selDate,isT=ds===t;
     const tc=col===0?'#f87171':col===6?'#93c5fd':'#fff';
     cells+=`<div onclick="selectDate('${ds}')" style="text-align:center;padding:10px 2px;cursor:pointer;border-radius:8px;font-size:19px;font-weight:900;color:${isSel?'#000':tc};background:${isSel?'#fbbf24':isT?'#1f2937':'transparent'};border:1px solid ${isT&&!isSel?'#fbbf24':'transparent'}">${day}</div>`;
     day++;
@@ -1177,7 +1189,15 @@ function refreshCurPage(){
   else if(curPage==='purchase')renderPurchase();
   else if(curPage==='credit')renderCredit();
 }
-function selectDate(ds){selectedDate=ds;closeCal();updateDateLabel();refreshCurPage();}
+function selectDate(ds){
+  if(_calTarget){
+    const el=$('#'+_calTarget);
+    el.dataset.date=ds;el.value=fmtDate(ds);
+    _calTarget=null;closeCal();
+  } else {
+    selectedDate=ds;closeCal();updateDateLabel();refreshCurPage();
+  }
+}
 function prevMonth(){calM--;if(calM<1){calM=12;calY--;}renderCal();}
 function nextMonth(){calM++;if(calM>12){calM=1;calY++;}renderCal();}
 
