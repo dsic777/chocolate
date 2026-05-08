@@ -890,6 +890,7 @@ function drawChart(labels,sData,pData) {
 let _parsed={sales:[],purchase:[]};
 
 async function parseAI(type) {
+  if(isListening){isListening=false;try{recognition.stop();}catch(e){}stopMic(_micType||type);}
   const taId=type==='sales'?'sales-ta':'purch-ta';
   const text=$(('#'+taId)).value.trim();
   if(!text){await showAlert('텍스트를 입력하거나 말해주세요','🎤');return;}
@@ -1033,34 +1034,49 @@ function editParsed(type,idx) {
 }
 
 // ── VOICE STT ─────────────────────────────
-let recognition=null,isListening=false;
+let recognition=null,isListening=false,_micType=null;
 
 function toggleMic(type) {
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showAlert('Chrome 또는 Edge에서 사용해 주세요','🌐');return;}
-  const btn=$('#mic-'+type);
+  if(isListening){
+    isListening=false;
+    try{recognition.stop();}catch(e){}
+    return;
+  }
+  // 파싱 결과 및 텍스트 초기화
+  const parsedId=type==='sales'?'sales-parsed':'purch-parsed';
+  $('#'+parsedId).innerHTML='';
+  _parsed[type]=[];
   const ta=$(type==='sales'?'#sales-ta':'#purch-ta');
-  if(isListening){recognition.stop();return;}
+  ta.value='';
+  _micType=type;
+  const btn=$('#mic-'+type);
   recognition=new SR();
-  recognition.lang='ko-KR';recognition.interimResults=true;recognition.continuous=false;
-  recognition.onstart=()=>{isListening=true;btn.classList.add('on','pulsing');btn.textContent='🔴 듣는 중...';showV('🎤 말씀하세요...');};
+  recognition.lang='ko-KR';recognition.interimResults=true;recognition.continuous=true;
+  recognition.onstart=()=>{isListening=true;btn.classList.add('on','pulsing');btn.textContent='🔴 듣는 중...';};
   recognition.onresult=e=>{
     let fin='',inter='';
-    for(let i=0;i<e.results.length;i++){
+    for(let i=e.resultIndex;i<e.results.length;i++){
       if(e.results[i].isFinal)fin+=e.results[i][0].transcript;
       else inter+=e.results[i][0].transcript;
     }
     if(inter)btn.textContent='🔴 '+inter;
-    if(fin){ta.value=(ta.value+(ta.value?'\n':'')+fin.trim()).trim();showV('🎤 '+fin.trim());}
+    if(fin){ta.value=(ta.value+(ta.value?'\n':'')+fin.trim()).trim();btn.textContent='🔴 듣는 중...';}
   };
-  recognition.onerror=e=>{showV('⚠️ '+e.error);stopMic(type);};
-  recognition.onend=()=>stopMic(type);
+  recognition.onerror=e=>{if(e.error!=='no-speech')stopMic(type);};
+  recognition.onend=()=>{
+    if(isListening){try{recognition.start();}catch(err){stopMic(type);}}
+    else{stopMic(type);}
+  };
   recognition.start();
 }
 function stopMic(type){
   isListening=false;
-  const btn=$('#mic-'+type);
+  const t=_micType||type;
+  const btn=$('#mic-'+t);
   if(btn){btn.classList.remove('on','pulsing');btn.textContent='🎤 말하기';}
+  _micType=null;
 }
 
 // ── VOICE STATUS ──────────────────────────
