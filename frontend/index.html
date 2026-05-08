@@ -933,7 +933,7 @@ async function parseAI(type) {
 오늘 날짜: ${t}
 
 추출 방법:
-1. 사람 이름 → customer
+1. 사람 이름이 나올 때마다 새 항목 시작. 이름 뒤에 "이/아"가 붙어도 사람 이름임 (수정이→수정, 지연이→지연, 연수야→연수)
 2. 카드/현금/외상 금액 → card/cash/credit (결제수단 없으면 cash)
 3. total = card+cash+credit
 4. 위 세 가지를 제외한 나머지 단어들을 자연스럽게 정리해서 memo에 넣는다 (없으면 "")
