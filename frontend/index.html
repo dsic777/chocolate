@@ -1034,7 +1034,7 @@ function editParsed(type,idx) {
 }
 
 // ── VOICE STT ─────────────────────────────
-let recognition=null,isListening=false,_micType=null;
+let recognition=null,isListening=false,_micType=null,_finalText='';
 
 function toggleMic(type) {
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1050,6 +1050,7 @@ function toggleMic(type) {
   _parsed[type]=[];
   const ta=$(type==='sales'?'#sales-ta':'#purch-ta');
   ta.value='';
+  _finalText='';
   _micType=type;
   const btn=$('#mic-'+type);
   recognition=new SR();
@@ -1061,13 +1062,14 @@ function toggleMic(type) {
       if(e.results[i].isFinal)fin+=e.results[i][0].transcript;
       else inter+=e.results[i][0].transcript;
     }
-    if(inter)btn.textContent='🔴 '+inter;
-    if(fin){ta.value=(ta.value+(ta.value?'\n':'')+fin.trim()).trim();btn.textContent='🔴 듣는 중...';}
+    if(fin){_finalText=(_finalText+(_finalText?'\n':'')+fin.trim()).trim();}
+    ta.value=_finalText+(inter?(_finalText?'\n':'')+inter:'');
+    btn.textContent=inter?'🔴 '+inter:'🔴 듣는 중...';
   };
   recognition.onerror=e=>{if(e.error!=='no-speech')stopMic(type);};
   recognition.onend=()=>{
     if(isListening){try{recognition.start();}catch(err){stopMic(type);}}
-    else{stopMic(type);}
+    else{if(_micType)$('#'+(type==='sales'?'sales-ta':'purch-ta')).value=_finalText;stopMic(type);}
   };
   recognition.start();
 }
