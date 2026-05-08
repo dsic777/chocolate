@@ -233,6 +233,19 @@ def add_credit(c: Credit):
     return {"ok": True}
 
 
+# ── Reset ─────────────────────────────────────────────────────────────────────
+
+@app.delete("/api/reset")
+def reset_all():
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM choco_credits")
+            cur.execute("DELETE FROM choco_sales")
+            cur.execute("DELETE FROM choco_purchases")
+        conn.commit()
+    return {"ok": True}
+
+
 # ── Health ────────────────────────────────────────────────────────────────────
 
 @app.get("/api/health")
