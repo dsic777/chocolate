@@ -495,14 +495,13 @@ async function renderHome() {
   pEl.style.cssText='font-size:32px;font-weight:700;text-align:center;padding:8px 0';
   $('#h-profit-sub').textContent=`매출 ${won(sTotal)} · 매입 ${won(pTotal)}`;
 
-  const [sy,sm,sd]=t.split('-').map(Number);
-  const dtFrom=new Date(sy,sm-1,sd);dtFrom.setDate(dtFrom.getDate()-13);
-  const dateFrom=`${dtFrom.getFullYear()}-${pad2(dtFrom.getMonth()+1)}-${pad2(dtFrom.getDate())}`;
-  const all=[
+  const sorted=[
     ...sales.map(s=>({...s,_t:'sale'})),
     ...purch.map(p=>({...p,_t:'purch'}))
-  ].filter(x=>x.date>=dateFrom&&x.date<=t)
-   .sort((a,b)=>b.date.localeCompare(a.date)||(b.id||'').localeCompare(a.id||'')).slice(0,8);
+  ].filter(x=>x.date<=t)
+   .sort((a,b)=>b.date.localeCompare(a.date)||(b.id||'').localeCompare(a.id||''));
+  const cutoffDate=sorted.length>=15?sorted[14].date:sorted[sorted.length-1]?.date;
+  const all=cutoffDate?sorted.filter(x=>x.date>=cutoffDate):sorted;
 
   $('#home-list').innerHTML=all.length===0
     ?`<div class="empty">거래 내역이 없습니다</div>`
@@ -982,7 +981,10 @@ B단계 - 구조화 항목만 추출한다:
   · 금액이 없는 이름은 customer로 추출하지 않는다
 
 C단계 - C = A에서 B를 제거한다:
-  · A 전체 텍스트에서 B에서 추출한 단어들(이름, 결제수단, 금액 숫자/단위)을 모두 제거한다.
+  · 고객 이름(customer로 추출된 것)을 제거한다.
+  · 결제수단 단어(카드/현금/외상)를 제거한다.
+  · 결제수단 바로 뒤에 오는 금액(숫자+만+원 조합)만 제거한다.
+  · 독립적인 숫자나 시간/수량 표현(예: 4시간, 3시간, 2개 등)은 절대 제거하지 않는다.
   · 남은 텍스트가 C이다.
 
 D단계 - C에서 불필요한 조사/공백을 제거해 정리한다 → D
@@ -995,17 +997,24 @@ ${text}`
     :`아래 텍스트에서 매입 항목을 추출해 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
-처리 순서:
-1단계 - 구조화 항목만 추출:
-  · 거래처명 → vendor
-  · 품목 → category
-  · 카드/현금 + 금액 → amount, payment (없으면 cash)
-  · date = ${t} (고정, 텍스트에서 추출하지 않음)
+A단계 - 전체 텍스트를 그대로 보존한다.
 
-2단계 - memo:
-  각 항목에서 거래처명·품목·금액·결제수단 단어를 원문에서 제거한다.
-  남은 텍스트를 그대로 memo에 넣는다. 해석·판단 없이 원문 그대로.
-  남은 것 없으면 ""
+B단계 - 구조화 항목만 추출한다:
+  · 거래처명 → vendor
+  · 품목(수량 포함, 예: 맥주 10박스, 수박외) → category
+  · 카드/현금 바로 뒤 금액 → amount, payment (없으면 cash)
+  · date = ${t} (고정)
+
+C단계 - C = A에서 B를 제거한다:
+  · 거래처명(vendor로 추출된 것)을 제거한다.
+  · 결제수단 단어(카드/현금)를 제거한다.
+  · 결제수단 바로 뒤에 오는 금액(숫자+만+원 조합)만 제거한다.
+  · 품목/수량 표현(category로 추출된 것)을 제거한다.
+  · 남은 텍스트가 C이다.
+
+D단계 - C에서 불필요한 조사/공백을 제거해 정리한다 → D
+  · D를 memo로 사용한다.
+  · D가 없으면 memo = ""
 
 한국어 숫자: 100만=1000000, 50만=500000
 설명 없이 JSON 배열만 반환:
