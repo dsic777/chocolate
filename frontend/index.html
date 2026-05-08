@@ -310,15 +310,13 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 
     <!-- ═══ 분석 ═══ -->
     <div class="page" id="page-analysis">
-      <div class="ptabs">
+      <div style="display:flex;align-items:center;gap:5px;padding:4px 0 10px;position:sticky;top:0;background:#000;z-index:10">
+        <button onclick="shiftAnalysis(-1)" style="background:#1f2937;border:1px solid #374151;color:#e5e7eb;width:36px;height:36px;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0">‹</button>
         <button class="pt on" id="pt-daily"   onclick="switchPeriod('daily',this)">일별</button>
         <button class="pt"    id="pt-weekly"  onclick="switchPeriod('weekly',this)">주간</button>
         <button class="pt"    id="pt-monthly" onclick="switchPeriod('monthly',this)">월별</button>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 2px 6px">
-        <button onclick="shiftAnalysis(-1)" style="background:#1f2937;border:1px solid #374151;color:#e5e7eb;width:40px;height:40px;border-radius:8px;font-size:22px;cursor:pointer;flex-shrink:0">‹</button>
-        <span id="analysis-period-lbl" style="font-size:15px;font-weight:700;color:#e5e7eb;text-align:center;flex:1;padding:0 4px"></span>
-        <button onclick="shiftAnalysis(1)"  style="background:#1f2937;border:1px solid #374151;color:#e5e7eb;width:40px;height:40px;border-radius:8px;font-size:22px;cursor:pointer;flex-shrink:0">›</button>
+        <span id="analysis-period-lbl" style="font-size:14px;font-weight:700;color:#e5e7eb;flex:1;text-align:right;white-space:nowrap"></span>
+        <button onclick="shiftAnalysis(1)"  style="background:#1f2937;border:1px solid #374151;color:#e5e7eb;width:36px;height:36px;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0">›</button>
       </div>
       <div class="card">
         <div class="card-ttl" id="chart-title">최근 14일</div>
@@ -430,20 +428,17 @@ function updateAnalysisHeader(){
   const dt=analysisDateObj(),y=dt.getFullYear(),mo=dt.getMonth()+1,d=dt.getDate(),dw=dt.getDay();
   const DW=['일','월','화','수','목','금','토'];
   const DC=['#f87171','#e5e7eb','#e5e7eb','#e5e7eb','#e5e7eb','#e5e7eb','#93c5fd'];
-  let html='';
+  let txt='';
   if(_analysisPeriod==='weekly'){
     const sun=new Date(dt);sun.setDate(d-dw);
     const sat=new Date(sun);sat.setDate(sun.getDate()+6);
-    html=`<span style="font-size:17px;font-weight:900;color:#e5e7eb">`+
-         `${sun.getFullYear()}년 ${sun.getMonth()+1}월 ${sun.getDate()}일 ~ ${sat.getMonth()+1}월 ${sat.getDate()}일</span>`;
+    txt=`${y}년 ${sun.getMonth()+1}월 ${sun.getDate()}일 ~ ${sat.getMonth()+1}월 ${sat.getDate()}일`;
   }else if(_analysisPeriod==='monthly'){
-    html=`<span style="font-size:20px;font-weight:900;color:#e5e7eb">${y}년 ${mo}월</span>`;
+    txt=`${y}년 ${mo}월`;
   }else{
-    html=`<span style="font-size:20px;font-weight:900;color:#e5e7eb">${y}년 ${mo}월 ${d}일</span>`+
-         `<span style="font-size:20px;font-weight:900;color:${DC[dw]};margin-left:4px">(${DW[dw]})</span>`;
+    txt=`${mo}월 ${d}일 <span style="color:${DC[dw]}">(${DW[dw]})</span>`;
   }
-  $('#today-lbl').innerHTML=html;
-  $('#today-btn').style.display='none';
+  $('#analysis-period-lbl').innerHTML=txt;
 }
 function navigate(p) {
   curPage=p;
@@ -455,9 +450,13 @@ function navigate(p) {
   if(p==='credit')   { updateDateLabel(); renderCredit(); }
   if(p==='analysis'){
     analysisDate=selectedDate;
+    $('#today-lbl').style.display='none';
+    $('#today-btn').style.display='none';
     document.querySelectorAll('.pt').forEach((b,i)=>b.classList.toggle('on',['daily','weekly','monthly'][i]===_analysisPeriod));
     renderAnalysis();
     updateAnalysisHeader();
+  } else {
+    $('#today-lbl').style.display='';
   }
 }
 
