@@ -378,7 +378,7 @@ def seed_data():
                     sales_rows)
             if purch_rows:
                 psycopg2.extras.execute_batch(cur,
-                    "INSERT INTO choco_purchases (id,date,vendor,category,amount,payment,memo) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                    "INSERT INTO choco_purchases (id,date,vendor,category,amount,payment,memo) VALUES (%s,%s,%s,%s,%s,%s,%s)",
                     purch_rows)
             if credit_rows:
                 psycopg2.extras.execute_batch(cur,
