@@ -1158,6 +1158,12 @@ function showV(msg){console.log(msg);}
 let _msgResolve=null;
 function _closeMsg(v){$('#msg-overlay').style.display='none';if(_msgResolve)_msgResolve(v);}
 
+function showLoading(msg,icon='⏳'){
+  $('#msg-icon').textContent=icon;
+  $('#msg-text').textContent=msg;
+  $('#msg-btns').innerHTML='';
+  $('#msg-overlay').style.display='flex';
+}
 function showAlert(msg,icon='ℹ️'){
   return new Promise(r=>{
     _msgResolve=r;
@@ -1369,7 +1375,7 @@ async function doSeed(){
   const ok=await showConfirm('1년치 기초 데이터를 생성합니다.\n(기존 데이터에 추가됩니다)','📦','생성','mb-ok');
   if(!ok)return;
   try{
-    await showAlert('생성 중... 잠시 기다려주세요','⏳');
+    showLoading('생성 중... 잠시 기다려주세요','⏳');
     const res=await fetch('/chocolate/api/seed',{method:'POST'});
     const d=await res.json();
     await showAlert(`생성 완료!\n매출 ${d.sales}건 · 매입 ${d.purchases}건`,'✅');
