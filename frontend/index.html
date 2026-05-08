@@ -375,6 +375,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
       <div style="display:flex;flex-direction:column;gap:10px">
         <button class="mb" style="background:#0d9488;color:#fff;padding:14px;font-size:16px" onclick="doSeed()">📦 기초 데이터 생성</button>
         <button class="mb mb-del" style="padding:14px;font-size:16px" onclick="doReset()">🗑️ 전체 데이터 삭제</button>
+        <button class="mb" style="background:#1e3a5f;color:#93c5fd;padding:14px;font-size:16px" onclick="doViewLog()">📋 파싱 로그 보기</button>
         <button class="mb mb-cancel" style="padding:14px;font-size:16px;color:#e5e7eb" onclick="closeResetModal()">취소</button>
       </div>
     </div>
@@ -1301,6 +1302,18 @@ async function doReset(){
     await showAlert('데이터가 초기화되었습니다','✅');
     location.reload();
   }catch(e){await showAlert('오류가 발생했습니다','❌');}
+}
+async function doViewLog(){
+  closeResetModal();
+  try{
+    const res=await fetch('/chocolate/api/parse_log');
+    const txt=await res.text();
+    const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='parse_log.txt';
+    a.click();
+  }catch(e){await showAlert('로그를 가져올 수 없습니다','❌');}
 }
 async function doSeed(){
   closeResetModal();

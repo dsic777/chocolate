@@ -2,9 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
-import anthropic, os, psycopg2, psycopg2.extras, uuid, random
-from datetime import date, timedelta
+import anthropic, os, psycopg2, psycopg2.extras, uuid, random, json
+from datetime import date, timedelta, datetime
 from dotenv import load_dotenv
+from fastapi.responses import PlainTextResponse
 
 load_dotenv()
 
@@ -70,20 +71,78 @@ init_db()
 
 # ── AI Parse ──────────────────────────────────────────────────────────────────
 
+LOG_FILE = "/app/parse_log.txt"
+
+def write_log(input_text: str, ai_raw: str, parsed: list, error: str = ""):
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    lines = [
+        f"\n{'='*60}",
+        f"[시각] {ts}",
+        f"[입력]\n{input_text}",
+        f"[AI 원본 응답]\n{ai_raw}",
+    ]
+    if error:
+        lines.append(f"[오류] {error}")
+    else:
+        for i, item in enumerate(parsed, 1):
+            extracted = []
+            memo_val = item.get('memo', '')
+            if item.get('customer'): extracted.append(f"고객: {item['customer']}")
+            if item.get('card'):     extracted.append(f"카드: {item['card']:,}")
+            if item.get('cash'):     extracted.append(f"현금: {item['cash']:,}")
+            if item.get('credit'):   extracted.append(f"외상: {item['credit']:,}")
+            if item.get('vendor'):   extracted.append(f"거래처: {item['vendor']}")
+            if item.get('category'): extracted.append(f"품목: {item['category']}")
+            if item.get('amount'):   extracted.append(f"금액: {item['amount']:,}")
+            lines.append(f"[항목{i} 추출] {' | '.join(extracted)}")
+            lines.append(f"[항목{i} 메모] {memo_val if memo_val else '(없음)'}")
+    try:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+    except Exception:
+        pass
+
 class ParseRequest(BaseModel):
     prompt: str
 
 @app.post("/api/parse")
 async def parse(req: ParseRequest):
+    # 입력 텍스트만 추출 (프롬프트 마지막 줄)
+    input_text = req.prompt.split("반환:\n")[-1].strip() if "반환:\n" in req.prompt else req.prompt
     try:
         message = client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=1024,
             messages=[{"role": "user", "content": req.prompt}],
         )
-        return {"text": message.content[0].text}
+        ai_raw = message.content[0].text
+        # 로그용 파싱 시도
+        try:
+            match = __import__('re').search(r'\[[\s\S]*\]', ai_raw)
+            parsed = json.loads(match.group()) if match else []
+        except Exception:
+            parsed = []
+        write_log(input_text, ai_raw, parsed)
+        return {"text": ai_raw}
     except Exception as e:
+        write_log(input_text, "", [], str(e))
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/parse_log")
+def get_parse_log():
+    try:
+        with open(LOG_FILE, "r", encoding="utf-8") as f:
+            return PlainTextResponse(f.read())
+    except FileNotFoundError:
+        return PlainTextResponse("(로그 없음)")
+
+@app.delete("/api/parse_log")
+def clear_parse_log():
+    try:
+        open(LOG_FILE, "w").close()
+    except Exception:
+        pass
+    return {"ok": True}
 
 
 # ── Sales ─────────────────────────────────────────────────────────────────────
