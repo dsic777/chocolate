@@ -882,7 +882,7 @@ async function parseAI(type) {
   btn.innerHTML='<span class="spin"></span> 파싱 중...';
   btn.disabled=true;
 
-  const t=today();
+  const t=selectedDate;
   const prompt=type==='sales'
     ?`다음 텍스트에서 초콜릿 매출 정보를 추출하여 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
