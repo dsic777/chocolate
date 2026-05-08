@@ -1372,10 +1372,11 @@ async function doViewLog(){
 }
 async function doSeed(){
   closeResetModal();
-  const ok=await showConfirm('1년치 기초 데이터를 생성합니다.\n(기존 데이터에 추가됩니다)','📦','생성','mb-ok');
+  const ok=await showConfirm('기존 데이터를 삭제 후\n1년치 데이터를 새로 생성합니다.','📦','생성','mb-ok');
   if(!ok)return;
   try{
     showLoading('생성 중... 잠시 기다려주세요','⏳');
+    await fetch('/chocolate/api/reset',{method:'DELETE'});
     const res=await fetch('/chocolate/api/seed',{method:'POST'});
     const d=await res.json();
     await showAlert(`생성 완료!\n매출 ${d.sales}건 · 매입 ${d.purchases}건`,'✅');
