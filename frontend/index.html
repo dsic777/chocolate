@@ -570,9 +570,10 @@ async function delSale(id){
 const _saleRows={};
 async function renderSales() {
   if(!$('#s-date').dataset.date){$('#s-date').dataset.date=selectedDate;$('#s-date').value=fmtDate(selectedDate);}
-  const list=[...await getSales()].sort((a,b)=>b.date.localeCompare(a.date));
-  list.forEach(s=>{_saleRows[s.id]=s;});
-  $('#sales-list').innerHTML=list.length===0?`<div class="empty">매출 내역이 없습니다</div>`
+  const all=[...await getSales()].sort((a,b)=>b.date.localeCompare(a.date));
+  all.forEach(s=>{_saleRows[s.id]=s;});
+  const list=all.filter(s=>s.date===selectedDate);
+  $('#sales-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 매출 없음</div>`
     :list.map(s=>`<div class="li">
       <div class="li-body">
         <div class="li-title">${dl(s.date)} <strong>${s.customer||'고객'}</strong></div>
@@ -623,9 +624,10 @@ async function delPurchase(id){if(!await showConfirm('매입을 삭제할까요?
 const _purchRows={};
 async function renderPurchase() {
   if(!$('#p-date').dataset.date){$('#p-date').dataset.date=selectedDate;$('#p-date').value=fmtDate(selectedDate);}
-  const list=[...await getPurchs()].sort((a,b)=>b.date.localeCompare(a.date));
-  list.forEach(p=>{_purchRows[p.id]=p;});
-  $('#purch-list').innerHTML=list.length===0?`<div class="empty">매입 내역이 없습니다</div>`
+  const all=[...await getPurchs()].sort((a,b)=>b.date.localeCompare(a.date));
+  all.forEach(p=>{_purchRows[p.id]=p;});
+  const list=all.filter(p=>p.date===selectedDate);
+  $('#purch-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 매입 없음</div>`
     :list.map(p=>`<div class="li">
       <div class="li-body">
         <div class="li-title">${dl(p.date)} <strong>${p.vendor||'미상'}</strong>${p.category?' <span style="color:#888;font-weight:400">'+p.category+'</span>':''}</div>
