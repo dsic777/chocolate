@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import anthropic, os, psycopg2, psycopg2.extras, uuid, random, json
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 from dotenv import load_dotenv
 from fastapi.responses import PlainTextResponse
 
@@ -74,7 +74,8 @@ init_db()
 LOG_FILE = "/app/parse_log.txt"
 
 def write_log(input_text: str, ai_raw: str, parsed: list, error: str = ""):
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    KST = timezone(timedelta(hours=9))
+    ts = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
     lines = [
         f"\n{'='*60}",
         f"[시각] {ts}",
