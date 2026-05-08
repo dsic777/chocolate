@@ -942,6 +942,9 @@ async function parseAI(type) {
 한국어 숫자(백만원=1000000, 오십만=500000, 300만=3000000 등) 변환 필수.
 
 예시:
+입력: "김종춘 카드 300만원 현금 200만원 단골고객"
+출력: [{"date":"${t}","customer":"김종춘","card":3000000,"cash":2000000,"credit":0,"total":5000000,"memo":"단골고객"}]
+
 입력: "정현이 단골 고객"
 출력: [{"date":"${t}","customer":"정현이","card":0,"cash":0,"credit":0,"total":0,"memo":"단골 고객"}]
 
@@ -1022,7 +1025,7 @@ function showParsed(type,items) {
         </div>
       </div>`
   ).join('');
-  $('#'+elId).innerHTML=`<div style="font-size:15px;font-weight:700;color:#1565c0;margin-bottom:8px">✨ ${items.length}건 파싱 완료</div>`+html;
+  $('#'+elId).innerHTML=`<div style="font-size:15px;font-weight:700;color:#1565c0;margin-bottom:8px">✨ 파싱 완료</div>`+html;
 }
 
 async function saveParsed(type,idx) {
@@ -1080,6 +1083,8 @@ function toggleMic(type){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showAlert('Chrome 또는 Edge에서 사용해 주세요','🌐');return;}
   if(isListening){_keepListening=false;try{recognition.stop();}catch(e){}return;}
+  const parsedId=type==='sales'?'sales-parsed':'purch-parsed';
+  $('#'+parsedId).innerHTML='';_parsed[type]=[];
   const ta=$(type==='sales'?'#sales-ta':'#purch-ta');
   const btn=$('#mic-'+type);
   _finalText=ta.value.trim();
