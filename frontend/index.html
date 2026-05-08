@@ -67,7 +67,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .vbtns{display:flex;gap:8px;margin-top:10px}
 .vb{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 8px;border:none;border-radius:6px;font-size:17px;font-weight:900;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
 .vb-mic{background:#1f2937;color:#fff;border:1px solid #374151}
-.vb-mic.on{background:#991b1b;border-color:#991b1b}
+.vb-mic.on{background:#0d9488;border-color:#0d9488;color:#fff}
 .vb-ai{background:#fbbf24;color:#000}
 .vb-ai:disabled{background:#374151;color:#9ca3af;cursor:not-allowed}
 
@@ -135,8 +135,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 /* ── Spinner ── */
 .spin{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.pulsing{animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.pulsing{animation:pulse 2s infinite}
 
 /* ── Alert / Confirm Modal ── */
 #msg-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:400;align-items:center;justify-content:center}
@@ -1047,8 +1047,7 @@ function editParsed(type,idx) {
 }
 
 // ── VOICE STT ─────────────────────────────
-let recognition=null,isListening=false,_micType=null,_finalText='',_keepListening=false,_silentCount=0;
-const MAX_SILENT=2;
+let recognition=null,isListening=false,_micType=null,_finalText='',_keepListening=false;
 
 function _startRecognition(type){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1056,24 +1055,22 @@ function _startRecognition(type){
   const ta=$(type==='sales'?'#sales-ta':'#purch-ta');
   const btn=$('#mic-'+type);
   recognition=new SR();
-  recognition.lang='ko-KR';recognition.continuous=false;recognition.interimResults=true;
-  recognition.onstart=()=>{isListening=true;btn.classList.add('on','pulsing');btn.textContent='🔴 듣는 중...';};
+  recognition.lang='ko-KR';recognition.continuous=true;recognition.interimResults=true;
+  recognition.onstart=()=>{isListening=true;btn.classList.add('on','pulsing');btn.textContent='● 듣는 중';};
   recognition.onresult=e=>{
     let fin='',inter='';
-    for(let i=0;i<e.results.length;i++){
+    for(let i=e.resultIndex;i<e.results.length;i++){
       if(e.results[i].isFinal)fin+=e.results[i][0].transcript;
       else inter+=e.results[i][0].transcript;
     }
-    if(fin){_silentCount=0;_finalText=(_finalText+(_finalText?'\n':'')+fin.trim()).trim();}
+    if(fin){_finalText=(_finalText+(_finalText?'\n':'')+fin.trim()).trim();}
     ta.value=_finalText+(inter?(_finalText?'\n':'')+inter:'');
-    btn.textContent=inter?'🔴 '+inter:'🔴 듣는 중...';
+    btn.textContent=inter?'● '+inter.slice(0,12)+'…':'● 듣는 중';
   };
-  recognition.onerror=e=>{if(e.error!=='no-speech'){_keepListening=false;stopMic(type);}};
+  recognition.onerror=e=>{if(e.error!=='no-speech'&&e.error!=='aborted'){_keepListening=false;stopMic(type);}};
   recognition.onend=()=>{
     if(!_keepListening){stopMic(type);return;}
-    _silentCount+=1;
-    if(_silentCount>MAX_SILENT){_keepListening=false;stopMic(type);}
-    else{try{_startRecognition(type);}catch(err){stopMic(type);}}
+    try{_startRecognition(type);}catch(err){stopMic(type);}
   };
   recognition.start();
 }
@@ -1081,10 +1078,9 @@ function toggleMic(type){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showAlert('Chrome 또는 Edge에서 사용해 주세요','🌐');return;}
   if(isListening){_keepListening=false;try{recognition.stop();}catch(e){}return;}
-  const parsedId=type==='sales'?'sales-parsed':'purch-parsed';
-  $('#'+parsedId).innerHTML='';_parsed[type]=[];
-  $(type==='sales'?'#sales-ta':'#purch-ta').value='';
-  _finalText='';_silentCount=0;_keepListening=true;_micType=type;
+  const ta=$(type==='sales'?'#sales-ta':'#purch-ta');
+  _finalText=ta.value.trim();
+  _keepListening=true;_micType=type;
   _startRecognition(type);
 }
 function stopMic(type){
