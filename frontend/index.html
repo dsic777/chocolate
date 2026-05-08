@@ -180,12 +180,12 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
     <!-- ═══ HOME ═══ -->
     <div class="page on" id="page-home">
       <div class="stat-table">
-        <div class="stat-row"><span class="stat-lbl">오늘 매출</span><span class="stat-val amber" id="h-sales">-</span></div>
-        <div class="stat-row"><span class="stat-lbl">오늘 매입</span><span class="stat-val red"   id="h-purch">-</span></div>
+        <div class="stat-row"><span class="stat-lbl">당일 매출</span><span class="stat-val amber" id="h-sales">-</span></div>
+        <div class="stat-row"><span class="stat-lbl">당일 매입</span><span class="stat-val red"   id="h-purch">-</span></div>
         <div class="stat-row"><span class="stat-lbl">외상 잔액</span><span class="stat-val blue"  id="h-cred">-</span></div>
       </div>
       <div class="card">
-        <div class="card-ttl">오늘 손익 (매출 - 매입)</div>
+        <div class="card-ttl">당일 손익 (매출 - 매입)</div>
         <div id="h-profit-val">-</div>
         <div style="text-align:center;font-size:16px;color:#aaa;margin-top:4px" id="h-profit-sub"></div>
       </div>
@@ -462,10 +462,14 @@ async function renderHome() {
   pEl.style.cssText='font-size:32px;font-weight:700;text-align:center;padding:8px 0';
   $('#h-profit-sub').textContent=`매출 ${won(sTotal)} · 매입 ${won(pTotal)}`;
 
+  const [sy,sm,sd]=t.split('-').map(Number);
+  const dtFrom=new Date(sy,sm-1,sd);dtFrom.setDate(dtFrom.getDate()-13);
+  const dateFrom=`${dtFrom.getFullYear()}-${pad2(dtFrom.getMonth()+1)}-${pad2(dtFrom.getDate())}`;
   const all=[
     ...sales.map(s=>({...s,_t:'sale'})),
     ...purch.map(p=>({...p,_t:'purch'}))
-  ].sort((a,b)=>b.date.localeCompare(a.date)||(b.id||'').localeCompare(a.id||'')).slice(0,8);
+  ].filter(x=>x.date>=dateFrom&&x.date<=t)
+   .sort((a,b)=>b.date.localeCompare(a.date)||(b.id||'').localeCompare(a.id||'')).slice(0,8);
 
   $('#home-list').innerHTML=all.length===0
     ?`<div class="empty">거래 내역이 없습니다</div>`
