@@ -337,7 +337,8 @@ _PURCH_MEMOS = [
 
 @app.post("/api/seed")
 def seed_data():
-    today = date.today()
+    KST = timezone(timedelta(hours=9))
+    today = datetime.now(KST).date()
     start = today.replace(year=today.year - 1) + timedelta(days=1)
 
     sales_rows, purch_rows, credit_rows = [], [], []
