@@ -325,7 +325,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
       <div id="analysis-content">
       <div class="card">
         <div class="card-ttl" id="chart-title">최근 14일</div>
-        <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
+        <div class="chart-wrap" id="chart-swipe"><canvas id="main-chart"></canvas></div>
       </div>
       <div id="stat-area">
         <div class="stat-table">
@@ -1267,8 +1267,8 @@ function nextMonth(){calM++;if(calM>12){calM=1;calY++;}renderCal();}
 
 // ── SWIPE (ANALYSIS) ─────────────────────
 let _swX=0;
-document.getElementById('analysis-content').addEventListener('touchstart',e=>{_swX=e.touches[0].clientX;},{passive:true});
-document.getElementById('analysis-content').addEventListener('touchend',e=>{
+document.getElementById('chart-swipe').addEventListener('touchstart',e=>{_swX=e.touches[0].clientX;},{passive:true});
+document.getElementById('chart-swipe').addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-_swX;
   if(Math.abs(dx)>60)shiftAnalysis(dx<0?-1:1);
 },{passive:true});
