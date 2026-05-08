@@ -126,7 +126,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 /* ── Chart ── */
 .chart-wrap{position:relative;height:220px}
 .ptabs{display:flex;gap:6px;margin-bottom:12px}
-.pt{flex:1;padding:10px 4px;border:1px solid #374151;border-radius:6px;background:transparent;color:#9ca3af;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.pt{flex:0 0 auto;padding:10px 14px;border:1px solid #374151;border-radius:6px;background:transparent;color:#9ca3af;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap}
 .pt.on{background:#fbbf24;color:#000;border-color:#fbbf24}
 
 /* ── Profit ── */
@@ -318,6 +318,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <span id="analysis-period-lbl" style="font-size:14px;font-weight:700;color:#e5e7eb;flex:1;text-align:right;white-space:nowrap"></span>
         <button onclick="shiftAnalysis(1)"  style="background:#1f2937;border:1px solid #374151;color:#e5e7eb;width:36px;height:36px;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0">›</button>
       </div>
+      <div id="analysis-content">
       <div class="card">
         <div class="card-ttl" id="chart-title">최근 14일</div>
         <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
@@ -329,6 +330,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           <div class="stat-row"><span class="stat-lbl" id="as3-l">순이익</span>  <span class="stat-val blue"  id="as3-v">-</span></div>
         </div>
       </div>
+      </div><!-- /analysis-content -->
     </div>
 
   </div><!-- /content -->
@@ -782,22 +784,7 @@ let analysisDate=today(), _analysisPeriod='daily';
 function analysisDateObj(){
   const[y,m,d]=analysisDate.split('-').map(Number);return new Date(y,m-1,d);
 }
-function updateAnalysisPeriodLabel(){
-  const dt=analysisDateObj(),y=dt.getFullYear(),mo=dt.getMonth()+1,d=dt.getDate(),dw=dt.getDay();
-  const DW=['일','월','화','수','목','금','토'];
-  let lbl='';
-  if(_analysisPeriod==='daily'){
-    lbl=`${y}년 ${mo}월 ${d}일 (${DW[dw]})`;
-  }else if(_analysisPeriod==='weekly'){
-    const sun=new Date(dt);sun.setDate(d-dw);
-    const sat=new Date(sun);sat.setDate(sun.getDate()+6);
-    const sm=sun.getMonth()+1,sd2=sun.getDate(),em=sat.getMonth()+1,ed=sat.getDate();
-    lbl=`${sun.getFullYear()}년 ${sm}월 ${sd2}일 ~ ${sat.getFullYear()}년 ${em}월 ${ed}일`;
-  }else{
-    lbl=`${y}년 ${mo}월`;
-  }
-  $('#analysis-period-lbl').textContent=lbl;
-}
+function updateAnalysisPeriodLabel(){updateAnalysisHeader();}
 function shiftAnalysis(dir){
   const dt=analysisDateObj();
   if(_analysisPeriod==='daily'){
@@ -1276,8 +1263,8 @@ function nextMonth(){calM++;if(calM>12){calM=1;calY++;}renderCal();}
 
 // ── SWIPE (ANALYSIS) ─────────────────────
 let _swX=0;
-document.getElementById('page-analysis').addEventListener('touchstart',e=>{_swX=e.touches[0].clientX;},{passive:true});
-document.getElementById('page-analysis').addEventListener('touchend',e=>{
+document.getElementById('analysis-content').addEventListener('touchstart',e=>{_swX=e.touches[0].clientX;},{passive:true});
+document.getElementById('analysis-content').addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-_swX;
   if(Math.abs(dx)>60)shiftAnalysis(dx<0?-1:1);
 },{passive:true});
