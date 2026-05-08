@@ -361,7 +361,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
     <div id="reset-pw-view">
       <div style="font-size:34px;margin-bottom:8px">🔐</div>
       <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:6px">관리자 인증</div>
-      <div style="font-size:14px;color:#9ca3af;margin-bottom:18px">비밀번호를 입력하세요</div>
+      <div style="font-size:14px;color:#e5e7eb;margin-bottom:18px">비밀번호를 입력하세요</div>
       <input id="reset-pw" type="password" inputmode="numeric" maxlength="6"
         style="width:100%;padding:13px;border-radius:10px;border:1px solid #374151;background:#111827;color:#fff;font-size:22px;font-weight:900;text-align:center;letter-spacing:6px;box-sizing:border-box;outline:none"
         placeholder="••••••" oninput="onResetPwInput()">
@@ -371,11 +371,11 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
     <!-- 액션 선택 화면 -->
     <div id="reset-action-view" style="display:none">
       <div style="font-size:34px;margin-bottom:8px">⚙️</div>
-      <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:18px">데이터 관리</div>
+      <div style="font-size:18px;font-weight:900;color:#fbbf24;margin-bottom:18px">데이터 관리</div>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button class="mb" style="background:#0d9488;color:#fff;padding:14px" onclick="doSeed()">📦 기초 데이터 생성</button>
-        <button class="mb mb-del" style="padding:14px" onclick="doReset()">🗑️ 전체 데이터 삭제</button>
-        <button class="mb mb-cancel" style="padding:14px" onclick="closeResetModal()">취소</button>
+        <button class="mb" style="background:#0d9488;color:#fff;padding:14px;font-size:16px" onclick="doSeed()">📦 기초 데이터 생성</button>
+        <button class="mb mb-del" style="padding:14px;font-size:16px" onclick="doReset()">🗑️ 전체 데이터 삭제</button>
+        <button class="mb mb-cancel" style="padding:14px;font-size:16px;color:#e5e7eb" onclick="closeResetModal()">취소</button>
       </div>
     </div>
   </div>
