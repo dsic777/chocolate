@@ -903,15 +903,28 @@ async function parseAI(type) {
     ?`다음 텍스트에서 초콜릿 매출 정보를 추출하여 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
-필드: date(YYYY-MM-DD, 없으면 오늘), customer(고객명, 없으면 "고객"), card(카드금액 숫자), cash(현금금액 숫자), credit(외상금액 숫자), total(합계=card+cash+credit), memo
-한국어 숫자(백만원=1000000, 오십만=500000 등) 변환 필수.
+필드 설명:
+- date: YYYY-MM-DD, 날짜 언급 없으면 오늘
+- customer: 고객명, 없으면 "고객"
+- card: 카드 금액 (숫자만)
+- cash: 현금 금액 (숫자만). 결제수단 언급 없으면 cash로 처리
+- credit: 외상 금액 (숫자만)
+- total: card+cash+credit 합계
+- memo: 금액·결제방법·고객명이 아닌 모든 부가 텍스트 (예: "단골고객", "메모", "특이사항" 등). 없으면 ""
+한국어 숫자(백만원=1000000, 오십만=500000, 300만=3000000 등) 변환 필수.
 설명 없이 JSON 배열만 반환:
 ${text}`
     :`다음 텍스트에서 초콜릿 매입 정보를 추출하여 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
-필드: date(YYYY-MM-DD, 없으면 오늘), vendor(거래처명), category(품목), amount(금액 숫자), payment("card" 또는 "cash"), memo
-한국어 숫자(백만원=1000000, 오십만=500000 등) 변환 필수.
+필드 설명:
+- date: YYYY-MM-DD, 날짜 언급 없으면 오늘
+- vendor: 거래처명, 없으면 ""
+- category: 품목, 없으면 ""
+- amount: 금액 (숫자만)
+- payment: "card" 또는 "cash". 언급 없으면 "cash"
+- memo: 금액·결제방법·거래처명·품목이 아닌 모든 부가 텍스트. 없으면 ""
+한국어 숫자(백만원=1000000, 오십만=500000, 300만=3000000 등) 변환 필수.
 설명 없이 JSON 배열만 반환:
 ${text}`;
 
@@ -949,7 +962,7 @@ function showParsed(type,items) {
         ${x.card?`<div class="pi-row"><span class="pi-lbl">카드</span><span class="pi-val">${won(x.card)}</span></div>`:''}
         ${x.cash?`<div class="pi-row"><span class="pi-lbl">현금</span><span class="pi-val">${won(x.cash)}</span></div>`:''}
         ${x.credit?`<div class="pi-row"><span class="pi-lbl">외상</span><span class="pi-val neg">${won(x.credit)}</span></div>`:''}
-        ${x.memo?`<div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val">${x.memo}</span></div>`:''}
+        <div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val" style="${x.memo?'':'color:#4b5563'}">${x.memo||'없음'}</span></div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button class="btn btn-green" style="width:60%;margin:0" onclick="saveParsed('sales',${i})">매출 저장</button>
           <button class="btn btn-navy" style="width:40%;margin:0" onclick="editParsed('sales',${i})">매출 수정</button>
@@ -961,7 +974,7 @@ function showParsed(type,items) {
         <div class="pi-row"><span class="pi-lbl">품목</span><span class="pi-val">${x.category||''}</span></div>
         <div class="pi-row"><span class="pi-lbl">금액</span><span class="pi-val neg">${won(x.amount||0)}</span></div>
         <div class="pi-row"><span class="pi-lbl">구분</span><span class="pi-val">${x.payment==='cash'?'현금':'카드'}</span></div>
-        ${x.memo?`<div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val">${x.memo}</span></div>`:''}
+        <div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val" style="${x.memo?'':'color:#4b5563'}">${x.memo||'없음'}</span></div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button class="btn btn-green" style="width:60%;margin:0" onclick="saveParsed('purchase',${i})">매입 저장</button>
           <button class="btn btn-navy" style="width:40%;margin:0" onclick="editParsed('purchase',${i})">매입 수정</button>
