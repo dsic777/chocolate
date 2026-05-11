@@ -126,10 +126,6 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 /* ── Chart ── */
 .chart-wrap{position:relative;height:220px}
 #analysis-content{overflow:hidden}
-@keyframes slideInLeft{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes slideInRight{from{transform:translateX(-100%);opacity:0}to{transform:translateX(0);opacity:1}}
-.slide-in-left{animation:slideInLeft 0.25s ease}
-.slide-in-right{animation:slideInRight 0.25s ease}
 .ptabs{display:flex;gap:6px;margin-bottom:12px}
 .pt{flex:0 0 auto;padding:10px 32px;border:1px solid #374151;border-radius:6px;background:transparent;color:#9ca3af;font-size:24px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap}
 .pt.on{background:#fbbf24;color:#000;border-color:#fbbf24}
@@ -791,7 +787,10 @@ function analysisDateObj(){
   const[y,m,d]=analysisDate.split('-').map(Number);return new Date(y,m-1,d);
 }
 function updateAnalysisPeriodLabel(){updateAnalysisHeader();}
-function shiftAnalysis(dir){
+let _shifting=false;
+async function shiftAnalysis(dir){
+  if(_shifting)return;
+  _shifting=true;
   const dt=analysisDateObj();
   if(_analysisPeriod==='daily'){
     dt.setDate(dt.getDate()+dir);
@@ -804,12 +803,49 @@ function shiftAnalysis(dir){
     analysisDate=`${nm.getFullYear()}-${pad2(nm.getMonth()+1)}-01`;
   }
   updateAnalysisHeader();
-  updateAnalysisPeriodLabel();
-  const el=$('#analysis-content');
-  el.classList.remove('slide-in-left','slide-in-right');
-  void el.offsetWidth;
-  el.classList.add(dir>0?'slide-in-left':'slide-in-right');
-  renderAnalysis();
+
+  const container=$('#analysis-content');
+  const h=container.offsetHeight;
+
+  // 현재 화면 스냅샷 (ID 제거해 중복 방지)
+  const snap=document.createElement('div');
+  snap.style.cssText='width:100%;flex-shrink:0;pointer-events:none';
+  snap.innerHTML=container.innerHTML;
+  snap.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
+
+  // 실제 DOM(ID 포함)을 live로 이동
+  const live=document.createElement('div');
+  live.style.cssText='width:100%;flex-shrink:0';
+  while(container.firstChild)live.appendChild(container.firstChild);
+
+  // 스테이지 구성 (두 화면 나란히)
+  const stage=document.createElement('div');
+  stage.style.cssText='display:flex;width:200%;will-change:transform';
+  const startX=dir>0?'0%':'-50%';
+  const endX  =dir>0?'-50%':'0%';
+  if(dir>0){stage.appendChild(snap);stage.appendChild(live);}
+  else{stage.appendChild(live);stage.appendChild(snap);}
+  stage.style.transform=`translateX(${startX})`;
+  container.style.overflow='hidden';
+  container.style.minHeight=h+'px';
+  container.appendChild(stage);
+
+  // 새 콘텐츠 렌더링 (live 안의 ID들에 렌더)
+  await renderAnalysis();
+
+  // 슬라이드 실행
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    stage.style.transition='transform 0.55s cubic-bezier(0.4,0,0.2,1)';
+    stage.style.transform=`translateX(${endX})`;
+  }));
+
+  stage.addEventListener('transitionend',()=>{
+    container.style.minHeight='';
+    container.style.overflow='';
+    container.innerHTML='';
+    while(live.firstChild)container.appendChild(live.firstChild);
+    _shifting=false;
+  },{once:true});
 }
 function switchPeriod(p,btn){
   document.querySelectorAll('.pt').forEach(b=>b.classList.remove('on'));
