@@ -1401,6 +1401,61 @@ document.getElementById('chart-swipe').addEventListener('touchend',e=>{
   if(Math.abs(dx)>60)shiftAnalysis(dx<0?1:-1);
 },{passive:true});
 
+// ── SWIPE (HOME) ──────────────────────────
+let _homeSwX=0,_homeShifting=false;
+document.getElementById('page-home').addEventListener('touchstart',e=>{_homeSwX=e.touches[0].clientX;},{passive:true});
+document.getElementById('page-home').addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-_homeSwX;
+  if(Math.abs(dx)>60)shiftHome(dx<0?1:-1);
+},{passive:true});
+
+async function shiftHome(dir){
+  if(_homeShifting)return;
+  _homeShifting=true;
+  const dt=new Date(selectedDate);
+  dt.setDate(dt.getDate()+dir);
+  selectedDate=`${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}`;
+  updateDateLabel();
+
+  const container=$('#page-home');
+  const h=container.offsetHeight;
+
+  const snap=document.createElement('div');
+  snap.style.cssText='width:100%;flex-shrink:0;pointer-events:none';
+  snap.innerHTML=container.innerHTML;
+  snap.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
+
+  const live=document.createElement('div');
+  live.style.cssText='width:100%;flex-shrink:0';
+  while(container.firstChild)live.appendChild(container.firstChild);
+
+  const stage=document.createElement('div');
+  stage.style.cssText='display:flex;width:200%;will-change:transform';
+  const startX=dir>0?'0%':'-50%';
+  const endX  =dir>0?'-50%':'0%';
+  if(dir>0){stage.appendChild(snap);stage.appendChild(live);}
+  else{stage.appendChild(live);stage.appendChild(snap);}
+  stage.style.transform=`translateX(${startX})`;
+  container.style.overflow='hidden';
+  container.style.minHeight=h+'px';
+  container.appendChild(stage);
+
+  await renderHome();
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    stage.style.transition='transform 0.55s cubic-bezier(0.4,0,0.2,1)';
+    stage.style.transform=`translateX(${endX})`;
+  }));
+
+  stage.addEventListener('transitionend',()=>{
+    container.style.minHeight='';
+    container.style.overflow='';
+    container.innerHTML='';
+    while(live.firstChild)container.appendChild(live.firstChild);
+    _homeShifting=false;
+  },{once:true});
+}
+
 // ── RESET / SEED ──────────────────────────
 function openResetModal(){
   $('#reset-pw').value='';$('#reset-err').textContent='';
