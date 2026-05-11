@@ -1412,48 +1412,29 @@ document.getElementById('page-home').addEventListener('touchend',e=>{
 async function shiftHome(dir){
   if(_homeShifting)return;
   _homeShifting=true;
+  const page=$('#page-home');
+  // 1. 현재 페이지 슬라이드 아웃 (#app overflow:hidden이 클리핑)
+  page.style.transition='transform 0.25s ease';
+  page.style.transform=dir>0?'translateX(-105%)':'translateX(105%)';
+  await new Promise(r=>setTimeout(r,260));
+  // 2. 화면 밖에서 날짜/내용 업데이트
   const dt=new Date(selectedDate);
   dt.setDate(dt.getDate()+dir);
   selectedDate=`${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}`;
   updateDateLabel();
-
-  const container=$('#page-home');
-  const h=container.offsetHeight;
-
-  const snap=document.createElement('div');
-  snap.style.cssText='width:100%;flex-shrink:0;pointer-events:none';
-  snap.innerHTML=container.innerHTML;
-  snap.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
-
-  const live=document.createElement('div');
-  live.style.cssText='width:100%;flex-shrink:0';
-  while(container.firstChild)live.appendChild(container.firstChild);
-
-  const stage=document.createElement('div');
-  stage.style.cssText='display:flex;width:200%;will-change:transform';
-  const startX=dir>0?'0%':'-50%';
-  const endX  =dir>0?'-50%':'0%';
-  if(dir>0){stage.appendChild(snap);stage.appendChild(live);}
-  else{stage.appendChild(live);stage.appendChild(snap);}
-  stage.style.transform=`translateX(${startX})`;
-  container.style.overflow='hidden';
-  container.style.minHeight=h+'px';
-  container.appendChild(stage);
-
+  page.style.transition='none';
+  page.style.transform=dir>0?'translateX(105%)':'translateX(-105%)';
   await renderHome();
-
+  // 3. 반대편에서 슬라이드 인
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    stage.style.transition='transform 0.55s cubic-bezier(0.4,0,0.2,1)';
-    stage.style.transform=`translateX(${endX})`;
+    page.style.transition='transform 0.25s ease';
+    page.style.transform='translateX(0)';
   }));
-
-  stage.addEventListener('transitionend',()=>{
-    container.style.minHeight='';
-    container.style.overflow='';
-    container.innerHTML='';
-    while(live.firstChild)container.appendChild(live.firstChild);
+  setTimeout(()=>{
+    page.style.transition='';
+    page.style.transform='';
     _homeShifting=false;
-  },{once:true});
+  },320);
 }
 
 // ── RESET / SEED ──────────────────────────
