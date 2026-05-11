@@ -1413,28 +1413,31 @@ async function shiftHome(dir){
   if(_homeShifting)return;
   _homeShifting=true;
   const page=$('#page-home');
-  // 1. 현재 페이지 슬라이드 아웃 (#app overflow:hidden이 클리핑)
-  page.style.transition='transform 0.25s ease';
-  page.style.transform=dir>0?'translateX(-105%)':'translateX(105%)';
-  await new Promise(r=>setTimeout(r,260));
-  // 2. 화면 밖에서 날짜/내용 업데이트
+  // 1. 페이드+슬라이드 아웃
+  page.style.transition='opacity 0.2s ease, transform 0.2s ease';
+  page.style.opacity='0';
+  page.style.transform=dir>0?'translateX(-40px)':'translateX(40px)';
+  await new Promise(r=>setTimeout(r,220));
+  // 2. 날짜/내용 업데이트 (보이지 않는 상태)
   const dt=new Date(selectedDate);
   dt.setDate(dt.getDate()+dir);
   selectedDate=`${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}`;
   updateDateLabel();
   page.style.transition='none';
-  page.style.transform=dir>0?'translateX(105%)':'translateX(-105%)';
+  page.style.transform=dir>0?'translateX(40px)':'translateX(-40px)';
   await renderHome();
-  // 3. 반대편에서 슬라이드 인
+  // 3. 반대 방향에서 페이드+슬라이드 인
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    page.style.transition='transform 0.25s ease';
+    page.style.transition='opacity 0.2s ease, transform 0.2s ease';
+    page.style.opacity='1';
     page.style.transform='translateX(0)';
   }));
   setTimeout(()=>{
     page.style.transition='';
+    page.style.opacity='';
     page.style.transform='';
     _homeShifting=false;
-  },320);
+  },280);
 }
 
 // ── RESET / SEED ──────────────────────────
