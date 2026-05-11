@@ -286,7 +286,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div class="card-ttl">고객별 외상 현황</div>
         <div id="cred-summary"></div>
       </div>
-      <div class="card" id="pay-form">
+      <div class="card" id="pay-form" style="display:none">
         <div class="card-ttl">변제 입력</div>
         <div class="fg2">
           <div class="fg"><label>날짜</label><input type="text" id="pay-date" readonly onclick="openCalFor('pay-date')" placeholder="날짜 선택" style="cursor:pointer"></div>
@@ -712,6 +712,7 @@ function selectCreditor(name,bal){
   $('#pay-cred-bal').value=bal.toLocaleString('ko-KR');
   $('#pay-total').value='';
   $('#pay-card').value='';$('#pay-cash').value='';
+  $('#pay-form').style.display='block';
   $('#pay-form').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function addPayment() {
@@ -725,7 +726,8 @@ async function addPayment() {
   if(bal>0&&amount>bal)return;
   try {
     await apiPost('/credits',{id:uid(),name,date,amount,type:'credit',memo:''});
-    ['pay-card','pay-cash','pay-total','pay-cred-bal'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+    ['pay-name','pay-card','pay-cash','pay-total','pay-cred-bal'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+    $('#pay-form').style.display='none';
     await renderCredit(); showV('✅ '+name+' 변제 '+won(amount));
   } catch(e) { await showAlert('저장 실패: '+e.message,'❌'); }
 }
