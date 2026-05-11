@@ -1374,29 +1374,34 @@ function _animateCalShift(dir){
   _calAnimating=true;
   const selDate=_calTarget==='analysis'?analysisDate:_calTarget?(($('#'+_calTarget)?.dataset.date||selectedDate)):selectedDate;
   const grid=$('#cal-grid');
+  const gridH=grid.offsetHeight;
   const oldHTML=grid.innerHTML;
   // 날짜 이동
   if(dir>0){calM++;if(calM>12){calM=1;calY++;}}
   else{calM--;if(calM<1){calM=12;calY--;}}
   $('#cal-title').textContent=calY+'년 '+calM+'월';
   const newHTML=_buildCalCells(selDate);
-  // 스테이지 구성
-  const mkDiv=html=>{const d=document.createElement('div');d.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:3px;width:100%;flex-shrink:0';d.innerHTML=html;return d;};
-  const oldDiv=mkDiv(oldHTML);
-  const newDiv=mkDiv(newHTML);
-  const stage=document.createElement('div');
-  stage.style.cssText='display:flex;width:200%';
-  if(dir>0){stage.appendChild(oldDiv);stage.appendChild(newDiv);stage.style.transform='translateX(0%)';}
-  else{stage.appendChild(newDiv);stage.appendChild(oldDiv);stage.style.transform='translateX(-50%)';}
-  grid.style.cssText='display:block;overflow:hidden';
+  // absolute 패널 방식 (각 패널 = grid 100% 너비)
+  const panelCSS='position:absolute;top:0;width:100%;display:grid;grid-template-columns:repeat(7,1fr);gap:3px';
+  const oldPanel=document.createElement('div');
+  oldPanel.style.cssText=panelCSS+';transform:translateX(0)';
+  oldPanel.innerHTML=oldHTML;
+  const newPanel=document.createElement('div');
+  newPanel.style.cssText=panelCSS+`;transform:translateX(${dir>0?'100%':'-100%'})`;
+  newPanel.innerHTML=newHTML;
+  grid.style.cssText=`display:block;position:relative;overflow:hidden;height:${gridH}px`;
   grid.innerHTML='';
-  grid.appendChild(stage);
+  grid.appendChild(oldPanel);
+  grid.appendChild(newPanel);
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    stage.style.transition='transform 0.35s cubic-bezier(0.4,0,0.2,1)';
-    stage.style.transform=dir>0?'translateX(-50%)':'translateX(0%)';
+    const tr='transform 0.35s cubic-bezier(0.4,0,0.2,1)';
+    oldPanel.style.transition=tr;
+    newPanel.style.transition=tr;
+    oldPanel.style.transform=dir>0?'translateX(-100%)':'translateX(100%)';
+    newPanel.style.transform='translateX(0)';
   }));
-  stage.addEventListener('transitionend',()=>{
-    grid.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:3px';
+  newPanel.addEventListener('transitionend',()=>{
+    grid.style.cssText='';
     grid.innerHTML=newHTML;
     _calAnimating=false;
   },{once:true});
