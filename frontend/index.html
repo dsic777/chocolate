@@ -733,6 +733,7 @@ async function addPayment() {
 }
 
 async function renderCredit() {
+  $('#pay-form').style.display='none';
   if(!$('#pay-date').dataset.date){$('#pay-date').dataset.date=selectedDate;$('#pay-date').value=fmtDate(selectedDate);}
   const cr=await getCreds(), allNames=[...new Set(cr.map(c=>c.name))];
   const balMap={};
