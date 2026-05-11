@@ -318,7 +318,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           <button class="pt"    id="pt-monthly" onclick="switchPeriod('monthly',this)">월별</button>
         </div>
         <div style="display:flex;align-items:center;justify-content:center;gap:10px;padding-top:8px">
-          <span id="analysis-period-lbl" style="font-size:22px;font-weight:700;color:#e5e7eb;white-space:nowrap"></span>
+          <span id="analysis-period-lbl" style="font-size:22px;font-weight:700;color:#e5e7eb;white-space:nowrap;cursor:pointer" onclick="openCalForAnalysis()"></span>
         </div>
       </div>
       <div id="analysis-content">
@@ -1323,7 +1323,7 @@ function updateDateLabel() {
 function goToday(){selectedDate=today();updateDateLabel();refreshCurPage();}
 
 // ── CALENDAR ──────────────────────────────
-let calY,calM;
+let calY,calM,_calAnimating=false;
 
 function openCal(){
   _calTarget=null;
@@ -1339,10 +1339,16 @@ function openCalFor(inputId){
   calY=y;calM=m;renderCal();
   $('#cal-modal').style.display='flex';
 }
+function openCalForAnalysis(){
+  if(_analysisPeriod!=='daily')return;
+  _calTarget='analysis';
+  const [y,m]=analysisDate.split('-').map(Number);
+  calY=y;calM=m;renderCal();
+  $('#cal-modal').style.display='flex';
+}
 function closeCal(){$('#cal-modal').style.display='none';_calTarget=null;}
 
-function renderCal(){
-  $('#cal-title').textContent=calY+'년 '+calM+'월';
+function _buildCalCells(selDate){
   const first=new Date(calY,calM-1,1).getDay();
   const last=new Date(calY,calM,0).getDate();
   const t=today();
@@ -1351,13 +1357,49 @@ function renderCal(){
     const col=i%7;
     if(i<first||day>last){cells+='<div></div>';continue;}
     const ds=`${calY}-${String(calM).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const selDate=_calTarget?(($('#'+_calTarget)?.dataset.date||selectedDate)):selectedDate;
     const isSel=ds===selDate,isT=ds===t;
     const tc=col===0?'#f87171':col===6?'#93c5fd':'#fff';
     cells+=`<div onclick="selectDate('${ds}')" style="text-align:center;padding:10px 2px;cursor:pointer;border-radius:8px;font-size:19px;font-weight:900;color:${isSel?'#000':tc};background:${isSel?'#fbbf24':isT?'#1f2937':'transparent'};border:1px solid ${isT&&!isSel?'#fbbf24':'transparent'}">${day}</div>`;
     day++;
   }
-  $('#cal-grid').innerHTML=cells;
+  return cells;
+}
+function renderCal(){
+  const selDate=_calTarget==='analysis'?analysisDate:_calTarget?(($('#'+_calTarget)?.dataset.date||selectedDate)):selectedDate;
+  $('#cal-title').textContent=calY+'년 '+calM+'월';
+  $('#cal-grid').innerHTML=_buildCalCells(selDate);
+}
+function _animateCalShift(dir){
+  if(_calAnimating)return;
+  _calAnimating=true;
+  const selDate=_calTarget==='analysis'?analysisDate:_calTarget?(($('#'+_calTarget)?.dataset.date||selectedDate)):selectedDate;
+  const grid=$('#cal-grid');
+  const oldHTML=grid.innerHTML;
+  // 날짜 이동
+  if(dir>0){calM++;if(calM>12){calM=1;calY++;}}
+  else{calM--;if(calM<1){calM=12;calY--;}}
+  $('#cal-title').textContent=calY+'년 '+calM+'월';
+  const newHTML=_buildCalCells(selDate);
+  // 스테이지 구성
+  const mkDiv=html=>{const d=document.createElement('div');d.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:3px;width:100%;flex-shrink:0';d.innerHTML=html;return d;};
+  const oldDiv=mkDiv(oldHTML);
+  const newDiv=mkDiv(newHTML);
+  const stage=document.createElement('div');
+  stage.style.cssText='display:flex;width:200%';
+  if(dir>0){stage.appendChild(oldDiv);stage.appendChild(newDiv);stage.style.transform='translateX(0%)';}
+  else{stage.appendChild(newDiv);stage.appendChild(oldDiv);stage.style.transform='translateX(-50%)';}
+  grid.style.cssText='display:block;overflow:hidden';
+  grid.innerHTML='';
+  grid.appendChild(stage);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    stage.style.transition='transform 0.35s cubic-bezier(0.4,0,0.2,1)';
+    stage.style.transform=dir>0?'translateX(-50%)':'translateX(0%)';
+  }));
+  stage.addEventListener('transitionend',()=>{
+    grid.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:3px';
+    grid.innerHTML=newHTML;
+    _calAnimating=false;
+  },{once:true});
 }
 
 function refreshCurPage(){
@@ -1367,7 +1409,9 @@ function refreshCurPage(){
   else if(curPage==='credit')renderCredit();
 }
 function selectDate(ds){
-  if(_calTarget){
+  if(_calTarget==='analysis'){
+    analysisDate=ds;_calTarget=null;closeCal();updateAnalysisHeader();renderAnalysis();
+  } else if(_calTarget){
     const el=$('#'+_calTarget);
     el.dataset.date=ds;el.value=fmtDate(ds);
     _calTarget=null;closeCal();
@@ -1375,8 +1419,8 @@ function selectDate(ds){
     selectedDate=ds;closeCal();updateDateLabel();refreshCurPage();
   }
 }
-function prevMonth(){calM--;if(calM<1){calM=12;calY--;}renderCal();}
-function nextMonth(){calM++;if(calM>12){calM=1;calY++;}renderCal();}
+function prevMonth(){_animateCalShift(-1);}
+function nextMonth(){_animateCalShift(1);}
 
 // ── SWIPE (ANALYSIS) ─────────────────────
 let _swX=0;
