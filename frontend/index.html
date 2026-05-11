@@ -653,6 +653,7 @@ async function addPurchase(data) {
       d.id=uid();
       await apiPost('/purchases', d);
       ['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+      $('#p-form-card').style.display='none';
       await renderPurchase(); showV('✅ 매입 저장: '+(d.vendor||'')+' '+won(d.amount));
     }
     return true;
