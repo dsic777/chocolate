@@ -1340,7 +1340,7 @@ let _swX=0;
 document.getElementById('chart-swipe').addEventListener('touchstart',e=>{_swX=e.touches[0].clientX;},{passive:true});
 document.getElementById('chart-swipe').addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-_swX;
-  if(Math.abs(dx)>60)shiftAnalysis(dx<0?-1:1);
+  if(Math.abs(dx)>60)shiftAnalysis(dx<0?1:-1);
 },{passive:true});
 
 // ── RESET / SEED ──────────────────────────
