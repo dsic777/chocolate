@@ -1403,8 +1403,8 @@ document.getElementById('chart-swipe').addEventListener('touchend',e=>{
 
 // ── SWIPE (HOME) ──────────────────────────
 let _homeSwX=0,_homeShifting=false;
-document.getElementById('page-home').addEventListener('touchstart',e=>{_homeSwX=e.touches[0].clientX;},{passive:true});
-document.getElementById('page-home').addEventListener('touchend',e=>{
+document.getElementById('hdr').addEventListener('touchstart',e=>{_homeSwX=e.touches[0].clientX;},{passive:true});
+document.getElementById('hdr').addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-_homeSwX;
   if(Math.abs(dx)>60)shiftHome(dx<0?1:-1);
 },{passive:true});
