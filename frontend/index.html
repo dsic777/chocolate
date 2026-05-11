@@ -1370,8 +1370,37 @@ function renderCal(){
   $('#cal-grid').innerHTML=_buildCalCells(selDate);
 }
 
-function prevMonth(){calM--;if(calM<1){calM=12;calY--;}renderCal();}
-function nextMonth(){calM++;if(calM>12){calM=1;calY++;}renderCal();}
+let _calSwX=0;
+function _calSlide(dir){
+  const grid=$('#cal-grid');
+  grid.style.transition='opacity 0.15s ease, transform 0.15s ease';
+  grid.style.opacity='0';
+  grid.style.transform=dir>0?'translateX(-30px)':'translateX(30px)';
+  setTimeout(()=>{
+    if(dir>0){calM++;if(calM>12){calM=1;calY++;}}
+    else{calM--;if(calM<1){calM=12;calY--;}}
+    $('#cal-title').textContent=calY+'년 '+calM+'월';
+    const selDate=_calTarget==='analysis'?analysisDate:_calTarget?(($('#'+_calTarget)?.dataset.date||selectedDate)):selectedDate;
+    grid.style.transition='none';
+    grid.style.transform=dir>0?'translateX(30px)':'translateX(-30px)';
+    grid.innerHTML=_buildCalCells(selDate);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      grid.style.transition='opacity 0.15s ease, transform 0.15s ease';
+      grid.style.opacity='1';
+      grid.style.transform='translateX(0)';
+    }));
+    setTimeout(()=>{grid.style.transition='';grid.style.opacity='';grid.style.transform='';},200);
+  },160);
+}
+function prevMonth(){_calSlide(-1);}
+function nextMonth(){_calSlide(1);}
+
+// 달력 스와이프
+document.getElementById('cal-box').addEventListener('touchstart',e=>{_calSwX=e.touches[0].clientX;},{passive:true});
+document.getElementById('cal-box').addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-_calSwX;
+  if(Math.abs(dx)>50)_calSlide(dx<0?1:-1);
+},{passive:true});
 
 function refreshCurPage(){
   if(curPage==='home')return renderHome();
