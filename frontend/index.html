@@ -282,10 +282,6 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 
     <!-- ═══ 외상 ═══ -->
     <div class="page" id="page-credit">
-      <div class="card">
-        <div class="card-ttl">고객별 외상 현황</div>
-        <div id="cred-summary"></div>
-      </div>
       <div class="card" id="pay-form" style="display:none">
         <div class="card-ttl">변제 입력</div>
         <div class="fg2">
@@ -304,10 +300,15 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <button class="btn btn-green" id="pay-btn" onclick="addPayment()">변제 처리</button>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 6px">
-        <span class="stl" style="margin:0">외상 거래 내역</span>
-        <label style="display:flex;align-items:center;gap:6px;font-size:15px;color:#9ca3af;cursor:pointer">
-          <input type="checkbox" id="show-all-cred" onchange="renderCredit()">완제포함
-        </label>
+        <span class="stl" style="margin:0">고객별 외상 현황</span>
+        <div style="display:flex;gap:14px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:15px;color:#9ca3af;cursor:pointer">
+            <input type="checkbox" id="cred-reverse" onchange="renderCredit()">역순
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:15px;color:#9ca3af;cursor:pointer">
+            <input type="checkbox" id="show-all-cred" onchange="renderCredit()">완제포함
+          </label>
+        </div>
       </div>
       <div class="card" id="cred-list"></div>
     </div>
@@ -743,32 +744,22 @@ async function renderCredit() {
     balMap[n]=deb-pd;
   });
   const misuNames=allNames.filter(n=>balMap[n]>0);
-  $('#cred-summary').innerHTML=misuNames.length===0?`<div class="empty">미수 외상이 없습니다</div>`
-    :misuNames.map(n=>{
-      const deb=cr.filter(c=>c.name===n&&c.type==='debit').reduce((a,c)=>a+c.amount,0);
-      const pd=cr.filter(c=>c.name===n&&c.type==='credit').reduce((a,c)=>a+c.amount,0);
-      return `<div class="li" style="cursor:pointer" onclick="selectCreditor('${n}',${balMap[n]})">
-        <div class="li-body">
-          <div class="li-title" style="white-space:normal">👤 ${n}</div>
-          <div class="li-sub">총 외상 ${won(deb)} · 변제 ${won(pd)}</div>
-        </div>
-        <div class="li-right">
-          <div class="li-main neg">${won(balMap[n])}</div>
-          <div style="font-size:16px;color:#f87171">미수</div>
-        </div>
-      </div>`;
-    }).join('');
   const showAll=$('#show-all-cred')?.checked;
+  const rev=$('#cred-reverse')?.checked;
   const showNames=showAll?allNames:misuNames;
   $('#cred-list').innerHTML=showNames.length===0?`<div class="empty">거래 내역이 없습니다</div>`
     :showNames.map(n=>{
-      const entries=[...cr.filter(c=>c.name===n)].sort((a,b)=>a.date.localeCompare(b.date));
+      const entries=[...cr.filter(c=>c.name===n)].sort((a,b)=>rev?b.date.localeCompare(a.date):a.date.localeCompare(b.date));
       const debits=entries.filter(c=>c.type==='debit');
       const credits=entries.filter(c=>c.type==='credit');
       const deb=debits.reduce((a,c)=>a+c.amount,0);
       const pd=credits.reduce((a,c)=>a+c.amount,0);
       const bal=deb-pd;
       const memos=debits.filter(c=>c.memo).map(c=>c.memo);
+      const isMisu=bal>0;
+      const statusTag=isMisu
+        ?`<span style="font-size:15px;color:#f87171;font-weight:700">미수 ${won(bal)}</span>`
+        :`<span style="font-size:15px;color:#4ade80;font-weight:700">완제</span>`;
       const debitRows=debits.map(c=>`
         <div style="display:flex;justify-content:space-between;padding:3px 0">
           <span style="color:#9ca3af;font-size:16px">${dl(c.date)}</span>
@@ -780,11 +771,11 @@ async function renderCredit() {
           <span style="color:#4ade80;font-size:17px;font-weight:700">-${won(c.amount)}</span>
         </div>`).join('');
       return `<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #1f2937">
-        <div style="font-size:19px;font-weight:900;color:#fff;margin-bottom:6px">👤 ${n}</div>
-        ${debitRows}${creditRows}
-        <div style="display:flex;justify-content:flex-end;padding:5px 0 2px;border-top:1px solid #374151;margin-top:4px">
-          <span style="color:#fff;font-size:18px;font-weight:900">${won(bal)}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;${isMisu?'cursor:pointer':''}" ${isMisu?`onclick="selectCreditor('${n}',${bal})"`:''}>
+          <span style="font-size:19px;font-weight:900;color:#fff">👤 ${n}</span>
+          ${statusTag}
         </div>
+        ${debitRows}${creditRows}
         ${memos.length?`<div style="color:#9ca3af;font-size:15px;margin-top:4px">${memos.join(' · ')}</div>`:''}
       </div>`;
     }).join('');
