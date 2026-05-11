@@ -125,6 +125,11 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 
 /* ── Chart ── */
 .chart-wrap{position:relative;height:220px}
+#analysis-content{overflow:hidden}
+@keyframes slideInLeft{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideInRight{from{transform:translateX(-100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.slide-in-left{animation:slideInLeft 0.25s ease}
+.slide-in-right{animation:slideInRight 0.25s ease}
 .ptabs{display:flex;gap:6px;margin-bottom:12px}
 .pt{flex:0 0 auto;padding:10px 32px;border:1px solid #374151;border-radius:6px;background:transparent;color:#9ca3af;font-size:24px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap}
 .pt.on{background:#fbbf24;color:#000;border-color:#fbbf24}
@@ -317,9 +322,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           <button class="pt"    id="pt-monthly" onclick="switchPeriod('monthly',this)">월별</button>
         </div>
         <div style="display:flex;align-items:center;justify-content:center;gap:10px;padding-top:8px">
-          <button onclick="shiftAnalysis(-1)" style="background:#1f2937;border:1px solid #374151;color:#e5e7eb;width:36px;height:36px;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0">‹</button>
           <span id="analysis-period-lbl" style="font-size:22px;font-weight:700;color:#e5e7eb;white-space:nowrap"></span>
-          <button onclick="shiftAnalysis(1)"  style="background:#1f2937;border:1px solid #374151;color:#e5e7eb;width:36px;height:36px;border-radius:8px;font-size:20px;cursor:pointer;flex-shrink:0">›</button>
         </div>
       </div>
       <div id="analysis-content">
@@ -802,6 +805,10 @@ function shiftAnalysis(dir){
   }
   updateAnalysisHeader();
   updateAnalysisPeriodLabel();
+  const el=$('#analysis-content');
+  el.classList.remove('slide-in-left','slide-in-right');
+  void el.offsetWidth;
+  el.classList.add(dir>0?'slide-in-left':'slide-in-right');
   renderAnalysis();
 }
 function switchPeriod(p,btn){
