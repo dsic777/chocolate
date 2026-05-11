@@ -1374,6 +1374,7 @@ function _animateCalShift(dir){
   _calAnimating=true;
   const selDate=_calTarget==='analysis'?analysisDate:_calTarget?(($('#'+_calTarget)?.dataset.date||selectedDate)):selectedDate;
   const grid=$('#cal-grid');
+  const box=$('#cal-box');
   const gridH=grid.offsetHeight;
   const oldHTML=grid.innerHTML;
   // 날짜 이동
@@ -1381,15 +1382,17 @@ function _animateCalShift(dir){
   else{calM--;if(calM<1){calM=12;calY--;}}
   $('#cal-title').textContent=calY+'년 '+calM+'월';
   const newHTML=_buildCalCells(selDate);
-  // absolute 패널 방식 (각 패널 = grid 100% 너비)
-  const panelCSS='position:absolute;top:0;width:100%;display:grid;grid-template-columns:repeat(7,1fr);gap:3px';
+  // absolute 패널 (grid 클립, box overflow:hidden으로 바깥 차단)
+  const base='position:absolute;top:0;left:0;width:100%;display:grid;grid-template-columns:repeat(7,1fr);gap:3px';
   const oldPanel=document.createElement('div');
-  oldPanel.style.cssText=panelCSS+';transform:translateX(0)';
+  oldPanel.style.cssText=base;
   oldPanel.innerHTML=oldHTML;
   const newPanel=document.createElement('div');
-  newPanel.style.cssText=panelCSS+`;transform:translateX(${dir>0?'100%':'-100%'})`;
+  newPanel.style.cssText=base;
+  newPanel.style.transform=dir>0?'translateX(100%)':'translateX(-100%)';
   newPanel.innerHTML=newHTML;
-  grid.style.cssText=`display:block;position:relative;overflow:hidden;height:${gridH}px`;
+  box.style.overflow='hidden';
+  grid.style.cssText=`display:block;position:relative;height:${gridH}px`;
   grid.innerHTML='';
   grid.appendChild(oldPanel);
   grid.appendChild(newPanel);
@@ -1400,11 +1403,9 @@ function _animateCalShift(dir){
     oldPanel.style.transform=dir>0?'translateX(-100%)':'translateX(100%)';
     newPanel.style.transform='translateX(0)';
   }));
-  newPanel.addEventListener('transitionend',()=>{
-    grid.style.cssText='';
-    grid.innerHTML=newHTML;
-    _calAnimating=false;
-  },{once:true});
+  const cleanup=()=>{box.style.overflow='';grid.style.cssText='';grid.innerHTML=newHTML;_calAnimating=false;};
+  newPanel.addEventListener('transitionend',cleanup,{once:true});
+  setTimeout(cleanup,600);
 }
 
 function refreshCurPage(){
