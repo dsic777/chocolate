@@ -170,7 +170,10 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 
 <div id="app">
   <div id="hdr">
-    <h1>🍫 초콜릿 운영관리</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h1>🍫 초콜릿 운영관리</h1>
+      <button id="analysis-today-btn" onclick="goAnalysisToday()" style="display:none;background:none;border:none;color:#fbbf24;font-size:16px;font-weight:700;padding:0;cursor:pointer">오늘로</button>
+    </div>
     <div id="hdr-sub">
       <span id="today-lbl" onclick="openCal()" style="cursor:pointer"></span>
       <span id="today-btn" onclick="goToday()" style="display:none;font-size:16px;font-weight:700;color:#fbbf24;cursor:pointer">오늘로</span>
@@ -312,9 +315,6 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
     <!-- ═══ 분석 ═══ -->
     <div class="page" id="page-analysis">
       <div style="position:sticky;top:0;background:#000;z-index:10;padding:4px 0 8px">
-        <div style="position:relative;display:flex;justify-content:flex-end;padding:0 12px 22px">
-          <button id="analysis-today-btn" onclick="goAnalysisToday()" style="background:none;border:none;color:#fbbf24;font-size:15px;font-weight:600;padding:3px 10px;cursor:pointer">오늘로</button>
-        </div>
         <div style="display:flex;justify-content:center;gap:6px;align-items:center">
           <button class="pt on" id="pt-daily"   onclick="switchPeriod('daily',this)">일별</button>
           <button class="pt"    id="pt-weekly"  onclick="switchPeriod('weekly',this)">주간</button>
@@ -447,7 +447,7 @@ function updateAnalysisHeader(){
     txt=`${mo}월 ${d}일 <span style="color:${DC[dw]}">(${DW[dw]})</span>`;
   }
   $('#analysis-period-lbl').innerHTML=txt;
-  $('#analysis-today-btn').style.display=analysisDate===today()?'none':'inline';
+  $('#analysis-today-btn').style.display=(curPage==='analysis'&&analysisDate!==today())?'inline':'none';
 }
 function navigate(p) {
   curPage=p;
@@ -466,6 +466,7 @@ function navigate(p) {
     updateAnalysisHeader();
   } else {
     $('#today-lbl').style.display='';
+    $('#analysis-today-btn').style.display='none';
   }
 }
 
