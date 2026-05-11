@@ -575,6 +575,7 @@ async function addSale(data) {
       }
       ['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
       $('#s-total').value='';
+      $('#s-form-card').style.display='none';
       await renderSales(); showV('✅ 매출 저장: '+won(d.total));
     }
     return true;
