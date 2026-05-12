@@ -746,10 +746,18 @@ async function renderCredit() {
   const misuNames=allNames.filter(n=>balMap[n]>0);
   const showAll=$('#show-all-cred')?.checked;
   const rev=$('#cred-reverse')?.checked;
-  const showNames=showAll?allNames:misuNames;
+  const showNames=showAll?[...allNames]:[...misuNames];
+  // 고객별 최종 처리일자 (debit+credit 전체 중 max)
+  const maxDateMap={};
+  showNames.forEach(n=>{
+    maxDateMap[n]=cr.filter(c=>c.name===n).reduce((mx,c)=>c.date>mx?c.date:mx,'');
+  });
+  showNames.sort((a,b)=>rev
+    ?maxDateMap[b].localeCompare(maxDateMap[a])
+    :maxDateMap[a].localeCompare(maxDateMap[b]));
   $('#cred-list').innerHTML=showNames.length===0?`<div class="empty">거래 내역이 없습니다</div>`
     :showNames.map(n=>{
-      const entries=[...cr.filter(c=>c.name===n)].sort((a,b)=>rev?b.date.localeCompare(a.date):a.date.localeCompare(b.date));
+      const entries=[...cr.filter(c=>c.name===n)].sort((a,b)=>a.date.localeCompare(b.date));
       const debits=entries.filter(c=>c.type==='debit');
       const credits=entries.filter(c=>c.type==='credit');
       const deb=debits.reduce((a,c)=>a+c.amount,0);
