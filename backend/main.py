@@ -372,6 +372,50 @@ def seed_data():
 
         cur_day += timedelta(days=1)
 
+    # 고객별 외상 변제 생성 (현실적 패턴)
+    debit_map = {}
+    for (cid, name, ds, amount, type_, memo, sid) in credit_rows:
+        debit_map.setdefault(name, []).append((ds, amount))
+
+    pay_rows = []
+    for name, entries in debit_map.items():
+        entries_sorted = sorted(entries)
+        balance = 0
+        batch_count = 0
+        for i, (ds, amount) in enumerate(entries_sorted):
+            balance += amount
+            batch_count += 1
+            is_last = (i == len(entries_sorted) - 1)
+            # 2~3건 누적 후 or 마지막 항목에서 변제 발생 여부 결정
+            if not is_last and batch_count < random.randint(2, 3):
+                continue
+            if balance <= 0:
+                batch_count = 0
+                continue
+            # 60% 확률로 변제 발생
+            if random.random() > 0.60:
+                batch_count = 0
+                continue
+            debit_date = date.fromisoformat(ds)
+            repay_date = debit_date + timedelta(days=random.randint(7, 40))
+            if repay_date > today:
+                batch_count = 0
+                continue
+            # 전체변제 40% / 일부변제 60%
+            if random.random() < 0.40:
+                pay_amt = balance
+                balance = 0
+            else:
+                ratio = random.uniform(0.4, 0.85)
+                pay_amt = max(10000, int(balance * ratio / 10000) * 10000)
+                pay_amt = min(pay_amt, balance)
+                balance -= pay_amt
+            rid = uuid.uuid4().hex[:15]
+            pay_rows.append((rid, name, repay_date.isoformat(), pay_amt, 'credit', '변제', None))
+            batch_count = 0
+
+    credit_rows.extend(pay_rows)
+
     with get_conn() as conn:
         with conn.cursor() as cur:
             if sales_rows:
