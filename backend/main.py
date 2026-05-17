@@ -63,6 +63,7 @@ def init_db():
                 )
             """)
             cur.execute("ALTER TABLE choco_credits ADD COLUMN IF NOT EXISTS sale_id VARCHAR(50)")
+            cur.execute("ALTER TABLE choco_credits ADD COLUMN IF NOT EXISTS due_date DATE")
         conn.commit()
 
 
@@ -157,12 +158,19 @@ class Sale(BaseModel):
     credit: Optional[int] = 0
     total: Optional[int] = 0
     memo: Optional[str] = ""
+    due_date: Optional[str] = None
 
 @app.get("/api/sales")
 def get_sales():
     with get_conn() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute("SELECT id, date::text, customer, card, cash, credit, total, memo FROM choco_sales ORDER BY date DESC, id DESC")
+            cur.execute("""
+                SELECT s.id, s.date::text, s.customer, s.card, s.cash, s.credit, s.total, s.memo,
+                       c.due_date::text AS due_date
+                FROM choco_sales s
+                LEFT JOIN choco_credits c ON c.sale_id = s.id AND c.type = 'debit'
+                ORDER BY s.date DESC, s.id DESC
+            """)
             return cur.fetchall()
 
 @app.post("/api/sales")
@@ -191,16 +199,16 @@ def update_sale(id: str, s: Sale):
             if existing:
                 if new_credit > 0:
                     cur.execute(
-                        "UPDATE choco_credits SET name=%s, date=%s, amount=%s WHERE sale_id=%s AND type='debit'",
-                        (s.customer, s.date, new_credit, id)
+                        "UPDATE choco_credits SET name=%s, date=%s, amount=%s, due_date=%s WHERE sale_id=%s AND type='debit'",
+                        (s.customer, s.date, new_credit, s.due_date, id)
                     )
                 else:
                     cur.execute("DELETE FROM choco_credits WHERE sale_id=%s AND type='debit'", (id,))
             elif new_credit > 0:
                 new_id = uuid.uuid4().hex[:15]
                 cur.execute(
-                    "INSERT INTO choco_credits (id,name,date,amount,type,memo,sale_id) VALUES (%s,%s,%s,%s,'debit','매출 외상',%s)",
-                    (new_id, s.customer, s.date, new_credit, id)
+                    "INSERT INTO choco_credits (id,name,date,amount,type,memo,sale_id,due_date) VALUES (%s,%s,%s,%s,'debit','매출 외상',%s,%s)",
+                    (new_id, s.customer, s.date, new_credit, id, s.due_date)
                 )
         conn.commit()
     return {"ok": True}
@@ -274,12 +282,13 @@ class Credit(BaseModel):
     type: str
     memo: Optional[str] = ""
     sale_id: Optional[str] = None
+    due_date: Optional[str] = None
 
 @app.get("/api/credits")
 def get_credits():
     with get_conn() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute("SELECT id, name, date::text, amount, type, memo FROM choco_credits ORDER BY date ASC, id ASC")
+            cur.execute("SELECT id, name, date::text, amount, type, memo, due_date::text FROM choco_credits ORDER BY date ASC, id ASC")
             return cur.fetchall()
 
 @app.post("/api/credits")
@@ -287,8 +296,8 @@ def add_credit(c: Credit):
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO choco_credits (id,name,date,amount,type,memo,sale_id) VALUES (%s,%s,%s,%s,%s,%s,%s)",
-                (c.id, c.name, c.date, c.amount, c.type, c.memo, c.sale_id)
+                "INSERT INTO choco_credits (id,name,date,amount,type,memo,sale_id,due_date) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                (c.id, c.name, c.date, c.amount, c.type, c.memo, c.sale_id, c.due_date)
             )
         conn.commit()
     return {"ok": True}

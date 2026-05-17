@@ -229,6 +229,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           <div class="fg"><label>외상</label><input type="text" inputmode="numeric" id="s-cred" placeholder="0" oninput="calcTotal()"></div>
           <div class="fg"><label>합계</label><input type="text" id="s-total" placeholder="자동" readonly style="background:#111827;color:#4ade80;font-size:22px;font-weight:900"></div>
         </div>
+        <div class="fg" id="s-due-wrap" style="display:none"><label>변제예정일</label><input type="text" id="s-due" readonly onclick="openCalFor('s-due')" placeholder="날짜 선택" style="cursor:pointer"></div>
         <div class="fg"><label>메모</label><input type="text" id="s-memo" placeholder="메모"></div>
         <div style="display:flex;gap:10px">
           <button class="btn btn-navy" id="s-save-btn" onclick="addSale()" style="flex:1">매출 저장</button>
@@ -541,13 +542,17 @@ function calcTotal() {
   ['s-card','s-cash','s-cred'].forEach(id=>fmtNum($('#'+id)));
   const v=parseNum($('#s-card').value)+parseNum($('#s-cash').value)+parseNum($('#s-cred').value);
   $('#s-total').value=v?v.toLocaleString('ko-KR'):'';
+  const hasCred=parseNum($('#s-cred').value)>0;
+  $('#s-due-wrap').style.display=hasCred?'block':'none';
+  if(!hasCred){const e=$('#s-due');if(e){e.value='';e.dataset.date='';}}
 }
 
 async function addSale(data) {
   const d=data||{
     date:$('#s-date').dataset.date||$('#s-date').value, customer:$('#s-cust').value.trim()||'고객',
     card:parseNum($('#s-card').value), cash:parseNum($('#s-cash').value),
-    credit:parseNum($('#s-cred').value), memo:$('#s-memo').value.trim()
+    credit:parseNum($('#s-cred').value), memo:$('#s-memo').value.trim(),
+    due_date:$('#s-due').dataset.date||$('#s-due').value||null
   };
   if(!d.date){await showAlert('날짜를 입력하세요','📅');return;}
   d.total=(d.card||0)+(d.cash||0)+(d.credit||0);
@@ -575,9 +580,11 @@ async function addSale(data) {
       d.id=uid();
       await apiPost('/sales', d);
       if((d.credit||0)>0){
-        await apiPost('/credits',{id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'매출 외상',sale_id:d.id});
+        await apiPost('/credits',{id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'매출 외상',sale_id:d.id,due_date:d.due_date||null});
       }
       ['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+      const sd=$('#s-due');if(sd){sd.value='';sd.dataset.date='';}
+      $('#s-due-wrap').style.display='none';
       $('#s-total').value='';
       $('#s-form-card').style.display='none';
       await renderSales(); showV('✅ 매출 저장: '+won(d.total));
@@ -768,11 +775,14 @@ async function renderCredit() {
       const bal=deb-pd;
       const memos=debits.filter(c=>c.memo).map(c=>c.memo);
       const isMisu=bal>0;
-      const debitRows=debits.map(c=>`
-        <div style="display:flex;justify-content:space-between;padding:3px 0">
-          <span style="color:#9ca3af;font-size:16px">${dl(c.date)}</span>
+      const debitRows=debits.map(c=>{
+        const isOverdue=c.due_date&&c.due_date<today();
+        const dueTag=c.due_date?` <span style="color:${isOverdue?'#f87171':'#fbbf24'};font-size:15px">→${dl(c.due_date)}</span>`:'';
+        return `<div style="display:flex;justify-content:space-between;padding:3px 0">
+          <span style="color:#9ca3af;font-size:16px">${dl(c.date)}${dueTag}</span>
           <span style="color:#f87171;font-size:17px;font-weight:700">${won(c.amount)}</span>
-        </div>`).join('');
+        </div>`;
+      }).join('');
       const creditRows=credits.map(c=>`
         <div style="display:flex;justify-content:space-between;padding:3px 0">
           <span style="color:#9ca3af;font-size:16px">${dl(c.date)}</span>
@@ -1031,6 +1041,12 @@ B단계 - 구조화 항목만 추출한다:
   · date = ${t} (고정)
   · 결제수단 없으면 cash
   · 금액이 없는 이름은 customer로 추출하지 않는다
+  · 외상(credit)이 있고 "N일", "N일 후", "N주 후", "한달 후" 등 변제 기한이 언급되면 due_date를 계산한다:
+    - "한달 후" → 다음달 같은날 (다음달에 그 날짜 없으면 마지막날)
+    - "N주 후" → 오늘+N×7일
+    - "N일" 또는 "N일 후" → 이번달 N일 (이미 지났으면 다음달 N일)
+    - due_date 형식: "YYYY-MM-DD"
+    - 기한 언급 없으면 due_date 필드 생략
 
 C단계 - C = A에서 B를 제거한다:
   · 고객 이름(customer로 추출된 것)을 제거한다.
@@ -1106,6 +1122,7 @@ function showParsed(type,items) {
         ${x.card?`<div class="pi-row"><span class="pi-lbl">카드</span><span class="pi-val">${won(x.card)}</span></div>`:''}
         ${x.cash?`<div class="pi-row"><span class="pi-lbl">현금</span><span class="pi-val">${won(x.cash)}</span></div>`:''}
         ${x.credit?`<div class="pi-row"><span class="pi-lbl">외상</span><span class="pi-val neg">${won(x.credit)}</span></div>`:''}
+        ${x.credit&&x.due_date?`<div class="pi-row"><span class="pi-lbl">변제예정일</span><span class="pi-val">${dl(x.due_date)}</span></div>`:''}
         <div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val" style="${x.memo?'':'color:#4b5563'}">${x.memo||'없음'}</span></div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button class="btn btn-green" style="width:60%;margin:0" onclick="saveParsed('sales',${i})">매출 저장</button>
@@ -1137,7 +1154,7 @@ async function saveParsed(type,idx) {
       item.total=(item.card||0)+(item.cash||0)+(item.credit||0);
       await apiPost('/sales',item);
       if((item.credit||0)>0)
-        await apiPost('/credits',{id:uid(),name:item.customer,date:item.date,amount:item.credit,type:'debit',memo:'매출 외상',sale_id:item.id});
+        await apiPost('/credits',{id:uid(),name:item.customer,date:item.date,amount:item.credit,type:'debit',memo:'매출 외상',sale_id:item.id,due_date:item.due_date||null});
       await renderSales();
     } else {
       await apiPost('/purchases',item);
@@ -1161,6 +1178,8 @@ function editParsed(type,idx) {
     $('#s-cash').value=item.cash?Number(item.cash).toLocaleString('ko-KR'):'';
     $('#s-cred').value=item.credit?Number(item.credit).toLocaleString('ko-KR'):'';
     $('#s-memo').value=item.memo||'';
+    const dde=item.due_date||'';
+    const dueFld=$('#s-due');if(dueFld){dueFld.dataset.date=dde;dueFld.value=dde?fmtDate(dde):'';}
     calcTotal();
     $('#s-form-card').style.display='block';
     $('#s-form-card').scrollIntoView({behavior:'smooth',block:'start'});
@@ -1293,6 +1312,9 @@ function enterSaleEditMode(item){
   $('#s-cash').value=item.cash?Number(item.cash).toLocaleString('ko-KR'):'';
   $('#s-cred').value=item.credit?Number(item.credit).toLocaleString('ko-KR'):'';
   $('#s-memo').value=item.memo||'';
+  const dd=item.due_date||'';
+  const dueEl=$('#s-due');if(dueEl){dueEl.dataset.date=dd;dueEl.value=dd?fmtDate(dd):'';}
+  $('#s-due-wrap').style.display=(item.credit||0)>0?'block':'none';
   calcTotal();
   $('#s-form-card').style.display='block';
   $('#s-edit-banner').style.display='block';
@@ -1305,6 +1327,8 @@ function enterSaleEditMode(item){
 function exitSaleEditMode(){
   _saleEditId=null;
   ['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+  const sd=$('#s-due');if(sd){sd.value='';sd.dataset.date='';}
+  $('#s-due-wrap').style.display='none';
   $('#s-total').value='';
   $('#s-form-card').style.display='none';
   $('#s-edit-banner').style.display='none';
