@@ -156,7 +156,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 
 /* ── Calendar Modal ── */
 #cal-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center}
-#cal-box{background:#111827;border:1px solid #374151;border-radius:14px;padding:20px;width:320px}
+#cal-box{background:#111827;border:1px solid #374151;border-radius:14px;padding:20px;width:360px}
 .cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .cal-nav{background:none;border:none;color:#9ca3af;font-size:26px;cursor:pointer;padding:2px 12px;line-height:1}
 .cal-nav:active{color:#fff}
@@ -1356,30 +1356,46 @@ function updateDateLabel() {
 function goToday(){selectedDate=today();updateDateLabel();refreshCurPage();}
 
 // ── CALENDAR ──────────────────────────────
-let calY,calM;
+let calY,calM,_calDueMap={};
 
-function openCal(){
+async function _loadCalDueMap(){
+  try{
+    const cr=await getCreds();
+    _calDueMap={};
+    cr.filter(c=>c.due_date&&c.type==='debit').forEach(c=>{
+      _calDueMap[c.due_date]=(_calDueMap[c.due_date]||0)+1;
+    });
+  }catch(e){_calDueMap={};}
+}
+
+async function openCal(){
   _calTarget=null;
   const [y,m]=selectedDate.split('-').map(Number);
-  calY=y;calM=m;renderCal();
+  calY=y;calM=m;
+  await _loadCalDueMap();
+  renderCal();
   $('#cal-modal').style.display='flex';
 }
-function openCalFor(inputId){
+async function openCalFor(inputId){
   _calTarget=inputId;
   const el=$('#'+inputId);
   const ref=el.dataset.date||selectedDate;
   const [y,m]=ref.split('-').map(Number);
-  calY=y;calM=m;renderCal();
+  calY=y;calM=m;
+  await _loadCalDueMap();
+  renderCal();
   $('#cal-modal').style.display='flex';
 }
 function goAnalysisToday(){
   analysisDate=today();updateAnalysisHeader();renderAnalysis();
 }
-function openCalForAnalysis(){
+async function openCalForAnalysis(){
   if(_analysisPeriod!=='daily')return;
   _calTarget='analysis';
   const [y,m]=analysisDate.split('-').map(Number);
-  calY=y;calM=m;renderCal();
+  calY=y;calM=m;
+  await _loadCalDueMap();
+  renderCal();
   $('#cal-modal').style.display='flex';
 }
 function closeCal(){$('#cal-modal').style.display='none';_calTarget=null;}
@@ -1395,7 +1411,8 @@ function _buildCalCells(selDate){
     const ds=`${calY}-${String(calM).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     const isSel=ds===selDate,isT=ds===t;
     const tc=col===0?'#f87171':col===6?'#93c5fd':'#fff';
-    cells+=`<div onclick="selectDate('${ds}')" style="text-align:center;padding:10px 2px;cursor:pointer;border-radius:8px;font-size:19px;font-weight:900;color:${isSel?'#000':tc};background:${isSel?'#fbbf24':isT?'#1f2937':'transparent'};border:1px solid ${isT&&!isSel?'#fbbf24':'transparent'}">${day}</div>`;
+    const cnt=_calDueMap[ds]||0;
+    cells+=`<div onclick="selectDate('${ds}')" style="text-align:center;padding:10px 2px 6px;cursor:pointer;border-radius:8px;font-size:19px;font-weight:900;color:${isSel?'#000':tc};background:${isSel?'#fbbf24':isT?'#1f2937':'transparent'};border:1px solid ${isT&&!isSel?'#fbbf24':'transparent'}">${day}${cnt?`<div style="font-size:11px;font-weight:700;color:${isSel?'#333':'#fbbf24'};margin-top:2px;line-height:1">${cnt}건</div>`:''}</div>`;
     day++;
   }
   return cells;
