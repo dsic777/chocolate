@@ -310,6 +310,9 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
             <input type="checkbox" id="cred-reverse" onchange="renderCredit()">역순
           </label>
           <label style="display:flex;align-items:center;gap:6px;font-size:15px;color:#9ca3af;cursor:pointer">
+            <input type="checkbox" id="show-due-cred" onchange="renderCredit()">예정
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:15px;color:#9ca3af;cursor:pointer">
             <input type="checkbox" id="show-all-cred" onchange="renderCredit()">완제포함
           </label>
         </div>
@@ -755,8 +758,13 @@ async function renderCredit() {
   });
   const misuNames=allNames.filter(n=>balMap[n]>0);
   const showAll=$('#show-all-cred')?.checked;
+  const showDue=$('#show-due-cred')?.checked;
   const rev=$('#cred-reverse')?.checked;
-  const showNames=showAll?[...allNames]:[...misuNames];
+  // 예정 체크 시: debit 중 due_date 있는 고객만 추림
+  const baseNames=showDue
+    ?(()=>{const s=new Set(cr.filter(c=>c.type==='debit'&&c.due_date).map(c=>c.name));return allNames.filter(n=>s.has(n));})()
+    :[...allNames];
+  const showNames=showAll?[...baseNames]:baseNames.filter(n=>balMap[n]>0);
   // 고객별 최종 처리일자 (debit+credit 전체 중 max)
   const maxDateMap={};
   showNames.forEach(n=>{
