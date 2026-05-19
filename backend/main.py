@@ -207,7 +207,7 @@ def update_sale(id: str, s: Sale):
             elif new_credit > 0:
                 new_id = uuid.uuid4().hex[:15]
                 cur.execute(
-                    "INSERT INTO choco_credits (id,name,date,amount,type,memo,sale_id,due_date) VALUES (%s,%s,%s,%s,'debit','매출 외상',%s,%s)",
+                    "INSERT INTO choco_credits (id,name,date,amount,type,memo,sale_id,due_date) VALUES (%s,%s,%s,%s,'debit','수입 외상',%s,%s)",
                     (new_id, s.customer, s.date, new_credit, id, s.due_date)
                 )
         conn.commit()
@@ -368,7 +368,7 @@ def seed_data():
             sales_rows.append((sid, ds, customer, card, cash, credit, total, memo))
             if credit > 0:
                 cid = uuid.uuid4().hex[:15]
-                credit_rows.append((cid, customer, ds, credit, 'debit', '매출 외상', sid))
+                credit_rows.append((cid, customer, ds, credit, 'debit', '수입 외상', sid))
 
         for _ in range(random.randint(0, 3)):
             pid      = uuid.uuid4().hex[:15]

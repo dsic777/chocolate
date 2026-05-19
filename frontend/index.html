@@ -185,12 +185,12 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
     <!-- ═══ HOME ═══ -->
     <div class="page on" id="page-home">
       <div class="stat-table">
-        <div class="stat-row"><span class="stat-lbl">당일 매출</span><span class="stat-val amber" id="h-sales">-</span></div>
-        <div class="stat-row"><span class="stat-lbl">당일 매입</span><span class="stat-val red"   id="h-purch">-</span></div>
+        <div class="stat-row"><span class="stat-lbl">당일 수입</span><span class="stat-val amber" id="h-sales">-</span></div>
+        <div class="stat-row"><span class="stat-lbl">당일 지출</span><span class="stat-val red"   id="h-purch">-</span></div>
         <div class="stat-row"><span class="stat-lbl">외상 잔액</span><span class="stat-val blue"  id="h-cred">-</span></div>
       </div>
       <div class="card">
-        <div class="card-ttl">당일 손익 (매출 - 매입)</div>
+        <div class="card-ttl">당일 손익 (수입 - 지출)</div>
         <div id="h-profit-val">-</div>
         <div style="text-align:center;font-size:16px;color:#aaa;margin-top:4px" id="h-profit-sub"></div>
       </div>
@@ -198,7 +198,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
       <div class="card" id="home-list"></div>
     </div>
 
-    <!-- ═══ 매출 ═══ -->
+    <!-- ═══ 수입 ═══ -->
     <div class="page" id="page-sales">
       <div class="card">
         <div class="card-ttl">🎤 AI 음성 입력</div>
@@ -215,7 +215,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
       </div>
       <div class="card" id="s-form-card" style="display:none">
         <div id="s-edit-banner" style="display:none;background:#1a3a2a;border:1px solid #166534;border-radius:8px;padding:10px 14px;margin-bottom:12px">
-          <span class="pulsing" style="color:#4ade80;font-size:17px;font-weight:700">🔧 매출 수정 중</span>
+          <span class="pulsing" style="color:#4ade80;font-size:17px;font-weight:700">🔧 수입 수정 중</span>
         </div>
         <div class="card-ttl" id="s-form-ttl">직접 입력</div>
         <div class="fg2">
@@ -233,21 +233,21 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div class="fg" id="s-due-wrap" style="display:none"><label>변제예정일</label><input type="text" id="s-due" readonly onclick="openCalFor('s-due')" placeholder="날짜 선택" style="cursor:pointer"></div>
         <div class="fg"><label>메모</label><input type="text" id="s-memo" placeholder="메모"></div>
         <div style="display:flex;gap:10px">
-          <button class="btn btn-navy" id="s-save-btn" onclick="addSale()" style="flex:1">매출 저장</button>
+          <button class="btn btn-navy" id="s-save-btn" onclick="addSale()" style="flex:1">수입 저장</button>
           <button id="s-cancel-btn" onclick="exitSaleEditMode()" style="display:none;flex:0 0 90px;background:#374151;color:#e5e7eb;border:none;border-radius:8px;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
         </div>
       </div>
-      <div class="stl">매출 내역</div>
+      <div class="stl">수입 내역</div>
       <div class="card" id="sales-list"></div>
     </div>
 
-    <!-- ═══ 매입 ═══ -->
+    <!-- ═══ 지출 ═══ -->
     <div class="page" id="page-purchase">
       <div class="card">
         <div class="card-ttl">🎤 AI 음성 입력</div>
         <div class="vbox">
           <textarea id="purch-ta" rows="4" placeholder="말하거나 직접 입력하세요.
-예1) 대선주류 양주 음료 백만원 카드 매입단가 조정요청예정
+예1) 대선주류 양주 음료 백만원 카드 지출단가 조정요청예정
 예2) 시장상회 안주 오십만원 현금 사장님이 정이 많다"></textarea>
           <div class="vbtns">
             <button class="vb vb-mic" id="mic-purchase" onclick="toggleMic('purchase')">🎤 말하기</button>
@@ -258,7 +258,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
       </div>
       <div class="card" id="p-form-card" style="display:none">
         <div id="p-edit-banner" style="display:none;background:#1a3a2a;border:1px solid #166534;border-radius:8px;padding:10px 14px;margin-bottom:12px">
-          <span class="pulsing" style="color:#4ade80;font-size:17px;font-weight:700">🔧 매입 수정 중</span>
+          <span class="pulsing" style="color:#4ade80;font-size:17px;font-weight:700">🔧 지출 수정 중</span>
         </div>
         <div class="card-ttl" id="p-form-ttl">직접 입력</div>
         <div class="fg2">
@@ -274,11 +274,11 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
         <div class="fg"><label>금액</label><input type="text" inputmode="numeric" id="p-amt" placeholder="0" oninput="fmtNum(this)"></div>
         <div class="fg"><label>메모</label><input type="text" id="p-memo" placeholder="메모"></div>
         <div style="display:flex;gap:10px">
-          <button class="btn btn-navy" id="p-save-btn" onclick="addPurchase()" style="flex:1">매입 저장</button>
+          <button class="btn btn-navy" id="p-save-btn" onclick="addPurchase()" style="flex:1">지출 저장</button>
           <button id="p-cancel-btn" onclick="exitPurchEditMode()" style="display:none;flex:0 0 90px;background:#374151;color:#e5e7eb;border:none;border-radius:8px;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
         </div>
       </div>
-      <div class="stl">매입 내역</div>
+      <div class="stl">지출 내역</div>
       <div class="card" id="purch-list"></div>
     </div>
 
@@ -340,8 +340,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
       </div>
       <div id="stat-area">
         <div class="stat-table">
-          <div class="stat-row"><span class="stat-lbl" id="as1-l">기간 매출</span><span class="stat-val amber" id="as1-v">-</span></div>
-          <div class="stat-row"><span class="stat-lbl" id="as2-l">기간 매입</span><span class="stat-val red"   id="as2-v">-</span></div>
+          <div class="stat-row"><span class="stat-lbl" id="as1-l">기간 수입</span><span class="stat-val amber" id="as1-v">-</span></div>
+          <div class="stat-row"><span class="stat-lbl" id="as2-l">기간 지출</span><span class="stat-val red"   id="as2-v">-</span></div>
           <div class="stat-row"><span class="stat-lbl" id="as3-l">순이익</span>  <span class="stat-val blue"  id="as3-v">-</span></div>
         </div>
       </div>
@@ -352,8 +352,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 
   <div id="tabbar">
     <div class="tab on" data-p="home">    <div class="ti">📊</div><div class="tl">홈</div></div>
-    <div class="tab" data-p="sales">      <div class="ti">💰</div><div class="tl">매출</div></div>
-    <div class="tab" data-p="purchase">   <div class="ti">🛒</div><div class="tl">매입</div></div>
+    <div class="tab" data-p="sales">      <div class="ti">💰</div><div class="tl">수입</div></div>
+    <div class="tab" data-p="purchase">   <div class="ti">🛒</div><div class="tl">지출</div></div>
     <div class="tab" data-p="credit">     <div class="ti">📋</div><div class="tl">외상</div></div>
     <div class="tab" data-p="analysis">   <div class="ti">📈</div><div class="tl">분석</div></div>
   </div>
@@ -506,7 +506,7 @@ async function renderHome() {
   pEl.textContent=(profit>=0?'+':'')+won(profit);
   pEl.className=profit>=0?'pos':'neg';
   pEl.style.cssText='font-size:32px;font-weight:700;text-align:center;padding:8px 0';
-  $('#h-profit-sub').textContent=`매출 ${won(sTotal)} · 매입 ${won(pTotal)}`;
+  $('#h-profit-sub').textContent=`수입 ${won(sTotal)} · 지출 ${won(pTotal)}`;
 
   const sorted=[
     ...sales.map(s=>({...s,_t:'sale'})),
@@ -579,19 +579,19 @@ async function addSale(data) {
       }
       await fetch(`${API}/sales/${_saleEditId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
       exitSaleEditMode();
-      await renderSales(); showV('✅ 매출 수정 완료');
+      await renderSales(); showV('✅ 수입 수정 완료');
     } else {
       d.id=uid();
       await apiPost('/sales', d);
       if((d.credit||0)>0){
-        await apiPost('/credits',{id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'매출 외상',sale_id:d.id,due_date:d.due_date||null});
+        await apiPost('/credits',{id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'수입 외상',sale_id:d.id,due_date:d.due_date||null});
       }
       ['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
       const sd=$('#s-due');if(sd){sd.value='';sd.dataset.date='';}
       $('#s-due-wrap').style.display='none';
       $('#s-total').value='';
       $('#s-form-card').style.display='none';
-      await renderSales(); showV('✅ 매출 저장: '+won(d.total));
+      await renderSales(); showV('✅ 수입 저장: '+won(d.total));
     }
     return true;
   } catch(e) { await showAlert('저장 실패: '+e.message,'❌'); }
@@ -607,14 +607,14 @@ async function delSale(id){
     const newBal=(totDeb-(sale.credit||0))-totPaid;
     if(newBal<0){
       const ok=await showConfirm(
-        `${nm} 고객의 변제액이 ${won(Math.abs(newBal))} 초과됩니다.\n매출 삭제 시 외상 잔액이 음수가 됩니다.\n계속하시겠습니까?`,
+        `${nm} 고객의 변제액이 ${won(Math.abs(newBal))} 초과됩니다.\n수입 삭제 시 외상 잔액이 음수가 됩니다.\n계속하시겠습니까?`,
         '⚠️','삭제','mb-del');
       if(!ok)return;
     } else {
-      if(!await showConfirm('매출을 삭제할까요?'))return;
+      if(!await showConfirm('수입을 삭제할까요?'))return;
     }
   } else {
-    if(!await showConfirm('매출을 삭제할까요?'))return;
+    if(!await showConfirm('수입을 삭제할까요?'))return;
   }
   await apiDel('/sales/'+id);renderSales();
 }
@@ -628,7 +628,7 @@ async function renderSales() {
   const _sf=new Date(sy,sm-1,sd);_sf.setDate(_sf.getDate()-13);
   const _sfrom=`${_sf.getFullYear()}-${pad2(_sf.getMonth()+1)}-${pad2(_sf.getDate())}`;
   const list=all.filter(s=>s.date>=_sfrom&&s.date<=selectedDate);
-  $('#sales-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 기준 14일 매출 없음</div>`
+  $('#sales-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 기준 14일 수입 없음</div>`
     :list.map(s=>`<div class="li">
       <div class="li-body">
         <div class="li-title">${dl(s.date)} <strong>${s.customer||'고객'}</strong></div>
@@ -663,19 +663,19 @@ async function addPurchase(data) {
       d.id=_purchEditId;
       await fetch(`${API}/purchases/${_purchEditId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
       exitPurchEditMode();
-      await renderPurchase(); showV('✅ 매입 수정 완료');
+      await renderPurchase(); showV('✅ 지출 수정 완료');
     } else {
       d.id=uid();
       await apiPost('/purchases', d);
       ['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
       $('#p-form-card').style.display='none';
-      await renderPurchase(); showV('✅ 매입 저장: '+(d.vendor||'')+' '+won(d.amount));
+      await renderPurchase(); showV('✅ 지출 저장: '+(d.vendor||'')+' '+won(d.amount));
     }
     return true;
   } catch(e) { await showAlert('저장 실패: '+e.message,'❌'); }
 }
 
-async function delPurchase(id){if(!await showConfirm('매입을 삭제할까요?'))return;await apiDel('/purchases/'+id);renderPurchase();}
+async function delPurchase(id){if(!await showConfirm('지출을 삭제할까요?'))return;await apiDel('/purchases/'+id);renderPurchase();}
 
 const _purchRows={};
 async function renderPurchase() {
@@ -686,7 +686,7 @@ async function renderPurchase() {
   const _pf=new Date(py,pm-1,pd);_pf.setDate(_pf.getDate()-13);
   const _pfrom=`${_pf.getFullYear()}-${pad2(_pf.getMonth()+1)}-${pad2(_pf.getDate())}`;
   const list=all.filter(p=>p.date>=_pfrom&&p.date<=selectedDate);
-  $('#purch-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 기준 14일 매입 없음</div>`
+  $('#purch-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 기준 14일 지출 없음</div>`
     :list.map(p=>`<div class="li">
       <div class="li-body">
         <div class="li-title">${dl(p.date)} <strong>${p.vendor||'미상'}</strong>${p.category?' <span style="color:#888;font-weight:400">'+p.category+'</span>':''}</div>
@@ -917,8 +917,8 @@ function renderStats(sales,purch,creds) {
     `<div class="stat-table" style="margin-bottom:12px"><div class="stat-row"><span class="stat-lbl">외상 잔액</span><span class="stat-val red">${won(balance)}</span></div></div>`+
     `<div class="wk-grid">`+
       `<div class="wk-row wk-hdr-row"><div class="wk-cell wk-row-head" style="border-right:none"></div><div class="wk-cell wk-col-head">전일</div><div class="wk-cell wk-col-head">금일</div><div class="wk-cell wk-col-head">14일</div></div>`+
-      `<div class="wk-row"><div class="wk-cell wk-row-head">매출</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sY)}</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sT)}</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(s14)}</div></div>`+
-      `<div class="wk-row"><div class="wk-cell wk-row-head">매입</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pY)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pT)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(p14)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">수입</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sY)}</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sT)}</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(s14)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">지출</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pY)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pT)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(p14)}</div></div>`+
       `<div class="wk-row"><div class="wk-cell wk-row-head">순익</div><div class="wk-cell wk-val" style="color:${clr(sY-pY)}">${numK(sY-pY)}</div><div class="wk-cell wk-val" style="color:${clr(sT-pT)}">${numK(sT-pT)}</div><div class="wk-cell wk-val" style="color:${clr(s14-p14)}">${numK(s14-p14)}</div></div>`+
       `<div class="wk-row"><div class="wk-cell wk-row-head">외상</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(crY)}</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(crT)}</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cr14)}</div></div>`+
     `</div>`;
@@ -951,8 +951,8 @@ function renderWeekly(sales,purch,creds) {
     `<div class="stat-table" style="margin-bottom:12px"><div class="stat-row"><span class="stat-lbl">외상 잔액</span><span class="stat-val red">${won(balance)}</span></div></div>`+
     `<div class="wk-grid">`+
       `<div class="wk-row wk-hdr-row"><div class="wk-cell wk-row-head" style="border-right:none"></div><div class="wk-cell wk-col-head">전주</div><div class="wk-cell wk-col-head">금주</div><div class="wk-cell wk-col-head">증감</div></div>`+
-      `<div class="wk-row"><div class="wk-cell wk-row-head">매출</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sl)}</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(ss)}</div><div class="wk-cell wk-val" style="color:${clr(ss-sl)}">${sign(ss-sl)+numK(ss-sl)}</div></div>`+
-      `<div class="wk-row"><div class="wk-cell wk-row-head">매입</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pl)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(ps)}</div><div class="wk-cell wk-val" style="color:${clr(ps-pl)}">${sign(ps-pl)+numK(ps-pl)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">수입</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sl)}</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(ss)}</div><div class="wk-cell wk-val" style="color:${clr(ss-sl)}">${sign(ss-sl)+numK(ss-sl)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">지출</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pl)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(ps)}</div><div class="wk-cell wk-val" style="color:${clr(ps-pl)}">${sign(ps-pl)+numK(ps-pl)}</div></div>`+
       `<div class="wk-row"><div class="wk-cell wk-row-head">순익</div><div class="wk-cell wk-val" style="color:${clr(sl-pl)}">${numK(sl-pl)}</div><div class="wk-cell wk-val" style="color:${clr(ss-ps)}">${numK(ss-ps)}</div><div class="wk-cell wk-val" style="color:${clr((ss-ps)-(sl-pl))}">${sign((ss-ps)-(sl-pl))+numK((ss-ps)-(sl-pl))}</div></div>`+
       `<div class="wk-row"><div class="wk-cell wk-row-head">외상</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cl)}</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cs)}</div><div class="wk-cell wk-val" style="color:${clr(cs-cl)}">${sign(cs-cl)+numK(cs-cl)}</div></div>`+
     `</div>`;
@@ -984,8 +984,8 @@ function renderMonthly(sales,purch,creds) {
     `<div class="stat-table" style="margin-bottom:12px"><div class="stat-row"><span class="stat-lbl">외상 잔액</span><span class="stat-val red">${won(balance)}</span></div></div>`+
     `<div class="wk-grid">`+
       `<div class="wk-row wk-hdr-row"><div class="wk-cell wk-row-head" style="border-right:none"></div><div class="wk-cell wk-col-head">전월</div><div class="wk-cell wk-col-head">금월</div><div class="wk-cell wk-col-head">증감</div></div>`+
-      `<div class="wk-row"><div class="wk-cell wk-row-head">매출</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sL)}</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sS)}</div><div class="wk-cell wk-val" style="color:${clr(sS-sL)}">${sign(sS-sL)+numK(sS-sL)}</div></div>`+
-      `<div class="wk-row"><div class="wk-cell wk-row-head">매입</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pL)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pS)}</div><div class="wk-cell wk-val" style="color:${clr(pS-pL)}">${sign(pS-pL)+numK(pS-pL)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">수입</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sL)}</div><div class="wk-cell wk-val" style="color:#fbbf24">${numK(sS)}</div><div class="wk-cell wk-val" style="color:${clr(sS-sL)}">${sign(sS-sL)+numK(sS-sL)}</div></div>`+
+      `<div class="wk-row"><div class="wk-cell wk-row-head">지출</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pL)}</div><div class="wk-cell wk-val" style="color:#f87171">${numK(pS)}</div><div class="wk-cell wk-val" style="color:${clr(pS-pL)}">${sign(pS-pL)+numK(pS-pL)}</div></div>`+
       `<div class="wk-row"><div class="wk-cell wk-row-head">순익</div><div class="wk-cell wk-val" style="color:${clr(sL-pL)}">${numK(sL-pL)}</div><div class="wk-cell wk-val" style="color:${clr(sS-pS)}">${numK(sS-pS)}</div><div class="wk-cell wk-val" style="color:${clr((sS-pS)-(sL-pL))}">${sign((sS-pS)-(sL-pL))+numK((sS-pS)-(sL-pL))}</div></div>`+
       `<div class="wk-row"><div class="wk-cell wk-row-head">외상</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cL)}</div><div class="wk-cell wk-val" style="color:#60a5fa">${numK(cS)}</div><div class="wk-cell wk-val" style="color:${clr(cS-cL)}">${sign(cS-cL)+numK(cS-cL)}</div></div>`+
     `</div>`;
@@ -994,8 +994,8 @@ function renderMonthly(sales,purch,creds) {
 function restoreStatTable() {
   $('#stat-area').innerHTML=
     '<div class="stat-table">'+
-    '<div class="stat-row"><span class="stat-lbl" id="as1-l">기간 매출</span><span class="stat-val amber" id="as1-v">-</span></div>'+
-    '<div class="stat-row"><span class="stat-lbl" id="as2-l">기간 매입</span><span class="stat-val red" id="as2-v">-</span></div>'+
+    '<div class="stat-row"><span class="stat-lbl" id="as1-l">기간 수입</span><span class="stat-val amber" id="as1-v">-</span></div>'+
+    '<div class="stat-row"><span class="stat-lbl" id="as2-l">기간 지출</span><span class="stat-val red" id="as2-v">-</span></div>'+
     '<div class="stat-row"><span class="stat-lbl" id="as3-l">순이익</span><span class="stat-val blue" id="as3-v">-</span></div>'+
     '</div>';
 }
@@ -1009,8 +1009,8 @@ function drawChart(labels,sData,pData) {
   chartInst=new Chart($('#main-chart').getContext('2d'),{
     type:'bar',
     data:{labels,datasets:[
-      {label:'매출',data:sData,backgroundColor:'rgba(251,191,36,.8)',borderRadius:4},
-      {label:'매입',data:pData,backgroundColor:'rgba(248,113,113,.6)',borderRadius:4}
+      {label:'수입',data:sData,backgroundColor:'rgba(251,191,36,.8)',borderRadius:4},
+      {label:'지출',data:pData,backgroundColor:'rgba(248,113,113,.6)',borderRadius:4}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'top',labels:{font:{family:'Noto Sans KR',size:15,weight:'700'},color:'#9ca3af'}}},
@@ -1037,7 +1037,7 @@ async function parseAI(type) {
 
   const t=selectedDate;
   const prompt=type==='sales'
-    ?`아래 텍스트에서 매출 항목을 추출해 JSON 배열로만 반환하세요.
+    ?`아래 텍스트에서 수입 항목을 추출해 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
 처리 순서:
@@ -1071,7 +1071,7 @@ D단계 - C에서 불필요한 조사/공백을 제거해 정리한다 → D
 한국어 숫자: 100만=1000000, 50만=500000
 설명 없이 JSON 배열만 반환:
 ${text}`
-    :`아래 텍스트에서 매입 항목을 추출해 JSON 배열로만 반환하세요.
+    :`아래 텍스트에서 지출 항목을 추출해 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
 A단계 - 전체 텍스트를 그대로 보존한다.
@@ -1134,8 +1134,8 @@ function showParsed(type,items) {
         ${x.credit&&x.due_date?`<div class="pi-row"><span class="pi-lbl">변제예정일</span><span class="pi-val">${dl(x.due_date)}</span></div>`:''}
         <div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val" style="${x.memo?'':'color:#4b5563'}">${x.memo||'없음'}</span></div>
         <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="btn btn-green" style="width:60%;margin:0" onclick="saveParsed('sales',${i})">매출 저장</button>
-          <button class="btn btn-navy" style="width:40%;margin:0" onclick="editParsed('sales',${i})">매출 수정</button>
+          <button class="btn btn-green" style="width:60%;margin:0" onclick="saveParsed('sales',${i})">수입 저장</button>
+          <button class="btn btn-navy" style="width:40%;margin:0" onclick="editParsed('sales',${i})">수입 수정</button>
         </div>
       </div>`
     :`<div class="pi" id="pi-${type}-${i}">
@@ -1146,8 +1146,8 @@ function showParsed(type,items) {
         <div class="pi-row"><span class="pi-lbl">구분</span><span class="pi-val">${x.payment==='cash'?'현금':'카드'}</span></div>
         <div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val" style="${x.memo?'':'color:#4b5563'}">${x.memo||'없음'}</span></div>
         <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="btn btn-green" style="width:60%;margin:0" onclick="saveParsed('purchase',${i})">매입 저장</button>
-          <button class="btn btn-navy" style="width:40%;margin:0" onclick="editParsed('purchase',${i})">매입 수정</button>
+          <button class="btn btn-green" style="width:60%;margin:0" onclick="saveParsed('purchase',${i})">지출 저장</button>
+          <button class="btn btn-navy" style="width:40%;margin:0" onclick="editParsed('purchase',${i})">지출 수정</button>
         </div>
       </div>`
   ).join('');
@@ -1163,7 +1163,7 @@ async function saveParsed(type,idx) {
       item.total=(item.card||0)+(item.cash||0)+(item.credit||0);
       await apiPost('/sales',item);
       if((item.credit||0)>0)
-        await apiPost('/credits',{id:uid(),name:item.customer,date:item.date,amount:item.credit,type:'debit',memo:'매출 외상',sale_id:item.id,due_date:item.due_date||null});
+        await apiPost('/credits',{id:uid(),name:item.customer,date:item.date,amount:item.credit,type:'debit',memo:'수입 외상',sale_id:item.id,due_date:item.due_date||null});
       await renderSales();
     } else {
       await apiPost('/purchases',item);
@@ -1291,8 +1291,8 @@ function enterPurchEditMode(item){
   $('#p-memo').value=item.memo||'';
   $('#p-form-card').style.display='block';
   $('#p-edit-banner').style.display='block';
-  $('#p-form-ttl').textContent='매입 수정';
-  $('#p-save-btn').textContent='매입 수정 저장';
+  $('#p-form-ttl').textContent='지출 수정';
+  $('#p-save-btn').textContent='지출 수정 저장';
   $('#p-save-btn').className='btn btn-green';
   $('#p-cancel-btn').style.display='block';
   $('#p-form-card').scrollIntoView({behavior:'smooth',block:'start'});
@@ -1303,7 +1303,7 @@ function exitPurchEditMode(){
   $('#p-form-card').style.display='none';
   $('#p-edit-banner').style.display='none';
   $('#p-form-ttl').textContent='직접 입력';
-  $('#p-save-btn').textContent='매입 저장';
+  $('#p-save-btn').textContent='지출 저장';
   $('#p-save-btn').className='btn btn-navy';
   $('#p-cancel-btn').style.display='none';
 }
@@ -1327,8 +1327,8 @@ function enterSaleEditMode(item){
   calcTotal();
   $('#s-form-card').style.display='block';
   $('#s-edit-banner').style.display='block';
-  $('#s-form-ttl').textContent='매출 수정';
-  $('#s-save-btn').textContent='매출 수정 저장';
+  $('#s-form-ttl').textContent='수입 수정';
+  $('#s-save-btn').textContent='수입 수정 저장';
   $('#s-save-btn').className='btn btn-green';
   $('#s-cancel-btn').style.display='block';
   $('#s-form-card').scrollIntoView({behavior:'smooth',block:'start'});
@@ -1342,7 +1342,7 @@ function exitSaleEditMode(){
   $('#s-form-card').style.display='none';
   $('#s-edit-banner').style.display='none';
   $('#s-form-ttl').textContent='직접 입력';
-  $('#s-save-btn').textContent='매출 저장';
+  $('#s-save-btn').textContent='수입 저장';
   $('#s-save-btn').className='btn btn-navy';
   $('#s-cancel-btn').style.display='none';
 }
@@ -1551,7 +1551,7 @@ function onResetPwInput(){
 }
 async function doReset(){
   closeResetModal();
-  const ok=await showConfirm('매출·매입·외상 전체를 삭제합니다.\n정말 초기화하시겠습니까?','🗑️','삭제','mb-del');
+  const ok=await showConfirm('수입·지출·외상 전체를 삭제합니다.\n정말 초기화하시겠습니까?','🗑️','삭제','mb-del');
   if(!ok)return;
   try{
     await fetch('/chocolate/api/reset',{method:'DELETE'});
@@ -1580,7 +1580,7 @@ async function doSeed(){
     await fetch('/chocolate/api/reset',{method:'DELETE'});
     const res=await fetch('/chocolate/api/seed',{method:'POST'});
     const d=await res.json();
-    await showAlert(`생성 완료!\n매출 ${d.sales}건 · 매입 ${d.purchases}건`,'✅');
+    await showAlert(`생성 완료!\n수입 ${d.sales}건 · 지출 ${d.purchases}건`,'✅');
     location.reload();
   }catch(e){await showAlert('오류가 발생했습니다','❌');}
 }

@@ -141,12 +141,12 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:1
     <!-- ═══ HOME ═══ -->
     <div class="page on" id="page-home">
       <div class="stats3">
-        <div class="sc"><div class="sc-lbl">오늘 매출</div><div class="sc-val amber" id="h-sales">-</div></div>
-        <div class="sc"><div class="sc-lbl">오늘 매입</div><div class="sc-val red" id="h-purch">-</div></div>
+        <div class="sc"><div class="sc-lbl">오늘 수입</div><div class="sc-val amber" id="h-sales">-</div></div>
+        <div class="sc"><div class="sc-lbl">오늘 지출</div><div class="sc-val red" id="h-purch">-</div></div>
         <div class="sc"><div class="sc-lbl">외상 잔액</div><div class="sc-val navy" id="h-cred">-</div></div>
       </div>
       <div class="card">
-        <div class="card-ttl">오늘 손익 (매출 - 매입)</div>
+        <div class="card-ttl">오늘 손익 (수입 - 지출)</div>
         <div id="h-profit-val">-</div>
         <div style="text-align:center;font-size:12px;color:#aaa;margin-top:4px" id="h-profit-sub"></div>
       </div>
@@ -154,7 +154,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:1
       <div class="card" id="home-list"></div>
     </div>
 
-    <!-- ═══ 매출 ═══ -->
+    <!-- ═══ 수입 ═══ -->
     <div class="page" id="page-sales">
       <div class="card">
         <div class="card-ttl">🎤 AI 음성 입력</div>
@@ -184,13 +184,13 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:1
           <div class="fg"><label>합계</label><input type="number" id="s-total" placeholder="자동" readonly style="background:#f5f5f5;color:#888"></div>
         </div>
         <div class="fg"><label>메모</label><input type="text" id="s-memo" placeholder="메모"></div>
-        <button class="btn btn-navy" onclick="addSale()">매출 저장</button>
+        <button class="btn btn-navy" onclick="addSale()">수입 저장</button>
       </div>
-      <div class="stl">매출 내역</div>
+      <div class="stl">수입 내역</div>
       <div class="card" id="sales-list"></div>
     </div>
 
-    <!-- ═══ 매입 ═══ -->
+    <!-- ═══ 지출 ═══ -->
     <div class="page" id="page-purchase">
       <div class="card">
         <div class="card-ttl">🎤 AI 음성 입력</div>
@@ -219,9 +219,9 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:1
         </div>
         <div class="fg"><label>금액</label><input type="number" id="p-amt" placeholder="0"></div>
         <div class="fg"><label>메모</label><input type="text" id="p-memo" placeholder="메모"></div>
-        <button class="btn btn-navy" onclick="addPurchase()">매입 저장</button>
+        <button class="btn btn-navy" onclick="addPurchase()">지출 저장</button>
       </div>
-      <div class="stl">매입 내역</div>
+      <div class="stl">지출 내역</div>
       <div class="card" id="purch-list"></div>
     </div>
 
@@ -257,8 +257,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:1
         <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
       </div>
       <div class="stats3">
-        <div class="sc"><div class="sc-lbl" id="as1-l">기간 매출</div><div class="sc-val navy"  id="as1-v">-</div></div>
-        <div class="sc"><div class="sc-lbl" id="as2-l">기간 매입</div><div class="sc-val red"   id="as2-v">-</div></div>
+        <div class="sc"><div class="sc-lbl" id="as1-l">기간 수입</div><div class="sc-val navy"  id="as1-v">-</div></div>
+        <div class="sc"><div class="sc-lbl" id="as2-l">기간 지출</div><div class="sc-val red"   id="as2-v">-</div></div>
         <div class="sc"><div class="sc-lbl" id="as3-l">순이익</div>  <div class="sc-val green" id="as3-v">-</div></div>
       </div>
     </div>
@@ -267,8 +267,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:1
 
   <div id="tabbar">
     <div class="tab on" data-p="home">    <div class="ti">📊</div><div class="tl">홈</div></div>
-    <div class="tab" data-p="sales">      <div class="ti">💰</div><div class="tl">매출</div></div>
-    <div class="tab" data-p="purchase">   <div class="ti">🛒</div><div class="tl">매입</div></div>
+    <div class="tab" data-p="sales">      <div class="ti">💰</div><div class="tl">수입</div></div>
+    <div class="tab" data-p="purchase">   <div class="ti">🛒</div><div class="tl">지출</div></div>
     <div class="tab" data-p="credit">     <div class="ti">📋</div><div class="tl">외상</div></div>
     <div class="tab" data-p="analysis">   <div class="ti">📈</div><div class="tl">분석</div></div>
   </div>
@@ -333,7 +333,7 @@ function renderHome() {
   pEl.textContent=(profit>=0?'+':'')+won(profit);
   pEl.className=profit>=0?'pos':'neg';
   pEl.style.cssText='font-size:30px;font-weight:700;text-align:center;padding:8px 0';
-  $('#h-profit-sub').textContent=`매출 ${won(sTotal)} · 매입 ${won(pTotal)}`;
+  $('#h-profit-sub').textContent=`수입 ${won(sTotal)} · 지출 ${won(pTotal)}`;
 
   const all=[
     ...sales.map(s=>({...s,_t:'sale'})),
@@ -384,12 +384,12 @@ function addSale(data) {
   const sales=getSales(); sales.push(d); saveSales(sales);
   if((d.credit||0)>0){
     const cr=getCreds();
-    cr.push({id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'매출 외상'+(d.memo?' - '+d.memo:'')});
+    cr.push({id:uid(),name:d.customer,date:d.date,amount:d.credit,type:'debit',memo:'수입 외상'+(d.memo?' - '+d.memo:'')});
     saveCreds(cr);
   }
   if(!data)['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
   if(!data)$('#s-total').value='';
-  renderSales(); showV('✅ 매출 저장: '+won(d.total)); return true;
+  renderSales(); showV('✅ 수입 저장: '+won(d.total)); return true;
 }
 
 function delSale(id){if(!confirm('삭제할까요?'))return;saveSales(getSales().filter(s=>s.id!==id));renderSales();}
@@ -397,7 +397,7 @@ function delSale(id){if(!confirm('삭제할까요?'))return;saveSales(getSales()
 function renderSales() {
   if(!$('#s-date').value)$('#s-date').value=today();
   const list=[...getSales()].sort((a,b)=>b.date.localeCompare(a.date));
-  $('#sales-list').innerHTML=list.length===0?`<div class="empty">매출 내역이 없습니다</div>`
+  $('#sales-list').innerHTML=list.length===0?`<div class="empty">수입 내역이 없습니다</div>`
     :list.map(s=>`<div class="li">
       <div class="li-body">
         <div class="li-title">${dl(s.date)} <strong>${s.customer||'손님'}</strong></div>
@@ -427,7 +427,7 @@ function addPurchase(data) {
   d.id=uid();
   const p=getPurchs(); p.push(d); savePurchs(p);
   if(!data)['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
-  renderPurchase(); showV('✅ 매입 저장: '+(d.vendor||'')+ ' '+won(d.amount)); return true;
+  renderPurchase(); showV('✅ 지출 저장: '+(d.vendor||'')+ ' '+won(d.amount)); return true;
 }
 
 function delPurchase(id){if(!confirm('삭제할까요?'))return;savePurchs(getPurchs().filter(p=>p.id!==id));renderPurchase();}
@@ -435,7 +435,7 @@ function delPurchase(id){if(!confirm('삭제할까요?'))return;savePurchs(getPu
 function renderPurchase() {
   if(!$('#p-date').value)$('#p-date').value=today();
   const list=[...getPurchs()].sort((a,b)=>b.date.localeCompare(a.date));
-  $('#purch-list').innerHTML=list.length===0?`<div class="empty">매입 내역이 없습니다</div>`
+  $('#purch-list').innerHTML=list.length===0?`<div class="empty">지출 내역이 없습니다</div>`
     :list.map(p=>`<div class="li">
       <div class="li-body">
         <div class="li-title">${dl(p.date)} <strong>${p.vendor||'미상'}</strong>${p.category?' <span style="color:#888;font-weight:400">'+p.category+'</span>':''}</div>
@@ -515,7 +515,7 @@ function renderDaily(sales,purch) {
   const sd=days.map(d=>sales.filter(s=>s.date===d).reduce((a,s)=>a+(s.total||0),0));
   const pd=days.map(d=>purch.filter(p=>p.date===d).reduce((a,p)=>a+(p.amount||0),0));
   const ss=sd.reduce((a,v)=>a+v,0),ps=pd.reduce((a,v)=>a+v,0);
-  setStats('14일 매출',won(ss),'14일 매입',won(ps),'순이익',won(ss-ps),ss>=ps);
+  setStats('14일 수입',won(ss),'14일 지출',won(ps),'순이익',won(ss-ps),ss>=ps);
   drawChart(days.map(d=>d.slice(5)),sd,pd);
 }
 function renderWeekly(sales,purch) {
@@ -525,7 +525,7 @@ function renderWeekly(sales,purch) {
   const sT=wk(0,sales,'total'),pT=wk(0,purch,'amount');
   const sL=wk(-1,sales,'total');
   const ss=sT.reduce((a,v)=>a+v,0),sl=sL.reduce((a,v)=>a+v,0);
-  setStats('이번 주 매출',won(ss),'지난 주 매출',won(sl),'증감',(ss-sl>=0?'+':'')+won(ss-sl),ss>=sl);
+  setStats('이번 주 수입',won(ss),'지난 주 수입',won(sl),'증감',(ss-sl>=0?'+':'')+won(ss-sl),ss>=sl);
   drawChart(['일','월','화','수','목','금','토'],sT,pT);
 }
 function renderMonthly(sales,purch) {
@@ -535,7 +535,7 @@ function renderMonthly(sales,purch) {
   const sd=mos.map(m=>sales.filter(s=>s.date.startsWith(m)).reduce((a,s)=>a+(s.total||0),0));
   const pd=mos.map(m=>purch.filter(p=>p.date.startsWith(m)).reduce((a,p)=>a+(p.amount||0),0));
   const ss=sd.reduce((a,v)=>a+v,0),ps=pd.reduce((a,v)=>a+v,0);
-  setStats('6개월 매출',won(ss),'6개월 매입',won(ps),'순이익',won(ss-ps),ss>=ps);
+  setStats('6개월 수입',won(ss),'6개월 지출',won(ps),'순이익',won(ss-ps),ss>=ps);
   drawChart(mos.map(m=>m.slice(5)+'월'),sd,pd);
 }
 function setStats(l1,v1,l2,v2,l3,v3,pos) {
@@ -548,8 +548,8 @@ function drawChart(labels,sData,pData) {
   chartInst=new Chart($('#main-chart').getContext('2d'),{
     type:'bar',
     data:{labels,datasets:[
-      {label:'매출',data:sData,backgroundColor:'rgba(251,191,36,.8)',borderRadius:4},
-      {label:'매입',data:pData,backgroundColor:'rgba(248,113,113,.6)',borderRadius:4}
+      {label:'수입',data:sData,backgroundColor:'rgba(251,191,36,.8)',borderRadius:4},
+      {label:'지출',data:pData,backgroundColor:'rgba(248,113,113,.6)',borderRadius:4}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'top',labels:{font:{family:'Noto Sans KR',size:13,weight:'700'},color:'#9ca3af'}}},
@@ -577,14 +577,14 @@ async function parseAI(type) {
 
   const t=today();
   const prompt=type==='sales'
-    ?`다음 텍스트에서 초코렛 매출 정보를 추출하여 JSON 배열로만 반환하세요.
+    ?`다음 텍스트에서 초코렛 수입 정보를 추출하여 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
 필드: date(YYYY-MM-DD, 없으면 오늘), customer(손님명, 없으면 "손님"), card(카드금액 숫자), cash(현금금액 숫자), credit(외상금액 숫자), total(합계=card+cash+credit), memo
 한국어 숫자(백만원=1000000, 오십만=500000 등) 변환 필수.
 설명 없이 JSON 배열만 반환:
 ${text}`
-    :`다음 텍스트에서 초코렛 매입 정보를 추출하여 JSON 배열로만 반환하세요.
+    :`다음 텍스트에서 초코렛 지출 정보를 추출하여 JSON 배열로만 반환하세요.
 오늘 날짜: ${t}
 
 필드: date(YYYY-MM-DD, 없으면 오늘), vendor(업체명), category(품목), amount(금액 숫자), payment("card" 또는 "cash"), memo

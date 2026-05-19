@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>노래방 경영관리</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard',sans-serif;background:#f0f2f5;color:#222}
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+#sidebar{width:230px;background:#1a3a5c;color:#fff;flex-shrink:0;display:flex;flex-direction:column}
+#logo{padding:26px 20px 18px;border-bottom:1px solid rgba(255,255,255,.12)}
+#logo h1{font-size:20px;font-weight:700}
+#logo p{font-size:13px;opacity:.6;margin-top:4px}
+nav{flex:1;padding:10px 0}
+.nav-item{display:flex;align-items:center;gap:12px;padding:15px 20px;font-size:16px;cursor:pointer;transition:background .15s}
+.nav-item .ni{font-size:20px}
+.nav-item:hover{background:rgba(255,255,255,.1)}
+.nav-item.on{background:#e8a020;font-weight:700}
+#sidebar-foot{padding:14px 20px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;opacity:.45}
+
+/* ── Main ── */
+#main{flex:1;display:flex;flex-direction:column;min-width:0}
+
+/* ── Header ── */
+#hdr{background:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e0e4ea;box-shadow:0 1px 4px rgba(0,0,0,.06);flex-shrink:0}
+#hdr h2{font-size:22px;font-weight:700;color:#1a3a5c}
+#hdr-r{display:flex;gap:10px;align-items:center}
+.vbtn{display:flex;align-items:center;gap:7px;padding:10px 18px;border:none;border-radius:8px;font-size:15px;font-weight:600;font-family:'Pretendard',sans-serif;cursor:pointer;transition:opacity .15s}
+#mic-btn{background:#1a3a5c;color:#fff}
+#mic-btn.on{background:#c0392b}
+#spk-btn{background:#e8a020;color:#fff}
+.vbtn:hover{opacity:.85}
+#today-lbl{font-size:14px;color:#777}
+
+/* ── Voice status ── */
+#vstatus{background:#fffbea;border-bottom:1px solid #ffe082;padding:7px 28px;font-size:14px;color:#7a5a00;display:none}
+
+/* ── Content ── */
+#content{flex:1;overflow-y:auto;padding:22px 28px}
+.page{display:none}
+.page.on{display:block}
+
+/* ── Stat cards ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.sc{background:#fff;border-radius:12px;padding:18px 16px;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.sc-lbl{font-size:13px;color:#888;margin-bottom:5px}
+.sc-val{font-size:26px;font-weight:700;color:#1a3a5c;line-height:1.1}
+.sc-val.amber{color:#d4890a}
+.sc-val.red{color:#c0392b}
+.sc-val.green{color:#27ae60}
+.sc-sub{font-size:12px;color:#aaa;margin-top:4px}
+
+/* ── Card ── */
+.card{background:#fff;border-radius:12px;padding:20px 22px;box-shadow:0 2px 6px rgba(0,0,0,.07);margin-bottom:16px}
+.card-ttl{font-size:17px;font-weight:700;color:#1a3a5c;margin-bottom:14px;padding-bottom:11px;border-bottom:2px solid #f0f2f5;display:flex;align-items:center;justify-content:space-between}
+
+/* ── Form ── */
+.frow{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+.fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:110px}
+.fg label{font-size:13px;font-weight:600;color:#555}
+.fg input,.fg select{padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;font-family:'Pretendard',sans-serif;transition:border-color .15s}
+.fg input:focus,.fg select:focus{outline:none;border-color:#1a3a5c}
+
+/* ── Buttons ── */
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:15px;font-weight:600;font-family:'Pretendard',sans-serif;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.btn:hover{opacity:.85}
+.btn-navy{background:#1a3a5c;color:#fff}
+.btn-green{background:#27ae60;color:#fff}
+.btn-red{background:#c0392b;color:#fff}
+.btn-sm{padding:5px 12px;font-size:13px}
+.btn-demo{background:#ecf0f1;color:#555;font-size:13px;padding:6px 13px}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{background:#f8f9fa;padding:10px 13px;text-align:left;font-weight:700;color:#444;border-bottom:2px solid #e0e4ea;white-space:nowrap}
+td{padding:10px 13px;border-bottom:1px solid #f2f4f6}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfc}
+.tr{text-align:right;font-weight:600}
+.tc{text-align:center}
+.green{color:#27ae60}
+.red{color:#c0392b}
+.navy{color:#1a3a5c}
+.empty{text-align:center;padding:34px;color:#aaa;font-size:15px}
+
+/* ── Period tabs ── */
+.ptabs{display:flex;gap:6px;margin-bottom:16px}
+.pt{padding:9px 22px;border:2px solid #1a3a5c;border-radius:8px;background:#fff;color:#1a3a5c;font-size:15px;font-weight:600;cursor:pointer;font-family:'Pretendard',sans-serif;transition:all .15s}
+.pt.on{background:#1a3a5c;color:#fff}
+
+/* ── Chart ── */
+.chart-wrap{position:relative;height:290px}
+
+/* ── Badge ── */
+.badge{padding:3px 9px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block}
+.b-warn{background:#fff3e0;color:#e65100}
+.b-ok{background:#e8f5e9;color:#2e7d32}
+.b-zero{background:#f5f5f5;color:#777}
+
+/* ── 2-col grid ── */
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.vcol{display:flex;flex-direction:column;gap:10px}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.pulsing{animation:pulse 1s infinite}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<div id="sidebar">
+  <div id="logo">
+    <h1>🎵 노래방 관리</h1>
+    <p>경영 장부 시스템</p>
+  </div>
+  <nav>
+    <div class="nav-item on" data-p="dash"><span class="ni">📊</span>대시보드</div>
+    <div class="nav-item" data-p="sales"><span class="ni">💰</span>일일 매상</div>
+    <div class="nav-item" data-p="credit"><span class="ni">📋</span>외상 장부</div>
+    <div class="nav-item" data-p="analysis"><span class="ni">📈</span>영업 분석</div>
+  </nav>
+  <div id="sidebar-foot">localStorage 저장 · 로컬 테스트용</div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div id="main">
+  <div id="hdr">
+    <h2 id="page-title">대시보드</h2>
+    <div id="hdr-r">
+      <span id="today-lbl"></span>
+      <button class="vbtn" id="mic-btn" onclick="toggleMic()">🎤 말하기</button>
+      <button class="vbtn" id="spk-btn" onclick="readPage()">🔊 읽어주기</button>
+    </div>
+  </div>
+  <div id="vstatus"></div>
+
+  <div id="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="page on" id="page-dash">
+      <div class="stats">
+        <div class="sc"><div class="sc-lbl">오늘 수입</div><div class="sc-val amber" id="d-today">-</div><div class="sc-sub" id="d-today-sub"></div></div>
+        <div class="sc"><div class="sc-lbl">이번 달 누적</div><div class="sc-val navy" id="d-month">-</div><div class="sc-sub" id="d-month-sub"></div></div>
+        <div class="sc"><div class="sc-lbl">외상 잔액</div><div class="sc-val red" id="d-credit">-</div><div class="sc-sub">미수금 합계</div></div>
+        <div class="sc"><div class="sc-lbl">이번 달 영업일</div><div class="sc-val green" id="d-days">-</div><div class="sc-sub" id="d-days-sub"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">
+          오늘 매상 빠른 입력
+          <button class="btn btn-demo" onclick="seedDemo()">📦 데모 데이터</button>
+        </div>
+        <div class="frow">
+          <div class="fg"><label>날짜</label><input type="date" id="q-date"></div>
+          <div class="fg"><label>현금 (원)</label><input type="number" id="q-cash" placeholder="0"></div>
+          <div class="fg"><label>카드 (원)</label><input type="number" id="q-card" placeholder="0"></div>
+          <div class="fg"><label>메모</label><input type="text" id="q-memo" placeholder="특이사항"></div>
+          <button class="btn btn-navy" onclick="addSale('q')">저장</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">최근 매상</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>날짜</th><th class="tr">현금</th><th class="tr">카드</th><th class="tr">합계</th><th>메모</th></tr></thead>
+            <tbody id="dash-sales-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 일일 매상 ═══ -->
+    <div class="page" id="page-sales">
+      <div class="card">
+        <div class="card-ttl">매상 입력</div>
+        <div class="frow">
+          <div class="fg"><label>날짜</label><input type="date" id="s-date"></div>
+          <div class="fg"><label>현금 (원)</label><input type="number" id="s-cash" placeholder="0"></div>
+          <div class="fg"><label>카드 (원)</label><input type="number" id="s-card" placeholder="0"></div>
+          <div class="fg"><label>메모</label><input type="text" id="s-memo" placeholder="특이사항"></div>
+          <button class="btn btn-navy" onclick="addSale('s')">저장</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">매상 목록</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>날짜</th><th class="tr">현금</th><th class="tr">카드</th><th class="tr">합계</th><th>메모</th><th class="tc">삭제</th></tr></thead>
+            <tbody id="sales-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 외상 장부 ═══ -->
+    <div class="page" id="page-credit">
+      <div class="col2">
+        <div class="card">
+          <div class="card-ttl">외상 발생</div>
+          <div class="vcol">
+            <div class="fg"><label>손님 이름</label><input type="text" id="cr-name" placeholder="이름 입력"></div>
+            <div class="fg"><label>날짜</label><input type="date" id="cr-date"></div>
+            <div class="fg"><label>금액 (원)</label><input type="number" id="cr-amount" placeholder="0"></div>
+            <div class="fg"><label>메모</label><input type="text" id="cr-memo" placeholder="내용"></div>
+            <button class="btn btn-red" onclick="addDebit()">외상 추가</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-ttl">변제 입력</div>
+          <div class="vcol">
+            <div class="fg"><label>손님 이름</label><select id="pay-name"><option value="">-- 선택 --</option></select></div>
+            <div class="fg"><label>날짜</label><input type="date" id="pay-date"></div>
+            <div class="fg"><label>변제 금액 (원)</label><input type="number" id="pay-amount" placeholder="0"></div>
+            <div class="fg"><label>메모</label><input type="text" id="pay-memo" placeholder="내용"></div>
+            <button class="btn btn-green" onclick="addPayment()">변제 처리</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">손님별 외상 현황</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>손님</th><th class="tr">총 외상</th><th class="tr">총 변제</th><th class="tr">잔액</th><th class="tc">상태</th></tr></thead>
+            <tbody id="credit-summary-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">외상 거래 내역</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>날짜</th><th>손님</th><th>구분</th><th class="tr">금액</th><th>메모</th><th class="tc">삭제</th></tr></thead>
+            <tbody id="credit-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 영업 분석 ═══ -->
+    <div class="page" id="page-analysis">
+      <div class="ptabs">
+        <button class="pt on" onclick="switchPeriod('daily',this)">일별</button>
+        <button class="pt" onclick="switchPeriod('weekly',this)">주간</button>
+        <button class="pt" onclick="switchPeriod('monthly',this)">월별</button>
+      </div>
+      <div class="card">
+        <div class="card-ttl" id="chart-title">최근 30일 수입</div>
+        <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
+      </div>
+      <div class="stats">
+        <div class="sc"><div class="sc-lbl" id="as1-lbl">기간 합계</div><div class="sc-val navy" id="as1-val">-</div></div>
+        <div class="sc"><div class="sc-lbl" id="as2-lbl">일 평균</div><div class="sc-val amber" id="as2-val">-</div></div>
+        <div class="sc"><div class="sc-lbl" id="as3-lbl">최고 수입</div><div class="sc-val green" id="as3-val">-</div></div>
+        <div class="sc"><div class="sc-lbl" id="as4-lbl">영업일 수</div><div class="sc-val navy" id="as4-val">-</div></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ── DATA ──────────────────────────────────
+const KSALES = 'choco_sales';
+const KCRED  = 'choco_cred';
+const getSales = () => JSON.parse(localStorage.getItem(KSALES) || '[]');
+const saveSales = d => localStorage.setItem(KSALES, JSON.stringify(d));
+const getCreds  = () => JSON.parse(localStorage.getItem(KCRED)  || '[]');
+const saveCreds = d => localStorage.setItem(KCRED,  JSON.stringify(d));
+
+// ── UTILS ─────────────────────────────────
+const won  = n => Number(n||0).toLocaleString('ko-KR') + '원';
+const todayStr = () => new Date().toISOString().slice(0,10);
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+const $    = s => document.querySelector(s);
+const dl   = d => d.replace(/-/g, '.');
+const pad2 = n => String(n).padStart(2,'0');
+const curMonth = () => todayStr().slice(0,7);
+
+// ── NAVIGATION ────────────────────────────
+let curPage = 'dash';
+let chartInst = null;
+
+document.querySelectorAll('.nav-item').forEach(el =>
+  el.addEventListener('click', () => navigate(el.dataset.p))
+);
+
+function navigate(p) {
+  curPage = p;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('on', el.dataset.p === p));
+  document.querySelectorAll('.page').forEach(el => el.classList.toggle('on', el.id === 'page-' + p));
+  const titles = {dash:'대시보드', sales:'일일 매상', credit:'외상 장부', analysis:'영업 분석'};
+  $('#page-title').textContent = titles[p];
+  if (p === 'dash')     renderDash();
+  if (p === 'sales')    renderSales();
+  if (p === 'credit')   renderCredit();
+  if (p === 'analysis') renderAnalysis('daily');
+}
+
+// ── DASHBOARD ─────────────────────────────
+function renderDash() {
+  const sales = getSales();
+  const creds = getCreds();
+  const t = todayStr();
+  const m = curMonth();
+
+  const todayS = sales.filter(s => s.date === t);
+  const todayCash = todayS.reduce((a,s) => a+(s.cash||0), 0);
+  const todayCard = todayS.reduce((a,s) => a+(s.card||0), 0);
+  $('#d-today').textContent = won(todayCash + todayCard);
+  $('#d-today-sub').textContent = `현금 ${won(todayCash)} / 카드 ${won(todayCard)}`;
+
+  const monthS = sales.filter(s => s.date.startsWith(m));
+  const mCash = monthS.reduce((a,s) => a+(s.cash||0), 0);
+  const mCard = monthS.reduce((a,s) => a+(s.card||0), 0);
+  $('#d-month').textContent = won(mCash + mCard);
+  $('#d-month-sub').textContent = `현금 ${won(mCash)} / 카드 ${won(mCard)}`;
+
+  const totalDebit = creds.filter(c => c.type==='debit').reduce((a,c) => a+c.amount, 0);
+  const totalPaid  = creds.filter(c => c.type==='credit').reduce((a,c) => a+c.amount, 0);
+  $('#d-credit').textContent = won(totalDebit - totalPaid);
+
+  const monthDays = [...new Set(monthS.map(s => s.date))].length;
+  $('#d-days').textContent = `${monthDays}일`;
+  $('#d-days-sub').textContent = `이번 달 ${new Date().getDate()}일 중`;
+
+  if (!$('#q-date').value) $('#q-date').value = t;
+
+  const recent = [...sales].sort((a,b) => b.date.localeCompare(a.date)).slice(0,7);
+  $('#dash-sales-body').innerHTML = recent.length === 0
+    ? `<tr><td colspan="5" class="empty">매상 데이터가 없습니다 — 데모 데이터를 추가해보세요</td></tr>`
+    : recent.map(s => `<tr>
+        <td>${dl(s.date)}</td>
+        <td class="tr">${won(s.cash||0)}</td>
+        <td class="tr">${won(s.card||0)}</td>
+        <td class="tr navy"><strong>${won((s.cash||0)+(s.card||0))}</strong></td>
+        <td>${s.memo||''}</td>
+      </tr>`).join('');
+}
+
+// ── SALES ─────────────────────────────────
+function addSale(pfx) {
+  const date = $(`#${pfx}-date`).value;
+  const cash = parseInt($(`#${pfx}-cash`).value) || 0;
+  const card = parseInt($(`#${pfx}-card`).value) || 0;
+  const memo = $(`#${pfx}-memo`).value.trim();
+  if (!date) { alert('날짜를 입력하세요'); return; }
+  if (cash === 0 && card === 0) { alert('현금 또는 카드 금액을 입력하세요'); return; }
+
+  const sales = getSales();
+  const idx = sales.findIndex(s => s.date === date);
+  if (idx >= 0) {
+    if (!confirm(`${dl(date)} 매상이 이미 있습니다. 덮어쓸까요?`)) return;
+    sales[idx] = { ...sales[idx], cash, card, memo };
+  } else {
+    sales.push({ id: uid(), date, cash, card, memo });
+  }
+  saveSales(sales);
+  $(`#${pfx}-cash`).value = '';
+  $(`#${pfx}-card`).value = '';
+  $(`#${pfx}-memo`).value = '';
+  pfx === 's' ? renderSales() : renderDash();
+  showV(`✅ ${dl(date)} 매상 저장 — ${won(cash+card)}`);
+}
+
+function renderSales() {
+  if (!$('#s-date').value) $('#s-date').value = todayStr();
+  const sales = [...getSales()].sort((a,b) => b.date.localeCompare(a.date));
+  $('#sales-body').innerHTML = sales.length === 0
+    ? `<tr><td colspan="6" class="empty">데이터가 없습니다</td></tr>`
+    : sales.map(s => `<tr>
+        <td>${dl(s.date)}</td>
+        <td class="tr">${won(s.cash||0)}</td>
+        <td class="tr">${won(s.card||0)}</td>
+        <td class="tr"><strong class="navy">${won((s.cash||0)+(s.card||0))}</strong></td>
+        <td>${s.memo||''}</td>
+        <td class="tc"><button class="btn btn-red btn-sm" onclick="delSale('${s.id}')">삭제</button></td>
+      </tr>`).join('');
+}
+
+function delSale(sid) {
+  if (!confirm('이 매상 기록을 삭제할까요?')) return;
+  saveSales(getSales().filter(s => s.id !== sid));
+  renderSales();
+}
+
+// ── CREDIT ────────────────────────────────
+function addDebit() {
+  const name   = $('#cr-name').value.trim();
+  const date   = $('#cr-date').value;
+  const amount = parseInt($('#cr-amount').value) || 0;
+  const memo   = $('#cr-memo').value.trim();
+  if (!name)      { alert('손님 이름을 입력하세요'); return; }
+  if (!date)      { alert('날짜를 입력하세요'); return; }
+  if (amount <= 0){ alert('금액을 입력하세요'); return; }
+  const creds = getCreds();
+  creds.push({ id:uid(), name, date, amount, type:'debit', memo });
+  saveCreds(creds);
+  $('#cr-name').value = ''; $('#cr-amount').value = ''; $('#cr-memo').value = '';
+  renderCredit();
+  showV(`✅ ${name} 외상 ${won(amount)} 추가`);
+}
+
+function addPayment() {
+  const name   = $('#pay-name').value;
+  const date   = $('#pay-date').value;
+  const amount = parseInt($('#pay-amount').value) || 0;
+  const memo   = $('#pay-memo').value.trim();
+  if (!name)      { alert('손님을 선택하세요'); return; }
+  if (!date)      { alert('날짜를 입력하세요'); return; }
+  if (amount <= 0){ alert('금액을 입력하세요'); return; }
+  const creds = getCreds();
+  creds.push({ id:uid(), name, date, amount, type:'credit', memo });
+  saveCreds(creds);
+  $('#pay-amount').value = ''; $('#pay-memo').value = '';
+  renderCredit();
+  showV(`✅ ${name} 변제 ${won(amount)} 처리`);
+}
+
+function delCred(cid) {
+  if (!confirm('이 외상 기록을 삭제할까요?')) return;
+  saveCreds(getCreds().filter(c => c.id !== cid));
+  renderCredit();
+}
+
+function renderCredit() {
+  if (!$('#cr-date').value)  $('#cr-date').value  = todayStr();
+  if (!$('#pay-date').value) $('#pay-date').value = todayStr();
+  const creds = getCreds();
+  const names = [...new Set(creds.map(c => c.name))];
+
+  // pay-name dropdown
+  $('#pay-name').innerHTML = '<option value="">-- 선택 --</option>'
+    + names.map(n => `<option value="${n}">${n}</option>`).join('');
+
+  // summary
+  if (names.length === 0) {
+    $('#credit-summary-body').innerHTML = `<tr><td colspan="5" class="empty">외상 데이터가 없습니다</td></tr>`;
+  } else {
+    $('#credit-summary-body').innerHTML = names.map(n => {
+      const deb = creds.filter(c=>c.name===n&&c.type==='debit').reduce((a,c)=>a+c.amount,0);
+      const pd  = creds.filter(c=>c.name===n&&c.type==='credit').reduce((a,c)=>a+c.amount,0);
+      const bal = deb - pd;
+      const badge = bal===0
+        ? `<span class="badge b-zero">완제</span>`
+        : `<span class="badge b-warn">미수 ${won(bal)}</span>`;
+      return `<tr>
+        <td><strong>${n}</strong></td>
+        <td class="tr red">${won(deb)}</td>
+        <td class="tr green">${won(pd)}</td>
+        <td class="tr"><strong class="${bal>0?'red':'green'}">${won(Math.abs(bal))}</strong></td>
+        <td class="tc">${badge}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // transactions
+  const sorted = [...creds].sort((a,b) => b.date.localeCompare(a.date));
+  $('#credit-body').innerHTML = sorted.length === 0
+    ? `<tr><td colspan="6" class="empty">거래 내역이 없습니다</td></tr>`
+    : sorted.map(c => `<tr>
+        <td>${dl(c.date)}</td>
+        <td>${c.name}</td>
+        <td>${c.type==='debit'
+          ?'<span class="badge b-warn">외상</span>'
+          :'<span class="badge b-ok">변제</span>'}</td>
+        <td class="tr ${c.type==='debit'?'red':'green'}"><strong>${won(c.amount)}</strong></td>
+        <td>${c.memo||''}</td>
+        <td class="tc"><button class="btn btn-red btn-sm" onclick="delCred('${c.id}')">삭제</button></td>
+      </tr>`).join('');
+}
+
+// ── ANALYSIS ──────────────────────────────
+function switchPeriod(period, btn) {
+  document.querySelectorAll('.pt').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderAnalysis(period);
+}
+
+function renderAnalysis(period) {
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+  const sales = getSales();
+  if      (period === 'daily')   renderDaily(sales);
+  else if (period === 'weekly')  renderWeekly(sales);
+  else                           renderMonthly(sales);
+}
+
+function renderDaily(sales) {
+  $('#chart-title').textContent = '최근 30일 수입';
+  const today = new Date();
+  const days = Array.from({length:30}, (_,i) => {
+    const d = new Date(today); d.setDate(d.getDate()-(29-i));
+    return d.toISOString().slice(0,10);
+  });
+  const cash = days.map(d => { const s=sales.find(x=>x.date===d); return s?(s.cash||0):0; });
+  const card = days.map(d => { const s=sales.find(x=>x.date===d); return s?(s.card||0):0; });
+  const totals = days.map((_,i) => cash[i]+card[i]);
+  const opDays = totals.filter(v=>v>0).length;
+  const sum    = totals.reduce((a,v)=>a+v,0);
+  const maxV   = Math.max(...totals);
+  const maxD   = days[totals.indexOf(maxV)];
+
+  setStats('30일 합계', won(sum), '일 평균', opDays?won(Math.round(sum/opDays)):'-',
+           '최고 수입', maxV?`${dl(maxD).slice(5)} ${won(maxV)}`:'-', '영업일 수', `${opDays}일`);
+  drawChart(days.map(d=>d.slice(5)), cash, card, '현금', '카드', true);
+}
+
+function renderWeekly(sales) {
+  $('#chart-title').textContent = '주간 비교 (이번 주 vs 지난 주)';
+  const today = new Date();
+  const dow   = today.getDay();
+  const labels = ['일','월','화','수','목','금','토'];
+
+  const weekData = off => Array.from({length:7}, (_,i) => {
+    const d = new Date(today); d.setDate(d.getDate()-dow+i+off*7);
+    const ds = d.toISOString().slice(0,10);
+    const s  = sales.find(x=>x.date===ds);
+    return s ? (s.cash||0)+(s.card||0) : 0;
+  });
+  const thisW = weekData(0);
+  const lastW = weekData(-1);
+  const tSum  = thisW.reduce((a,v)=>a+v,0);
+  const lSum  = lastW.reduce((a,v)=>a+v,0);
+  const diff  = tSum - lSum;
+  const diffCls = diff>=0?'green':'red';
+
+  $('#as3-val').className = 'sc-val ' + diffCls;
+  setStats('이번 주 합계', won(tSum), '지난 주 합계', won(lSum),
+           '증감', (diff>=0?'+':'')+won(diff), '증감률',
+           lSum>0?`${((diff/lSum)*100).toFixed(1)}%`:'-');
+  drawChart(labels, lastW, thisW, '지난 주', '이번 주', false);
+}
+
+function renderMonthly(sales) {
+  $('#chart-title').textContent = '월별 수입 (최근 6개월)';
+  const today = new Date();
+  const months = Array.from({length:6}, (_,i) => {
+    const d = new Date(today.getFullYear(), today.getMonth()-(5-i), 1);
+    return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+  });
+  const cash  = months.map(m => sales.filter(s=>s.date.startsWith(m)).reduce((a,s)=>a+(s.cash||0),0));
+  const card  = months.map(m => sales.filter(s=>s.date.startsWith(m)).reduce((a,s)=>a+(s.card||0),0));
+  const totals = months.map((_,i) => cash[i]+card[i]);
+  const sum   = totals.reduce((a,v)=>a+v,0);
+  const active = totals.filter(v=>v>0).length;
+  const maxV  = Math.max(...totals);
+  const maxM  = months[totals.indexOf(maxV)];
+
+  setStats('6개월 합계', won(sum), '월 평균', active?won(Math.round(sum/active)):'-',
+           '최고 월수입', maxV?`${maxM.slice(5)}월 ${won(maxV)}`:'-', '이번 달', won(totals[5]));
+  drawChart(months.map(m=>m.slice(5)+'월'), cash, card, '현금', '카드', true);
+}
+
+function setStats(l1,v1,l2,v2,l3,v3,l4,v4) {
+  $('#as1-lbl').textContent=l1; $('#as1-val').textContent=v1;
+  $('#as2-lbl').textContent=l2; $('#as2-val').textContent=v2;
+  $('#as3-lbl').textContent=l3; $('#as3-val').textContent=v3;
+  $('#as4-lbl').textContent=l4; $('#as4-val').textContent=v4;
+}
+
+function drawChart(labels, d1, d2, lbl1, lbl2, stacked) {
+  chartInst = new Chart($('#main-chart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:lbl1, data:d1, backgroundColor:'rgba(26,58,92,.75)',  borderRadius:4 },
+        { label:lbl2, data:d2, backgroundColor:'rgba(232,160,32,.82)', borderRadius:4 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'top', labels:{ font:{ family:'Pretendard', size:14 } } } },
+      scales:{
+        x:{ stacked, ticks:{ font:{ family:'Pretendard' } } },
+        y:{ stacked, ticks:{ font:{ family:'Pretendard' }, callback: v => (v/10000)+'만' } }
+      }
+    }
+  });
+}
+
+// ── VOICE — STT ───────────────────────────
+let recognition = null, isListening = false, lastInput = null;
+
+document.addEventListener('focusin', e => {
+  if (e.target.tagName === 'INPUT') lastInput = e.target;
+});
+
+function toggleMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Chrome 또는 Edge에서 사용해 주세요 (음성 인식 미지원)'); return; }
+  if (isListening) { recognition.stop(); return; }
+
+  recognition = new SR();
+  recognition.lang = 'ko-KR';
+  recognition.interimResults = true;
+  recognition.continuous = false;
+
+  recognition.onstart = () => {
+    isListening = true;
+    const btn = $('#mic-btn');
+    btn.classList.add('on','pulsing');
+    btn.textContent = '🔴 듣는 중...';
+    showV('🎤 말씀하세요...');
+  };
+  recognition.onresult = e => {
+    let interim='', final='';
+    for (const r of e.results) {
+      if (r.isFinal) final += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+    showV('🎤 ' + (final||interim));
+    if (final && lastInput) {
+      lastInput.value = final;
+      lastInput.dispatchEvent(new Event('input'));
+    }
+  };
+  recognition.onerror = e => { showV(`⚠️ 오류: ${e.error}`); stopMic(); };
+  recognition.onend   = () => stopMic();
+  recognition.start();
+}
+
+function stopMic() {
+  isListening = false;
+  const btn = $('#mic-btn');
+  btn.classList.remove('on','pulsing');
+  btn.textContent = '🎤 말하기';
+}
+
+// ── VOICE — TTS ───────────────────────────
+function readPage() {
+  if (!('speechSynthesis' in window)) { alert('TTS 미지원 브라우저입니다'); return; }
+  window.speechSynthesis.cancel();
+  const sales = getSales(), creds = getCreds(), t = todayStr(), m = curMonth();
+  let text = '';
+
+  if (curPage === 'dash') {
+    const tS = sales.filter(s=>s.date===t);
+    const tTotal = tS.reduce((a,s)=>a+(s.cash||0)+(s.card||0),0);
+    const mTotal = sales.filter(s=>s.date.startsWith(m)).reduce((a,s)=>a+(s.cash||0)+(s.card||0),0);
+    const bal = creds.filter(c=>c.type==='debit').reduce((a,c)=>a+c.amount,0)
+              - creds.filter(c=>c.type==='credit').reduce((a,c)=>a+c.amount,0);
+    text = `대시보드입니다. 오늘 수입은 ${tTotal.toLocaleString()}원입니다. 이번 달 누적 수입은 ${mTotal.toLocaleString()}원이고, 외상 잔액은 ${bal.toLocaleString()}원입니다.`;
+  } else if (curPage === 'sales') {
+    const total = sales.reduce((a,s)=>a+(s.cash||0)+(s.card||0),0);
+    text = `일일 매상 화면입니다. 총 ${sales.length}건, 누적 수입 ${total.toLocaleString()}원입니다.`;
+  } else if (curPage === 'credit') {
+    const names = [...new Set(creds.map(c=>c.name))];
+    const bal   = creds.filter(c=>c.type==='debit').reduce((a,c)=>a+c.amount,0)
+                - creds.filter(c=>c.type==='credit').reduce((a,c)=>a+c.amount,0);
+    text = `외상 장부입니다. 총 ${names.length}명, 외상 잔액 합계 ${bal.toLocaleString()}원입니다.`;
+    if (names.length > 0) {
+      text += ' ' + names.map(n => {
+        const d = creds.filter(c=>c.name===n&&c.type==='debit').reduce((a,c)=>a+c.amount,0);
+        const p = creds.filter(c=>c.name===n&&c.type==='credit').reduce((a,c)=>a+c.amount,0);
+        return `${n} ${(d-p).toLocaleString()}원`;
+      }).join(', ');
+    }
+  } else if (curPage === 'analysis') {
+    const mTotal = sales.filter(s=>s.date.startsWith(m)).reduce((a,s)=>a+(s.cash||0)+(s.card||0),0);
+    text = `영업 분석 화면입니다. 이번 달 수입은 ${mTotal.toLocaleString()}원입니다.`;
+  }
+
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'ko-KR'; utt.rate = 0.95;
+  window.speechSynthesis.speak(utt);
+  showV('🔊 ' + text);
+}
+
+// ── VOICE STATUS BAR ──────────────────────
+let vstTimer = null;
+function showV(msg) {
+  const el = $('#vstatus');
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(vstTimer);
+  vstTimer = setTimeout(() => { el.style.display='none'; }, 4500);
+}
+
+// ── DEMO DATA ─────────────────────────────
+function seedDemo() {
+  if (!confirm('데모 데이터를 추가할까요?')) return;
+  const sales  = getSales();
+  const today  = new Date();
+  for (let i=0; i<30; i++) {
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    if (Math.random() < 0.12) continue;
+    const date = d.toISOString().slice(0,10);
+    if (sales.find(s=>s.date===date)) continue;
+    const base = 300000 + Math.floor(Math.random()*400000);
+    sales.push({ id:uid(), date,
+      cash: Math.floor(base*.4/1000)*1000,
+      card: Math.floor(base*.6/1000)*1000, memo:'' });
+  }
+  saveSales(sales);
+
+  if (getCreds().length === 0) {
+    const creds = [];
+    const d1=new Date(today); d1.setDate(d1.getDate()-10);
+    const d2=new Date(today); d2.setDate(d2.getDate()-5);
+    const d3=new Date(today); d3.setDate(d3.getDate()-2);
+    creds.push({id:uid(), name:'홍길동', date:d1.toISOString().slice(0,10), amount:50000, type:'debit',  memo:'맥주+안주'});
+    creds.push({id:uid(), name:'홍길동', date:d2.toISOString().slice(0,10), amount:30000, type:'credit', memo:'부분변제'});
+    creds.push({id:uid(), name:'김철수', date:d2.toISOString().slice(0,10), amount:80000, type:'debit',  memo:'단체이용'});
+    creds.push({id:uid(), name:'이영희', date:d3.toISOString().slice(0,10), amount:35000, type:'debit',  memo:''});
+    saveCreds(creds);
+  }
+  renderDash();
+  showV('✅ 데모 데이터 추가 완료');
+}
+
+// ── INIT ──────────────────────────────────
+$('#today-lbl').textContent = new Date().toLocaleDateString('ko-KR',
+  {year:'numeric', month:'long', day:'numeric', weekday:'short'});
+navigate('dash');
+</script>
+</body>
+</html>
