@@ -15,7 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+html,body{height:100%;overscroll-behavior-y:none}
 body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:20px;background:#3f3f3f;color:#fff;display:flex;justify-content:center}
 
 /* ── App shell ── */
@@ -23,7 +23,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 #hdr{background:#000;border-bottom:1px solid #1f2937;padding:18px 20px 14px;flex-shrink:0}
 #hdr h1{font-size:22px;font-weight:900;color:#fff}
 #hdr-sub{font-size:17px;font-weight:700;color:#9ca3af;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
-#content{flex:1;overflow-y:auto;padding-bottom:72px;scrollbar-width:none}
+#content{flex:1;overflow-y:auto;padding-bottom:72px;scrollbar-width:none;overscroll-behavior-y:none}
 #content::-webkit-scrollbar{display:none}
 #tabbar{position:absolute;bottom:0;left:0;right:0;background:#000;border-top:1px solid #1f2937;display:flex;z-index:100}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;cursor:pointer}
@@ -173,6 +173,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
   <div id="hdr">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <h1>🍫 초콜릿 운영관리</h1>
+      <div style="flex:1;height:44px;cursor:default" onclick="if(curPage==='home')location.reload()"></div>
       <button id="analysis-today-btn" onclick="goAnalysisToday()" style="display:none;background:none;border:none;color:#fbbf24;font-size:16px;font-weight:700;padding:0;cursor:pointer">오늘로</button>
     </div>
     <div id="hdr-sub">
@@ -465,7 +466,7 @@ function navigate(p) {
   if(p==='home')     { updateDateLabel(); renderHome(); }
   if(p==='sales')    { updateDateLabel(); renderSales(); }
   if(p==='purchase') { updateDateLabel(); renderPurchase(); }
-  if(p==='credit')   { updateDateLabel(); renderCredit(); }
+  if(p==='credit')   { updateDateLabel(); const sd=$('#show-due-cred'),rv=$('#cred-reverse');if(sd)sd.checked=true;if(rv)rv.checked=false;renderCredit(); }
   if(p==='analysis'){
     analysisDate=selectedDate;
     $('#today-lbl').style.display='none';
@@ -753,53 +754,74 @@ async function renderCredit() {
   const cr=await getCreds(), allNames=[...new Set(cr.map(c=>c.name))];
   const balMap={};
   allNames.forEach(n=>{
-    const deb=cr.filter(c=>c.name===n&&c.type==='debit').reduce((a,c)=>a+c.amount,0);
-    const pd=cr.filter(c=>c.name===n&&c.type==='credit').reduce((a,c)=>a+c.amount,0);
-    balMap[n]=deb-pd;
+    balMap[n]=cr.filter(c=>c.name===n&&c.type==='debit').reduce((a,c)=>a+c.amount,0)
+             -cr.filter(c=>c.name===n&&c.type==='credit').reduce((a,c)=>a+c.amount,0);
   });
-  const misuNames=allNames.filter(n=>balMap[n]>0);
-  const showAll=$('#show-all-cred')?.checked;
+  const showAll=$('#show-all-cred')?.checked, rev=$('#cred-reverse')?.checked;
   const showDue=$('#show-due-cred')?.checked;
-  const rev=$('#cred-reverse')?.checked;
-  // 예정 체크 시: debit 중 due_date 있는 고객만 추림
-  const baseNames=showDue
-    ?(()=>{const s=new Set(cr.filter(c=>c.type==='debit'&&c.due_date).map(c=>c.name));return allNames.filter(n=>s.has(n));})()
-    :[...allNames];
-  const showNames=showAll?[...baseNames]:baseNames.filter(n=>balMap[n]>0);
-  // 고객별 최종 처리일자 (debit+credit 전체 중 max)
-  const maxDateMap={};
-  showNames.forEach(n=>{
-    maxDateMap[n]=cr.filter(c=>c.name===n).reduce((mx,c)=>c.date>mx?c.date:mx,'');
-  });
-  showNames.sort((a,b)=>rev
-    ?maxDateMap[b].localeCompare(maxDateMap[a])
-    :maxDateMap[a].localeCompare(maxDateMap[b]));
-  $('#cred-list').innerHTML=showNames.length===0?`<div class="empty">거래 내역이 없습니다</div>`
-    :showNames.map(n=>{
-      const entries=[...cr.filter(c=>c.name===n)].sort((a,b)=>a.date.localeCompare(b.date));
-      const debits=entries.filter(c=>c.type==='debit');
-      const credits=entries.filter(c=>c.type==='credit');
-      const deb=debits.reduce((a,c)=>a+c.amount,0);
-      const pd=credits.reduce((a,c)=>a+c.amount,0);
-      const bal=deb-pd;
-      const memos=debits.filter(c=>c.memo).map(c=>c.memo);
-      const isMisu=bal>0;
-      const debitRows=debits.map(c=>{
-        const isOverdue=c.due_date&&c.due_date<today();
-        const dueTag=c.due_date?` <span style="color:${isOverdue?'#f87171':'#fbbf24'};font-size:15px">→${dl(c.due_date)}</span>`:'';
-        return `<div style="display:flex;justify-content:space-between;padding:3px 0">
-          <span style="color:#9ca3af;font-size:16px">${dl(c.date)}${dueTag}</span>
-          <span style="color:#f87171;font-size:17px;font-weight:700">${won(c.amount)}</span>
+
+  if(showDue){
+    const t=today();
+    const[ty,tm,td]=t.split('-').map(Number);
+    const wago=new Date(ty,tm-1,td);wago.setDate(wago.getDate()-7);
+    const wagoStr=`${wago.getFullYear()}-${pad2(wago.getMonth()+1)}-${pad2(wago.getDate())}`;
+    const dueNames=allNames.filter(n=>balMap[n]>0&&cr.some(c=>c.name===n&&c.type==='debit'&&c.due_date&&c.due_date>=wagoStr));
+    const nearDueMap={};
+    dueNames.forEach(n=>{
+      const dues=cr.filter(c=>c.name===n&&c.type==='debit'&&c.due_date&&c.due_date>=wagoStr).map(c=>c.due_date).sort();
+      nearDueMap[n]=dues[0]||'';
+    });
+    dueNames.sort((a,b)=>rev?nearDueMap[b].localeCompare(nearDueMap[a]):nearDueMap[a].localeCompare(nearDueMap[b]));
+    $('#cred-list').innerHTML=dueNames.length===0?`<div class="empty">변제예정 내역이 없습니다</div>`
+      :dueNames.map(n=>{
+        const bal=balMap[n], due=nearDueMap[n];
+        const isOverdue=due&&due<t;
+        const dueColor=isOverdue?'#f87171':'#fbbf24';
+        return`<div data-due="${due}" style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #1f2937">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:19px;font-weight:900;color:#fff;cursor:pointer" onclick="selectCreditor('${n}',${bal})">👤 ${n}</div>
+            <div style="text-align:right">
+              ${due?`<div style="font-size:15px;font-weight:700;color:${dueColor}">→${dl(due)}</div>`:''}
+              <div style="font-size:18px;font-weight:900;color:#fff">${won(bal)}</div>
+            </div>
+          </div>
         </div>`;
       }).join('');
-      const creditRows=credits.map(c=>`
-        <div style="display:flex;justify-content:space-between;padding:3px 0">
-          <span style="color:#9ca3af;font-size:16px">${dl(c.date)}</span>
-          <span style="color:#4ade80;font-size:17px;font-weight:700">-${won(c.amount)}</span>
-        </div>`).join('');
-      return `<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #1f2937">
+    const content=$('#content');
+    const items=[...$('#cred-list').querySelectorAll('[data-due]')];
+    const target=items.find(el=>el.dataset.due>=selectedDate)||items[0];
+    if(target){
+      const cRect=content.getBoundingClientRect();
+      const tRect=target.getBoundingClientRect();
+      const rowH=target.offsetHeight+10;
+      content.scrollTop=Math.max(0,content.scrollTop+(tRect.top-cRect.top)-rowH*2);
+    }
+    return;
+  }
+
+  const baseNames=[...allNames];
+  const showNames=showAll?[...baseNames]:baseNames.filter(n=>balMap[n]>0);
+  const maxDateMap={};
+  showNames.forEach(n=>{maxDateMap[n]=cr.filter(c=>c.name===n).reduce((mx,c)=>c.date>mx?c.date:mx,'');});
+  showNames.sort((a,b)=>rev?maxDateMap[b].localeCompare(maxDateMap[a]):maxDateMap[a].localeCompare(maxDateMap[b]));
+  $('#cred-list').innerHTML=showNames.length===0?`<div class="empty">거래 내역이 없습니다</div>`
+    :showNames.map(n=>{
+      const entries=[...cr.filter(c=>c.name===n)].sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
+      const deb=entries.filter(c=>c.type==='debit').reduce((a,c)=>a+c.amount,0);
+      const pd=entries.filter(c=>c.type==='credit').reduce((a,c)=>a+c.amount,0);
+      const bal=deb-pd, isMisu=bal>0;
+      const rows=entries.map(c=>{
+        if(c.type==='debit'){
+          const isOverdue=c.due_date&&c.due_date<today();
+          const dueTag=c.due_date?` <span style="color:${isOverdue?'#f87171':'#fbbf24'};font-size:15px">→${dl(c.due_date)}</span>`:'';
+          return `<div style="display:flex;justify-content:space-between;padding:3px 0"><span style="color:#9ca3af;font-size:16px">${dl(c.date)}${dueTag}</span><span style="color:#f87171;font-size:17px;font-weight:700">${won(c.amount)}</span></div>`;
+        }else{
+          return `<div style="display:flex;justify-content:space-between;padding:3px 0"><span style="color:#9ca3af;font-size:16px">${dl(c.date)}</span><span style="color:#4ade80;font-size:17px;font-weight:700">-${won(c.amount)}</span></div>`;
+        }
+      }).join('');
+      return`<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #1f2937">
         <div style="font-size:19px;font-weight:900;color:#fff;margin-bottom:6px;${isMisu?'cursor:pointer':''}" ${isMisu?`onclick="selectCreditor('${n}',${bal})"`:''}>👤 ${n}</div>
-        ${debitRows}${creditRows}
+        ${rows}
         <div style="display:flex;justify-content:flex-end;padding:5px 0 2px;border-top:1px solid #374151;margin-top:4px">
           <span style="color:#fff;font-size:18px;font-weight:900">${won(bal)}</span>
         </div>
