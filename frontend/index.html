@@ -765,23 +765,29 @@ async function renderCredit() {
     const[ty,tm,td]=t.split('-').map(Number);
     const wago=new Date(ty,tm-1,td);wago.setDate(wago.getDate()-7);
     const wagoStr=`${wago.getFullYear()}-${pad2(wago.getMonth()+1)}-${pad2(wago.getDate())}`;
-    const dueNames=allNames.filter(n=>balMap[n]>0&&cr.some(c=>c.name===n&&c.type==='debit'&&c.due_date&&c.due_date>=wagoStr));
+    const dueNames=allNames.filter(n=>balMap[n]>0&&cr.some(c=>c.name===n&&c.type==='debit'&&(
+      (c.due_date&&c.due_date>=wagoStr)||!c.due_date
+    )));
     const nearDueMap={};
     dueNames.forEach(n=>{
       const dues=cr.filter(c=>c.name===n&&c.type==='debit'&&c.due_date&&c.due_date>=wagoStr).map(c=>c.due_date).sort();
       nearDueMap[n]=dues[0]||'';
     });
-    dueNames.sort((a,b)=>rev?nearDueMap[b].localeCompare(nearDueMap[a]):nearDueMap[a].localeCompare(nearDueMap[b]));
+    // due_date 있는 고객 먼저(오름차순), 없는 고객 뒤로
+    const sortKey=n=>nearDueMap[n]||'9999-99-99';
+    dueNames.sort((a,b)=>rev?sortKey(b).localeCompare(sortKey(a)):sortKey(a).localeCompare(sortKey(b)));
     $('#cred-list').innerHTML=dueNames.length===0?`<div class="empty">변제예정 내역이 없습니다</div>`
       :dueNames.map(n=>{
         const bal=balMap[n], due=nearDueMap[n];
         const isOverdue=due&&due<t;
         const dueColor=isOverdue?'#f87171':'#fbbf24';
+        const dueLabel=due?`<div style="font-size:15px;font-weight:700;color:${dueColor}">→${dl(due)}</div>`
+          :`<div style="font-size:15px;font-weight:700;color:#6b7280">→미정</div>`;
         return`<div data-due="${due}" style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #1f2937">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-size:19px;font-weight:900;color:#fff;cursor:pointer" onclick="selectCreditor('${n}',${bal})">👤 ${n}</div>
             <div style="text-align:right">
-              ${due?`<div style="font-size:15px;font-weight:700;color:${dueColor}">→${dl(due)}</div>`:''}
+              ${dueLabel}
               <div style="font-size:18px;font-weight:900;color:#fff">${won(bal)}</div>
             </div>
           </div>
