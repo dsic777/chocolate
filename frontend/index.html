@@ -515,7 +515,7 @@ async function renderHome() {
             <div class="li-sub" style="margin-top:3px">
               ${x.card?`<span class="badge b-card">카드 ${won(x.card)}</span>`:''}
               ${x.cash?`<span class="badge b-cash">현금 ${won(x.cash)}</span>`:''}
-              ${x.credit?`<span class="badge b-credit">외상 ${won(x.credit)}</span>`:''}
+              ${x.credit?`<span style="white-space:nowrap"><span class="badge b-credit">외상 ${won(x.credit)}</span>${x.due_date?`<span style="font-size:15px;color:#fbbf24;margin-left:4px">( ${dl(x.due_date)} 변제예정 )</span>`:`<span style="font-size:15px;color:#6b7280;margin-left:4px">( 변제예정일 미정 )</span>`}</span>`:''}
             </div>
           </div>
           <div class="li-right"><div class="li-main pos">+${won(x.total||0)}</div></div>
@@ -624,7 +624,7 @@ async function renderSales() {
         <div class="li-sub" style="margin-top:4px;white-space:normal">
           ${s.card?`<span class="badge b-card">카드 ${won(s.card)}</span>`:''}
           ${s.cash?`<span class="badge b-cash">현금 ${won(s.cash)}</span>`:''}
-          ${s.credit?`<span class="badge b-credit">외상 ${won(s.credit)}</span>`:''}
+          ${s.credit?`<span style="white-space:nowrap"><span class="badge b-credit">외상 ${won(s.credit)}</span>${s.due_date?`<span style="font-size:15px;color:#fbbf24;margin-left:4px">( ${dl(s.due_date)} 변제예정 )</span>`:`<span style="font-size:15px;color:#6b7280;margin-left:4px">( 변제예정일 미정 )</span>`}</span>`:''}
         </div>
       </div>
       <div class="li-right">
