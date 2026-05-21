@@ -99,7 +99,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .bsm-green{background:#052e16;color:#4ade80;border:1px solid #166534}
 
 /* ── List items ── */
-.li{display:flex;align-items:flex-start;padding:12px 0;border-bottom:1px solid #1f2937;gap:10px}
+.li{display:flex;align-items:flex-start;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid #1f2937;gap:10px}
 .li:last-child{border-bottom:none}
 .li-body{flex:1;min-width:0}
 .li-title{font-size:18px;font-weight:700;color:#f3f4f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -621,12 +621,11 @@ async function renderSales() {
     :list.map(s=>`<div class="li">
       <div class="li-body">
         <div class="li-title">${dl(s.date)} <strong>${s.customer||'고객'}</strong></div>
-        <div class="li-sub" style="margin-top:4px">
+        <div class="li-sub" style="margin-top:4px;white-space:normal">
           ${s.card?`<span class="badge b-card">카드 ${won(s.card)}</span>`:''}
           ${s.cash?`<span class="badge b-cash">현금 ${won(s.cash)}</span>`:''}
           ${s.credit?`<span class="badge b-credit">외상 ${won(s.credit)}</span>`:''}
         </div>
-        ${s.memo?`<div class="li-sub">${s.memo}</div>`:''}
       </div>
       <div class="li-right">
         <div class="li-main pos">${won(s.total||0)}</div>
@@ -635,6 +634,7 @@ async function renderSales() {
           <button class="btn-sm bsm-red" onclick="delSale('${s.id}')">삭제</button>
         </div>
       </div>
+      ${s.memo?`<div class="li-sub" style="width:100%;margin-top:0">${s.memo}</div>`:''}
     </div>`).join('');
 }
 
@@ -679,10 +679,9 @@ async function renderPurchase() {
     :list.map(p=>`<div class="li">
       <div class="li-body">
         <div class="li-title">${dl(p.date)} <strong>${p.vendor||'미상'}</strong>${p.category?' <span style="color:#888;font-weight:400">'+p.category+'</span>':''}</div>
-        <div class="li-sub" style="margin-top:4px">
+        <div class="li-sub" style="margin-top:4px;white-space:normal">
           <span class="badge ${p.payment==='card'?'b-card':'b-cash'}">${p.payment==='card'?'카드':'현금'}</span>
         </div>
-        ${p.memo?`<div class="li-sub">${p.memo}</div>`:''}
       </div>
       <div class="li-right">
         <div class="li-main neg">-${won(p.amount||0)}</div>
@@ -691,6 +690,7 @@ async function renderPurchase() {
           <button class="btn-sm bsm-red" onclick="delPurchase('${p.id}')">삭제</button>
         </div>
       </div>
+      ${p.memo?`<div class="li-sub" style="width:100%;margin-top:0">${p.memo}</div>`:''}
     </div>`).join('');
 }
 
