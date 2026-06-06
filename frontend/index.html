@@ -461,7 +461,7 @@ function navigate(p) {
   document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('on',el.dataset.p===p));
   document.querySelectorAll('.page').forEach(el=>el.classList.toggle('on',el.id==='page-'+p));
   const hcp=$('#hdr-cal-panel');if(hcp)hcp.style.display='none';
-  const hs=$('#hdr-search');if(hs){const show=['sales','purchase','credit'].includes(p);hs.style.display=show?'':'none';hs.value='';hs.placeholder=p==='purchase'?'거래처명':'고객명';}
+  const hs=$('#hdr-search');if(hs){const show=['sales','purchase','credit'].includes(p);hs.style.display=show?'block':'none';hs.value='';hs.placeholder=p==='purchase'?'거래처명':'고객명';}
   if(p==='home')     { updateDateLabel(); renderHome(); }
   if(p==='sales')    { updateDateLabel(); renderSales(); }
   if(p==='purchase') { updateDateLabel(); renderPurchase(); }
@@ -1446,8 +1446,8 @@ function updateDateLabel() {
   const dow=dt.getDay();
   const t=today();
   $('#today-lbl').innerHTML=
-    `📅<span style="font-size:20px;font-weight:900;color:#e5e7eb">${y}년 ${m}월 ${d}일</span>`+
-    `<span style="font-size:20px;font-weight:900;color:${DOW_COLOR[dow]}">(${DOW_KO[dow]})</span>`;
+    `<span style="font-size:16px;font-weight:900;color:#e5e7eb">📅${y}년 ${m}월 ${d}일</span>`+
+    `<span style="font-size:16px;font-weight:900;color:${DOW_COLOR[dow]}">(${DOW_KO[dow]})</span>`;
   $('#today-btn').style.display=selectedDate===t?'none':'inline';
 }
 
@@ -1582,12 +1582,20 @@ document.getElementById('chart-swipe').addEventListener('touchend',e=>{
 },{passive:true});
 
 // ── SWIPE (HDR - 전체 탭 날짜 이동) ────────
-let _hdrSwX=0,_hdrShifting=false;
+let _hdrSwX=0,_hdrShifting=false,_hdrSwTarget=null;
 const _pageMap={home:'page-home',sales:'page-sales',purchase:'page-purchase',credit:'page-credit'};
-document.getElementById('hdr').addEventListener('touchstart',e=>{_hdrSwX=e.touches[0].clientX;},{passive:true});
+document.getElementById('hdr').addEventListener('touchstart',e=>{_hdrSwX=e.touches[0].clientX;_hdrSwTarget=e.target;},{passive:true});
 document.getElementById('hdr').addEventListener('touchend',e=>{
+  const hcp=$('#hdr-cal-panel');
+  if(hcp&&hcp.contains(_hdrSwTarget))return;
   const dx=e.changedTouches[0].clientX-_hdrSwX;
   if(Math.abs(dx)>60)shiftDate(dx<0?1:-1);
+},{passive:true});
+let _hdrCalSwX=0;
+document.getElementById('hdr-cal-panel').addEventListener('touchstart',e=>{_hdrCalSwX=e.touches[0].clientX;},{passive:true});
+document.getElementById('hdr-cal-panel').addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-_hdrCalSwX;
+  if(Math.abs(dx)>50){dx<0?hdrCalNext():hdrCalPrev();}
 },{passive:true});
 
 async function shiftDate(dir){
