@@ -1,17 +1,20 @@
-const CACHE = 'choco-v3';
+const CACHE = 'choco-v4';
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/chocolate/'])));
   self.skipWaiting();
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/chocolate/'])));
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(ks =>
       Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim()).then(() =>
+      self.clients.matchAll({type:'window'}).then(cls => {
+        cls.forEach(cl => cl.postMessage({type:'SW_UPDATED'}));
+      })
     )
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {

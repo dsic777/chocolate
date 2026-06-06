@@ -22,7 +22,8 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 #app{display:flex;flex-direction:column;width:100%;max-width:390px;height:100svh;background:#000;box-shadow:0 0 40px rgba(0,0,0,.8);overflow:hidden;position:relative}
 #hdr{background:#000;border-bottom:1px solid #1f2937;padding:18px 20px 14px;flex-shrink:0}
 #hdr h1{font-size:22px;font-weight:900;color:#fff}
-#hdr-sub{font-size:17px;font-weight:700;color:#9ca3af;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
+#hdr-sub{font-size:17px;font-weight:700;color:#9ca3af;margin-top:4px;display:flex;align-items:center;gap:8px}
+#hdr-search{flex:1;background:#1f2937;border:1px solid #374151;border-radius:8px;color:#fff;font-size:16px;font-weight:700;padding:5px 12px;outline:none;font-family:'Noto Sans KR',sans-serif;min-width:0;display:none}
 #content{flex:1;overflow-y:auto;padding-bottom:72px;scrollbar-width:none;overscroll-behavior-y:none}
 #content::-webkit-scrollbar{display:none}
 #tabbar{position:absolute;bottom:0;left:0;right:0;background:#000;border-top:1px solid #1f2937;display:flex;z-index:100}
@@ -177,8 +178,16 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
       <button id="analysis-today-btn" onclick="goAnalysisToday()" style="display:none;background:none;border:none;color:#fbbf24;font-size:16px;font-weight:700;padding:0;cursor:pointer">오늘로</button>
     </div>
     <div id="hdr-sub">
-      <span id="today-lbl" onclick="openCal()" style="cursor:pointer"></span>
-      <span id="today-btn" onclick="goToday()" style="display:none;font-size:16px;font-weight:700;color:#fbbf24;cursor:pointer">오늘로</span>
+      <span id="today-lbl" onclick="toggleHdrCal()" style="cursor:pointer;flex-shrink:0"></span>
+      <span id="today-btn" onclick="goToday()" style="display:none;font-size:16px;font-weight:700;color:#fbbf24;cursor:pointer;flex-shrink:0">오늘</span>
+      <input id="hdr-search" type="text" placeholder="" oninput="filterHdrSearch(this.value)">
+    </div>
+    <div id="hdr-cal-panel" style="display:none;padding:8px 0 4px;">
+      <div style="background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;">
+        <div class="cal-hdr"><button class="cal-nav" onclick="hdrCalPrev()">‹</button><div class="cal-month" id="hdr-cal-title"></div><button class="cal-nav" onclick="hdrCalNext()">›</button></div>
+        <div class="cal-dow"><span style="color:#f87171">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span style="color:#93c5fd">토</span></div>
+        <div id="hdr-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px"></div>
+      </div>
     </div>
   </div>
   <div id="content">
@@ -232,7 +241,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           <div class="fg"><label>합계</label><input type="text" id="s-total" placeholder="자동" readonly style="background:#111827;color:#4ade80;font-size:22px;font-weight:900"></div>
         </div>
         <div class="fg" id="s-due-wrap" style="display:none"><label>변제예정일</label><input type="text" id="s-due" readonly onclick="openCalFor('s-due')" placeholder="날짜 선택" style="cursor:pointer"></div>
-        <div class="fg"><label>메모</label><input type="text" id="s-memo" placeholder="메모"></div>
+        <div class="fg"><label>메모</label><textarea id="s-memo" placeholder="메모" rows="3" style="resize:vertical;width:100%;background:#111827;border:1px solid #374151;border-radius:6px;padding:12px;font-size:18px;font-family:'Noto Sans KR',sans-serif;font-weight:700;color:#fff;outline:none;box-sizing:border-box;line-height:1.5"></textarea></div>
         <div style="display:flex;gap:10px">
           <button class="btn btn-navy" id="s-save-btn" onclick="addSale()" style="flex:1">수입 저장</button>
           <button id="s-cancel-btn" onclick="exitSaleEditMode()" style="display:none;flex:0 0 90px;background:#374151;color:#e5e7eb;border:none;border-radius:8px;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
@@ -273,7 +282,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           </div>
         </div>
         <div class="fg"><label>금액</label><input type="text" inputmode="numeric" id="p-amt" placeholder="0" oninput="fmtNum(this)"></div>
-        <div class="fg"><label>메모</label><input type="text" id="p-memo" placeholder="메모"></div>
+        <div class="fg"><label>메모</label><textarea id="p-memo" placeholder="메모" rows="3" style="resize:vertical;width:100%;background:#111827;border:1px solid #374151;border-radius:6px;padding:12px;font-size:18px;font-family:'Noto Sans KR',sans-serif;font-weight:700;color:#fff;outline:none;box-sizing:border-box;line-height:1.5"></textarea></div>
         <div style="display:flex;gap:10px">
           <button class="btn btn-navy" id="p-save-btn" onclick="addPurchase()" style="flex:1">지출 저장</button>
           <button id="p-cancel-btn" onclick="exitPurchEditMode()" style="display:none;flex:0 0 90px;background:#374151;color:#e5e7eb;border:none;border-radius:8px;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
@@ -451,6 +460,8 @@ function navigate(p) {
   curPage=p;
   document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('on',el.dataset.p===p));
   document.querySelectorAll('.page').forEach(el=>el.classList.toggle('on',el.id==='page-'+p));
+  const hcp=$('#hdr-cal-panel');if(hcp)hcp.style.display='none';
+  const hs=$('#hdr-search');if(hs){const show=['sales','purchase','credit'].includes(p);hs.style.display=show?'':'none';hs.value='';hs.placeholder=p==='purchase'?'거래처명':'고객명';}
   if(p==='home')     { updateDateLabel(); renderHome(); }
   if(p==='sales')    { updateDateLabel(); renderSales(); }
   if(p==='purchase') { updateDateLabel(); renderPurchase(); }
@@ -1367,14 +1378,76 @@ function exitSaleEditMode(){
 const DOW_KO=['일','월','화','수','목','금','토'];
 const DOW_COLOR=['#f87171','#e5e7eb','#e5e7eb','#e5e7eb','#e5e7eb','#e5e7eb','#93c5fd'];
 
+// ── HDR CALENDAR ──────────────────────────
+let _hdrCalY,_hdrCalM,_hdrCalMap={};
+async function _loadHdrCalMap(){
+  try{
+    if(curPage==='sales'){const s=await getSales();_hdrCalMap={};s.forEach(x=>{if(x.date)_hdrCalMap[x.date]=(_hdrCalMap[x.date]||0)+1;});}
+    else if(curPage==='purchase'){const p=await getPurchs();_hdrCalMap={};p.forEach(x=>{if(x.date)_hdrCalMap[x.date]=(_hdrCalMap[x.date]||0)+1;});}
+    else if(curPage==='credit'){const c=await getCreds();_hdrCalMap={};c.filter(x=>x.type==='debit').forEach(x=>{if(x.date)_hdrCalMap[x.date]=(_hdrCalMap[x.date]||0)+1;});}
+    else _hdrCalMap={};
+  }catch(e){_hdrCalMap={};}
+}
+function _buildHdrCalGrid(selDate){
+  const first=new Date(_hdrCalY,_hdrCalM-1,1).getDay(),last=new Date(_hdrCalY,_hdrCalM,0).getDate(),t=today();
+  let cells='',day=1,total=Math.ceil((first+last)/7)*7;
+  for(let i=0;i<total;i++){
+    const col=i%7;
+    if(i<first||day>last){cells+='<div></div>';continue;}
+    const ds=`${_hdrCalY}-${pad2(_hdrCalM)}-${pad2(day)}`;
+    const isSel=ds===selDate,isT=ds===t;
+    const tc=col===0?'#f87171':col===6?'#93c5fd':'#fff';
+    const cnt=_hdrCalMap[ds]||0;
+    cells+=`<div onclick="selectHdrDate('${ds}')" style="text-align:center;padding:10px 2px 6px;cursor:pointer;border-radius:8px;font-size:19px;font-weight:900;color:${isSel?'#000':tc};background:${isSel?'#fbbf24':isT?'#1f2937':'transparent'};border:1px solid ${isT&&!isSel?'#fbbf24':'transparent'}">${day}${cnt?`<div style="font-size:11px;font-weight:700;color:${isSel?'#333':'#e11d48'};margin-top:2px;line-height:1">${cnt}건</div>`:''}</div>`;
+    day++;
+  }
+  return cells;
+}
+function renderHdrCal(){$('#hdr-cal-title').textContent=_hdrCalY+'년 '+_hdrCalM+'월';$('#hdr-cal-grid').innerHTML=_buildHdrCalGrid(selectedDate);}
+async function toggleHdrCal(){
+  const p=$('#hdr-cal-panel');
+  if(p.style.display!=='none'){p.style.display='none';return;}
+  const[y,m]=selectedDate.split('-').map(Number);_hdrCalY=y;_hdrCalM=m;
+  await _loadHdrCalMap();renderHdrCal();p.style.display='block';
+}
+function hdrCalPrev(){if(_hdrCalM===1){_hdrCalM=12;_hdrCalY--;}else _hdrCalM--;renderHdrCal();}
+function hdrCalNext(){if(_hdrCalM===12){_hdrCalM=1;_hdrCalY++;}else _hdrCalM++;renderHdrCal();}
+function selectHdrDate(ds){
+  selectedDate=ds;
+  const hcp=$('#hdr-cal-panel');if(hcp)hcp.style.display='none';
+  updateDateLabel();
+  const hs=$('#hdr-search');if(hs)hs.value='';
+  refreshCurPage();
+}
+function filterHdrSearch(q){
+  q=(q||'').trim().toLowerCase();
+  if(curPage==='sales'){
+    document.querySelectorAll('#sales-list .li').forEach(el=>{
+      el.style.display=(!q||el.querySelector('.li-title strong')?.textContent.toLowerCase().includes(q))?'':'none';
+    });
+  }else if(curPage==='purchase'){
+    document.querySelectorAll('#purch-list .li').forEach(el=>{
+      el.style.display=(!q||el.querySelector('.li-title strong')?.textContent.toLowerCase().includes(q))?'':'none';
+    });
+  }else if(curPage==='credit'){
+    document.querySelectorAll('#cred-list>div').forEach(el=>{
+      el.style.display=(!q||el.textContent.toLowerCase().includes(q))?'':'none';
+    });
+  }
+}
+document.addEventListener('click',e=>{
+  const hcp=$('#hdr-cal-panel');
+  if(hcp&&hcp.style.display!=='none'&&!hcp.contains(e.target)&&!e.target.closest('#today-lbl')){hcp.style.display='none';}
+});
+
 function updateDateLabel() {
   const [y,m,d]=selectedDate.split('-').map(Number);
   const dt=new Date(y,m-1,d);
   const dow=dt.getDay();
   const t=today();
   $('#today-lbl').innerHTML=
-    `<span style="font-size:20px;font-weight:900;color:#e5e7eb">${y}년 ${m}월 ${d}일</span>`+
-    `<span style="font-size:20px;font-weight:900;color:${DOW_COLOR[dow]};margin-left:4px">(${DOW_KO[dow]})</span>`;
+    `📅<span style="font-size:20px;font-weight:900;color:#e5e7eb">${y}년 ${m}월 ${d}일</span>`+
+    `<span style="font-size:20px;font-weight:900;color:${DOW_COLOR[dow]}">(${DOW_KO[dow]})</span>`;
   $('#today-btn').style.display=selectedDate===t?'none':'inline';
 }
 
@@ -1608,7 +1681,10 @@ window.addEventListener('pageshow',e=>{if(e.persisted)showSplash();});
 updateDateLabel();
 navigate('home');
 showSplash();
-if('serviceWorker' in navigator){navigator.serviceWorker.register('/chocolate/sw.js');}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/chocolate/sw.js');
+  navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='SW_UPDATED')location.reload();});
+}
 </script>
 </body>
 </html>
