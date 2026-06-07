@@ -247,7 +247,10 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           <button id="s-cancel-btn" onclick="exitSaleEditMode()" style="display:none;flex:0 0 90px;background:#374151;color:#e5e7eb;border:none;border-radius:8px;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
         </div>
       </div>
-      <div class="stl">수입 내역</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 6px">
+        <div class="stl" style="margin:0">수입 내역</div>
+        <button id="s-direct-btn" onclick="showSaleForm()" style="background:#1B2A4A;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;padding:5px 14px;cursor:pointer;font-family:inherit;white-space:nowrap;box-shadow:0 2px 8px rgba(255,255,255,0.15)">+ 직접 입력</button>
+      </div>
       <div class="card" id="sales-list"></div>
     </div>
 
@@ -591,6 +594,7 @@ async function addSale(data) {
       $('#s-due-wrap').style.display='none';
       $('#s-total').value='';
       $('#s-form-card').style.display='none';
+      const _db=$('#s-direct-btn');if(_db)_db.style.display='';
       await renderSales(); showV('✅ 수입 저장: '+won(d.total));
     }
     return true;
@@ -1360,6 +1364,13 @@ function enterSaleEditMode(item){
   $('#s-cancel-btn').style.display='block';
   $('#s-form-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
+function showSaleForm(){
+  $('#s-form-card').style.display='block';
+  if(!_saleEditId){$('#s-date').dataset.date=selectedDate;$('#s-date').value=fmtDate(selectedDate);}
+  $('#s-cancel-btn').style.display='';
+  const db=$('#s-direct-btn');if(db)db.style.display='none';
+  $('#s-form-card').scrollIntoView({behavior:'smooth',block:'start'});
+}
 function exitSaleEditMode(){
   _saleEditId=null;
   ['s-cust','s-card','s-cash','s-cred','s-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
@@ -1372,6 +1383,7 @@ function exitSaleEditMode(){
   $('#s-save-btn').textContent='수입 저장';
   $('#s-save-btn').className='btn btn-navy';
   $('#s-cancel-btn').style.display='none';
+  const db=$('#s-direct-btn');if(db)db.style.display='';
 }
 
 // ── DATE LABEL ────────────────────────────
