@@ -1,4 +1,4 @@
-const CACHE = 'choco-v5';
+const CACHE = 'choco-v6';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
