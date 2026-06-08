@@ -64,6 +64,14 @@ def init_db():
             """)
             cur.execute("ALTER TABLE choco_credits ADD COLUMN IF NOT EXISTS sale_id VARCHAR(50)")
             cur.execute("ALTER TABLE choco_credits ADD COLUMN IF NOT EXISTS due_date DATE")
+            cur.execute("ALTER TABLE choco_purchases ADD COLUMN IF NOT EXISTS card INTEGER DEFAULT 0")
+            cur.execute("ALTER TABLE choco_purchases ADD COLUMN IF NOT EXISTS cash INTEGER DEFAULT 0")
+            cur.execute("""
+                UPDATE choco_purchases SET
+                    card = CASE WHEN payment='card' THEN amount ELSE 0 END,
+                    cash = CASE WHEN payment='cash' THEN amount ELSE 0 END
+                WHERE card = 0 AND cash = 0 AND amount > 0
+            """)
         conn.commit()
 
 
@@ -230,6 +238,8 @@ class Purchase(BaseModel):
     date: str
     vendor: Optional[str] = ""
     category: Optional[str] = ""
+    card: Optional[int] = 0
+    cash: Optional[int] = 0
     amount: Optional[int] = 0
     payment: Optional[str] = "cash"
     memo: Optional[str] = ""
@@ -238,27 +248,33 @@ class Purchase(BaseModel):
 def get_purchases():
     with get_conn() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute("SELECT id, date::text, vendor, category, amount, payment, memo FROM choco_purchases ORDER BY date DESC, id DESC")
+            cur.execute("SELECT id, date::text, vendor, category, card, cash, amount, payment, memo FROM choco_purchases ORDER BY date DESC, id DESC")
             return cur.fetchall()
 
 @app.post("/api/purchases")
 def add_purchase(p: Purchase):
+    card = p.card or 0
+    cash = p.cash or 0
+    amount = card + cash
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO choco_purchases (id,date,vendor,category,amount,payment,memo) VALUES (%s,%s,%s,%s,%s,%s,%s)",
-                (p.id, p.date, p.vendor, p.category, p.amount, p.payment, p.memo)
+                "INSERT INTO choco_purchases (id,date,vendor,category,card,cash,amount,payment,memo) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                (p.id, p.date, p.vendor, p.category, card, cash, amount, "card" if cash==0 and card>0 else "cash", p.memo)
             )
         conn.commit()
     return {"ok": True}
 
 @app.put("/api/purchases/{id}")
 def update_purchase(id: str, p: Purchase):
+    card = p.card or 0
+    cash = p.cash or 0
+    amount = card + cash
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE choco_purchases SET date=%s,vendor=%s,category=%s,amount=%s,payment=%s,memo=%s WHERE id=%s",
-                (p.date, p.vendor, p.category, p.amount, p.payment, p.memo, id)
+                "UPDATE choco_purchases SET date=%s,vendor=%s,category=%s,card=%s,cash=%s,amount=%s,payment=%s,memo=%s WHERE id=%s",
+                (p.date, p.vendor, p.category, card, cash, amount, "card" if cash==0 and card>0 else "cash", p.memo, id)
             )
         conn.commit()
     return {"ok": True}
@@ -375,9 +391,16 @@ def seed_data():
             vendor   = random.choice(_VENDORS)
             category = random.choice(_CATEGORIES)
             amount   = random.randint(10, 100) * 10000
-            payment  = random.choices(['card','cash'], weights=[70,30])[0]
+            ptype    = random.choices(['card','cash','mixed'], weights=[60,30,10])[0]
+            if ptype == 'card':
+                card, cash = amount, 0
+            elif ptype == 'cash':
+                card, cash = 0, amount
+            else:
+                card = int(amount * random.uniform(0.3, 0.7) / 10000) * 10000
+                cash = amount - card
             memo     = random.choice(_PURCH_MEMOS)
-            purch_rows.append((pid, ds, vendor, category, amount, payment, memo))
+            purch_rows.append((pid, ds, vendor, category, card, cash, amount, "card" if cash==0 else "cash" if card==0 else "card", memo))
 
         cur_day += timedelta(days=1)
 
@@ -433,7 +456,7 @@ def seed_data():
                     sales_rows)
             if purch_rows:
                 psycopg2.extras.execute_batch(cur,
-                    "INSERT INTO choco_purchases (id,date,vendor,category,amount,payment,memo) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                    "INSERT INTO choco_purchases (id,date,vendor,category,card,cash,amount,payment,memo) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                     purch_rows)
             if credit_rows:
                 psycopg2.extras.execute_batch(cur,

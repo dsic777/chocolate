@@ -59,7 +59,7 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
 .wk-cell{padding:8px 4px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700}
 .wk-col-head,.wk-row-head{color:#9ca3af}
 .wk-row-head{border-right:1px solid #1f2937;font-size:18px;padding-left:2px;padding-right:2px}
-.wk-val{font-size:20px;font-weight:900;justify-content:flex-end;padding-right:8px}
+.wk-val{font-size:16px;font-weight:900;justify-content:flex-end;padding-right:8px;white-space:nowrap}
 
 /* ── Voice box ── */
 .vbox{background:#0a0a0a;border:1px solid #374151;border-radius:6px;padding:12px;margin-bottom:10px}
@@ -278,13 +278,12 @@ body{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;font-size:2
           <div class="fg"><label>날짜</label><input type="text" id="p-date" readonly onclick="openCalFor('p-date')" placeholder="날짜 선택" style="cursor:pointer"></div>
           <div class="fg"><label>거래처명</label><input type="text" id="p-vendor" placeholder="거래처명"></div>
         </div>
+        <div class="fg"><label>품목</label><input type="text" id="p-cat" placeholder="주류,음료"></div>
         <div class="fg2">
-          <div class="fg"><label>품목</label><input type="text" id="p-cat" placeholder="주류,음료"></div>
-          <div class="fg"><label>구분</label>
-            <select id="p-pay"><option value="card">카드</option><option value="cash">현금</option></select>
-          </div>
+          <div class="fg"><label>카드</label><input type="text" inputmode="numeric" id="p-card" placeholder="0" oninput="calcPurchTotal()"></div>
+          <div class="fg"><label>현금</label><input type="text" inputmode="numeric" id="p-cash" placeholder="0" oninput="calcPurchTotal()"></div>
         </div>
-        <div class="fg"><label>금액</label><input type="text" inputmode="numeric" id="p-amt" placeholder="0" oninput="fmtNum(this)"></div>
+        <div class="fg"><label>합계</label><input type="text" id="p-amt" readonly style="background:#111827;color:#4ade80;font-size:22px;font-weight:900"></div>
         <div class="fg"><label>메모</label><textarea id="p-memo" placeholder="메모" rows="3" style="resize:vertical;width:100%;background:#111827;border:1px solid #374151;border-radius:6px;padding:12px;font-size:18px;font-family:'Noto Sans KR',sans-serif;font-weight:700;color:#fff;outline:none;box-sizing:border-box;line-height:1.5"></textarea></div>
         <div style="display:flex;gap:10px">
           <button class="btn btn-navy" id="p-save-btn" onclick="addPurchase()" style="flex:1">지출 저장</button>
@@ -522,24 +521,27 @@ async function renderHome() {
   $('#home-list').innerHTML=all.length===0
     ?`<div class="empty">거래 내역이 없습니다</div>`
     :all.map(x=>x._t==='sale'
-      ?`<div class="li">
-          <div class="li-body">
-            <div class="li-title">💰 ${x.customer||'고객'}</div>
-            <div class="li-sub">${dl(x.date)}${x.memo?' · '+x.memo:''}</div>
-            <div class="li-sub" style="margin-top:3px">
-              ${x.card?`<span class="badge b-card">카드 ${won(x.card)}</span>`:''}
-              ${x.cash?`<span class="badge b-cash">현금 ${won(x.cash)}</span>`:''}
-              ${x.credit?`<span style="white-space:nowrap"><span class="badge b-credit">외상 ${won(x.credit)}</span>${x.due_date?`<span style="font-size:15px;color:#fbbf24;margin-left:4px">( ${dl(x.due_date)} 변제예정 )</span>`:`<span style="font-size:15px;color:#6b7280;margin-left:4px">( 변제예정일 미정 )</span>`}</span>`:''}
+      ?`<div class="li" style="align-items:flex-start;gap:0">
+          <span style="font-size:20px;margin-right:8px;padding-top:2px;flex-shrink:0">💰</span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+              <div class="li-title" style="margin:0">${dl(x.date)} <strong>${x.customer||'고객'}</strong></div>
+              <div class="li-main pos" style="white-space:nowrap;flex-shrink:0">${won((x.card||0)+(x.cash||0))}</div>
             </div>
+            ${(x.card||x.cash)?`<div class="li-sub" style="margin-top:3px;white-space:nowrap">${[(x.card?`<span class="badge b-card" style="white-space:nowrap">카드</span> ${won(x.card)}`:''), (x.cash?`<span class="badge b-cash" style="white-space:nowrap">현금</span> ${won(x.cash)}`:'')].filter(Boolean).join(' <span style="color:#4b5563;margin:0 2px">|</span> ')}</div>`:''}
+            ${x.credit?`<div class="li-sub" style="margin-top:3px;display:flex;justify-content:space-between;align-items:center"><span class="badge b-credit" style="white-space:nowrap;flex-shrink:0">외상 ${won(x.credit)}</span>${x.due_date?`<span style="font-size:14px;color:#fbbf24;white-space:nowrap;margin-left:8px">~${dl(x.due_date)} 변제예정</span>`:`<span style="font-size:14px;color:#6b7280;white-space:nowrap;margin-left:8px">변제예정일 미정</span>`}</div>`:''}
+            ${x.memo?`<div class="li-sub" style="margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.memo}</div>`:''}
           </div>
-          <div class="li-right"><div class="li-main pos">+${won(x.total||0)}</div></div>
         </div>`
-      :`<div class="li">
-          <div class="li-body">
-            <div class="li-title">🛒 ${x.vendor||''} <span style="font-weight:400;color:#888">${x.category||''}</span></div>
-            <div class="li-sub">${dl(x.date)} · <span class="badge ${x.payment==='card'?'b-card':'b-cash'}">${x.payment==='card'?'카드':'현금'}</span></div>
+      :`<div class="li" style="align-items:flex-start;gap:0">
+          <span style="font-size:20px;margin-right:8px;padding-top:2px;flex-shrink:0">🛒</span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+              <div class="li-title" style="margin:0">${dl(x.date)} <strong>${x.vendor||'미상'}</strong></div>
+              <div class="li-main neg" style="white-space:nowrap;flex-shrink:0">-${won(x.amount||0)}</div>
+            </div>
+            ${(x.category||x.memo)?`<div class="li-sub" style="margin-top:3px;display:flex;gap:12px;overflow:hidden">${x.category?`<span style="color:#9ca3af;flex-shrink:0">${x.category}</span>`:''}${x.memo?`<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.memo}</span>`:''}</div>`:''}
           </div>
-          <div class="li-right"><div class="li-main neg">-${won(x.amount||0)}</div></div>
         </div>`
     ).join('');
 }
@@ -633,35 +635,40 @@ async function renderSales() {
   const _sfrom=`${_sf.getFullYear()}-${pad2(_sf.getMonth()+1)}-${pad2(_sf.getDate())}`;
   const list=all.filter(s=>s.date>=_sfrom&&s.date<=selectedDate);
   $('#sales-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 기준 14일 수입 없음</div>`
-    :list.map(s=>`<div class="li">
-      <div class="li-body">
-        <div class="li-title">${dl(s.date)} <strong>${s.customer||'고객'}</strong></div>
-        <div class="li-sub" style="margin-top:4px;white-space:normal">
-          ${s.card?`<span class="badge b-card">카드 ${won(s.card)}</span>`:''}
-          ${s.cash?`<span class="badge b-cash">현금 ${won(s.cash)}</span>`:''}
-          ${s.credit?`<span style="white-space:nowrap"><span class="badge b-credit">외상 ${won(s.credit)}</span>${s.due_date?`<span style="font-size:15px;color:#fbbf24;margin-left:4px">( ${dl(s.due_date)} 변제예정 )</span>`:`<span style="font-size:15px;color:#6b7280;margin-left:4px">( 변제예정일 미정 )</span>`}</span>`:''}
+    :list.map(s=>{
+      const badges=[(s.card?`<span class="badge b-card" style="white-space:nowrap">카드</span> ${won(s.card)}`:''), (s.cash?`<span class="badge b-cash" style="white-space:nowrap">현금</span> ${won(s.cash)}`:'')].filter(Boolean);
+      return `<div class="li">
+        <div class="li-body">
+          <div class="li-title">${dl(s.date)} <strong>${s.customer||'고객'}</strong></div>
+          ${badges.length?`<div class="li-sub" style="margin-top:4px;white-space:nowrap">${badges.join(' <span style="color:#4b5563;margin:0 4px">|</span> ')}</div>`:''}
+          ${s.credit?`<div class="li-sub" style="margin-top:4px;display:flex;justify-content:space-between;align-items:center"><span class="badge b-credit" style="white-space:nowrap;flex-shrink:0">외상 ${won(s.credit)}</span>${s.due_date?`<span style="font-size:14px;color:#fbbf24;white-space:nowrap;margin-left:8px">~${dl(s.due_date)} 변제예정</span>`:`<span style="font-size:14px;color:#6b7280;white-space:nowrap;margin-left:8px">변제예정일 미정</span>`}</div>`:''}
+          ${s.memo?`<div class="li-sub" style="margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.memo}</div>`:''}
         </div>
-      </div>
-      <div class="li-right">
-        <div class="li-main pos">${won(s.total||0)}</div>
-        <div style="display:flex;gap:6px;margin-top:6px">
-          <button class="btn-sm bsm-green" onclick="_saleRows['${s.id}']&&enterSaleEditMode(_saleRows['${s.id}'])">수정</button>
-          <button class="btn-sm bsm-red" onclick="delSale('${s.id}')">삭제</button>
+        <div class="li-right">
+          <div class="li-main pos" style="white-space:nowrap">${won((s.card||0)+(s.cash||0))}</div>
+          <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end">
+            <button class="btn-sm bsm-green" onclick="_saleRows['${s.id}']&&enterSaleEditMode(_saleRows['${s.id}'])">수정</button>
+            <button class="btn-sm bsm-red" onclick="delSale('${s.id}')">삭제</button>
+          </div>
         </div>
-      </div>
-      ${s.memo?`<div class="li-sub" style="width:100%;margin-top:0">${s.memo}</div>`:''}
-    </div>`).join('');
+      </div>`;
+    }).join('');
 }
 
 // ── PURCHASE ──────────────────────────────
+function calcPurchTotal(){
+  ['p-card','p-cash'].forEach(id=>fmtNum($('#'+id)));
+  const v=parseNum($('#p-card').value)+parseNum($('#p-cash').value);
+  $('#p-amt').value=v?v.toLocaleString('ko-KR'):'';
+}
 async function addPurchase(data) {
+  const card=parseNum($('#p-card').value),cash=parseNum($('#p-cash').value),amount=card+cash;
   const d=data||{
     date:$('#p-date').dataset.date||$('#p-date').value, vendor:$('#p-vendor').value.trim(),
-    category:$('#p-cat').value.trim(), amount:parseNum($('#p-amt').value),
-    payment:$('#p-pay').value, memo:$('#p-memo').value.trim()
+    category:$('#p-cat').value.trim(), card, cash, amount, memo:$('#p-memo').value.trim()
   };
   if(!d.date){await showAlert('날짜를 입력하세요','📅');return;}
-  if(!d.amount){await showAlert('금액을 입력하세요','💰');return;}
+  if(!(d.card||0)&&!(d.cash||0)&&!d.amount){await showAlert('금액을 입력하세요','💰');return;}
   try {
     if(_purchEditId){
       d.id=_purchEditId;
@@ -671,7 +678,8 @@ async function addPurchase(data) {
     } else {
       d.id=uid();
       await apiPost('/purchases', d);
-      ['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+      ['p-vendor','p-cat','p-card','p-cash','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+      $('#p-amt').value='';
       $('#p-form-card').style.display='none';
       await renderPurchase(); showV('✅ 지출 저장: '+(d.vendor||'')+' '+won(d.amount));
     }
@@ -691,22 +699,27 @@ async function renderPurchase() {
   const _pfrom=`${_pf.getFullYear()}-${pad2(_pf.getMonth()+1)}-${pad2(_pf.getDate())}`;
   const list=all.filter(p=>p.date>=_pfrom&&p.date<=selectedDate);
   $('#purch-list').innerHTML=list.length===0?`<div class="empty">${fmtDate(selectedDate)} 기준 14일 지출 없음</div>`
-    :list.map(p=>`<div class="li">
-      <div class="li-body">
-        <div class="li-title">${dl(p.date)} <strong>${p.vendor||'미상'}</strong>${p.category?' <span style="color:#888;font-weight:400">'+p.category+'</span>':''}</div>
-        <div class="li-sub" style="margin-top:4px;white-space:normal">
-          <span class="badge ${p.payment==='card'?'b-card':'b-cash'}">${p.payment==='card'?'카드':'현금'}</span>
+    :list.map(p=>{
+      const badges=[(p.card?`<span class="badge b-card" style="white-space:nowrap">카드</span> ${won(p.card)}`:''), (p.cash?`<span class="badge b-cash" style="white-space:nowrap">현금</span> ${won(p.cash)}`:'')].filter(Boolean);
+      if(!badges.length)badges.push(`<span class="badge ${p.payment==='card'?'b-card':'b-cash'}">${p.payment==='card'?'카드':'현금'}</span>`);
+      return `<div class="li">
+        <div class="li-body">
+          <div class="li-title">${dl(p.date)} <strong>${p.vendor||'미상'}</strong></div>
+          <div class="li-sub" style="margin-top:4px;display:flex;gap:8px;align-items:center;overflow:hidden">
+            <span style="white-space:nowrap;flex-shrink:0">${badges.join(' <span style="color:#4b5563">|</span> ')}</span>
+            ${p.category?`<span style="color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.category}</span>`:''}
+            ${p.memo?`<span style="color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.memo}</span>`:''}
+          </div>
         </div>
-      </div>
-      <div class="li-right">
-        <div class="li-main neg">-${won(p.amount||0)}</div>
-        <div style="display:flex;gap:6px;margin-top:6px">
-          <button class="btn-sm bsm-green" onclick="_purchRows['${p.id}']&&enterPurchEditMode(_purchRows['${p.id}'])">수정</button>
-          <button class="btn-sm bsm-red" onclick="delPurchase('${p.id}')">삭제</button>
+        <div class="li-right">
+          <div class="li-main neg" style="white-space:nowrap">-${won(p.amount||0)}</div>
+          <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end">
+            <button class="btn-sm bsm-green" onclick="_purchRows['${p.id}']&&enterPurchEditMode(_purchRows['${p.id}'])">수정</button>
+            <button class="btn-sm bsm-red" onclick="delPurchase('${p.id}')">삭제</button>
+          </div>
         </div>
-      </div>
-      ${p.memo?`<div class="li-sub" style="width:100%;margin-top:0">${p.memo}</div>`:''}
-    </div>`).join('');
+      </div>`;
+    }).join('');
 }
 
 // ── CREDIT ────────────────────────────────
@@ -1110,7 +1123,9 @@ A단계 - 전체 텍스트를 그대로 보존한다.
 B단계 - 구조화 항목만 추출한다:
   · 거래처명 → vendor
   · 품목(수량 포함, 예: 맥주 10박스, 수박외) → category
-  · 카드/현금 바로 뒤 금액 → amount, payment (없으면 cash)
+  · 카드 바로 뒤 금액 → card 필드 (없으면 0)
+  · 현금 바로 뒤 금액 → cash 필드 (없으면 0)
+  · 결제수단 없이 금액만 있으면 → cash 필드
   · date = ${t} (고정)
 
 C단계 - C = A에서 B를 제거한다:
@@ -1124,8 +1139,8 @@ D단계 - C에서 불필요한 조사/공백을 제거해 정리한다 → D
   · D를 memo로 사용한다.
   · D가 없으면 memo = ""
 
-한국어 숫자: 100만=1000000, 50만=500000
-설명 없이 JSON 배열만 반환:
+한국어 숫자 변환 규칙: N만=N×10000 (예: 30만=300000, 50만=500000, 100만=1000000)
+설명 없이 JSON 배열만 반환 (필드: vendor, category, card, cash, memo):
 ${text}`;
 
   try {
@@ -1173,8 +1188,9 @@ function showParsed(type,items) {
         <div class="pi-row"><span class="pi-lbl">날짜</span><span class="pi-val">${dl(x.date)}</span></div>
         <div class="pi-row"><span class="pi-lbl">업체</span><span class="pi-val">${x.vendor||'미상'}</span></div>
         <div class="pi-row"><span class="pi-lbl">품목</span><span class="pi-val">${x.category||''}</span></div>
-        <div class="pi-row"><span class="pi-lbl">금액</span><span class="pi-val neg">${won(x.amount||0)}</span></div>
-        <div class="pi-row"><span class="pi-lbl">구분</span><span class="pi-val">${x.payment==='cash'?'현금':'카드'}</span></div>
+        ${x.card?`<div class="pi-row"><span class="pi-lbl">카드</span><span class="pi-val">${won(x.card)}</span></div>`:''}
+        ${x.cash?`<div class="pi-row"><span class="pi-lbl">현금</span><span class="pi-val">${won(x.cash)}</span></div>`:''}
+        <div class="pi-row"><span class="pi-lbl">합계</span><span class="pi-val neg">${won((x.card||0)+(x.cash||0)||x.amount||0)}</span></div>
         <div class="pi-row"><span class="pi-lbl">메모</span><span class="pi-val" style="${x.memo?'':'color:#4b5563'}">${x.memo||'없음'}</span></div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button class="btn btn-green" style="width:60%;margin:0" onclick="saveParsed('purchase',${i})">지출 저장</button>
@@ -1197,6 +1213,7 @@ async function saveParsed(type,idx) {
         await apiPost('/credits',{id:uid(),name:item.customer,date:item.date,amount:item.credit,type:'debit',memo:'수입 외상',sale_id:item.id,due_date:item.due_date||null});
       await renderSales();
     } else {
+      item.amount=(item.card||0)+(item.cash||0);
       await apiPost('/purchases',item);
       await renderPurchase();
     }
@@ -1227,8 +1244,9 @@ function editParsed(type,idx) {
     const pd=item.date||selectedDate;$('#p-date').dataset.date=pd;$('#p-date').value=fmtDate(pd);
     $('#p-vendor').value=item.vendor||'';
     $('#p-cat').value=item.category||'';
-    $('#p-pay').value=item.payment||'cash';
-    $('#p-amt').value=item.amount?Number(item.amount).toLocaleString('ko-KR'):'';
+    $('#p-card').value=item.card?Number(item.card).toLocaleString('ko-KR'):'';
+    $('#p-cash').value=item.cash?Number(item.cash).toLocaleString('ko-KR'):'';
+    calcPurchTotal();
     $('#p-memo').value=item.memo||'';
     $('#p-form-card').style.display='block';
     $('#p-form-card').scrollIntoView({behavior:'smooth',block:'start'});
@@ -1317,8 +1335,9 @@ function enterPurchEditMode(item){
   $('#p-date').dataset.date=item.date||'';$('#p-date').value=item.date?fmtDate(item.date):'';
   $('#p-vendor').value=item.vendor||'';
   $('#p-cat').value=item.category||'';
-  $('#p-pay').value=item.payment||'cash';
-  $('#p-amt').value=item.amount?Number(item.amount).toLocaleString('ko-KR'):'';
+  $('#p-card').value=item.card?Number(item.card).toLocaleString('ko-KR'):'';
+  $('#p-cash').value=item.cash?Number(item.cash).toLocaleString('ko-KR'):'';
+  calcPurchTotal();
   $('#p-memo').value=item.memo||'';
   $('#p-form-card').style.display='block';
   $('#p-edit-banner').style.display='block';
@@ -1330,7 +1349,7 @@ function enterPurchEditMode(item){
 }
 function exitPurchEditMode(){
   _purchEditId=null;
-  ['p-vendor','p-cat','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
+  ['p-vendor','p-cat','p-card','p-cash','p-amt','p-memo'].forEach(id=>{const e=$('#'+id);if(e)e.value='';});
   $('#p-form-card').style.display='none';
   $('#p-edit-banner').style.display='none';
   $('#p-form-ttl').textContent='직접 입력';
